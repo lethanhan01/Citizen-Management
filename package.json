@@ -1,0 +1,13 @@
+{
+  "name": "my-webapp",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
+    "start": "npm run start --prefix server"
+  },
+  "dependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
+
