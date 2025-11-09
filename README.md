@@ -164,6 +164,21 @@ Deploy trên **Render**, **Railway**, hoặc **AWS EC2** (PostgreSQL dùng RDS h
 
 ---
 
+## 🚀 Chất lượng Code (Code Quality)
+
+Dự án này sử dụng **ESLint** và **Prettier** để đảm bảo code thống nhất và sạch sẽ.
+
+### Tự động hóa (Husky & lint-staged)
+
+Khi bạn thực hiện `git commit`, **Husky** và **lint-staged** sẽ tự động chạy `eslint --fix` và `prettier --write` trên các file bạn đã thay đổi (staged files). Điều này đảm bảo code lỗi hoặc chưa format sẽ không được commit vào repository.
+
+### Scripts thủ công
+
+Bạn cũng có thể chạy các lệnh sau thủ công bất cứ lúc nào:
+
+* `npm run lint`: Quét và tự động sửa lỗi ESLint cho toàn bộ thư mục `src`.
+* `npm run format`: Tự động format code bằng Prettier cho toàn bộ dự án.
+
 ## 👨‍💻 Tác giả
 
 **Lê Thành An**
