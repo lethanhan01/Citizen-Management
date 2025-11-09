@@ -1,4 +1,4 @@
-import React, { Suspense } from 'react'
+import { Suspense } from 'react'
 import { Outlet } from 'react-router-dom'
 
 const LoadingFallback = () => <div>Đang tải...</div>;

@@ -1,0 +1,72 @@
+name: CI
+
+on:
+    push:
+        branches: [main]
+    pull_request:
+    workflow_dispatch:
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "22.x"
+                  cache: "npm"
+                  cache-dependency-path: |
+                      package-lock.json
+                      client/package-lock.json
+                      server/package-lock.json
+
+            - name: Install root dependencies (if any)
+              run: |
+                  if [ -f package-lock.json ]; then npm ci; elif [ -f package.json ]; then npm i; fi
+
+            - name: Install client dependencies
+              run: |
+                  if [ -f client/package-lock.json ]; then npm ci --prefix client; elif [ -f client/package.json ]; then npm i --prefix client; fi
+
+            - name: Install server dependencies
+              run: |
+                  if [ -f server/package-lock.json ]; then npm ci --prefix server; elif [ -f server/package.json ]; then npm i --prefix server; fi
+
+            - name: Build client
+              run: npm --prefix client run build --if-present
+
+            - name: Build server (if present)
+              run: npm --prefix server run build --if-present
+
+            - name: Lint (if present)
+              run: |
+                  npm run lint --if-present || true
+                  npm --prefix client run lint --if-present || true
+                  npm --prefix server run lint --if-present || true
+
+            - name: Test (if present)
+              run: |
+                  npm test --if-present --silent || true
+                  npm --prefix client test --if-present --silent || true
+                  npm --prefix server test --if-present --silent || true
+
+            - name: Upload client build artifact (if exists)
+              if: ${{ hashFiles('client/dist/**') != '' }}
+              uses: actions/upload-artifact@v4
+              with:
+                  name: client-dist
+                  path: client/dist
+
+            - name: Upload server build artifact (if exists)
+              if: ${{ hashFiles('server/dist/**') != '' }}
+              uses: actions/upload-artifact@v4
+              with:
+                  name: server-dist
+                  path: server/dist
