@@ -1,6 +1,9 @@
-const express = require("express");
-const pool = require("./config/db");
-const cors = require("cors");
+import express from "express";
+import pool from "./config/db.js";
+import sequelize from "./config/sequelize.js";
+import cors from "cors";
+import initWebRoutes from "./routes/web.js";
+
 const app = express();
 const PORT = 5000;
 
@@ -19,6 +22,7 @@ app.get("/campaigns", async (req, res) => {
         res.status(500).send("Lỗi truy vấn database");
     }
 });
+initWebRoutes(app);
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
