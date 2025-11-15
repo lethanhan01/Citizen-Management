@@ -18,10 +18,14 @@ let createHousehold = async (req, res) => {
 };
 let getAllHouseholds = async (req, res) => {
     try {
-        const households = await householdService.getAllHouseholds();
+        const { page = 1, limit = 20 } = req.query;
+        const households = await householdService.getAllHouseholds({
+            page: parseInt(page),
+            limit: parseInt(limit),
+        });
         return res.status(200).json({
             message: "Lấy danh sách hộ khẩu thành công",
-            households: households,
+            data: households,
         });
     } catch (error) {
         console.error("Lỗi khi lấy danh sách hộ khẩu:", error);
@@ -42,7 +46,7 @@ let getHouseholdById = async (req, res) => {
         }
         return res.status(200).json({
             message: "Lấy thông tin hộ khẩu thành công",
-            household: household,
+            data: household,
         });
     } catch (error) {
         console.error("Lỗi khi lấy thông tin hộ khẩu:", error);

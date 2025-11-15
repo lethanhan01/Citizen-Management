@@ -11,6 +11,26 @@ export default (sequelize, DataTypes) => {
         static associate(models) {
             // Define associations here if needed
             // Example: Household.belongsTo(models.Person, { foreignKey: 'head_person_id' });
+            Household.belongsTo(models.Person, {
+                foreignKey: "head_person_id",
+                targetKey: "person_id",
+                as: "headPerson",
+                onDelete: "SET NULL",
+                onUpdate: "CASCADE",
+            });
+            Household.hasMany(models.HouseholdMembership, {
+                foreignKey: "household_id",
+                sourceKey: "household_id",
+                as: "members",
+                onDelete: "CASCADE",
+                onUpdate: "CASCADE",
+            });
+            Household.belongsToMany(models.Person, {
+                through: models.HouseholdMembership,
+                foreignKey: "household_id",
+                otherKey: "person_id",
+                as: "residents",
+            });
         }
     }
 
@@ -52,7 +72,7 @@ export default (sequelize, DataTypes) => {
             modelName: "Household",
             tableName: "household",
             schema: "core",
-            timestamps: false, // Đã có cột created_at, không cần thêm createdAt/updatedAt
+            timestamps: false,
         }
     );
 

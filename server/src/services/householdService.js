@@ -9,14 +9,34 @@ let createHousehold = async (data) => {
         household_type: data.household_type,
     });
 };
-let getAllHouseholds = async () => {
+let getAllHouseholds = async ({ page = 1, limit = 20 }) => {
+    const offset = (page - 1) * limit;
     return await db.Household.findAll({
-        limit: 10,
+        offset,
+        limit,
     });
 };
 let getHouseholdById = async (id) => {
     return await db.Household.findOne({
         where: { household_id: id },
+        include: [
+            {
+                model: db.Person,
+                as: "headPerson",
+            },
+            {
+                model: db.Person,
+                as: "residents",
+                through: {
+                    attributes: [
+                        "start_date",
+                        "end_date",
+                        "relation_to_head",
+                        "is_head",
+                    ],
+                },
+            },
+        ],
     });
 };
 let updateHousehold = async (id, data) => {
@@ -25,9 +45,16 @@ let updateHousehold = async (id, data) => {
     });
 };
 let deleteHousehold = async (id) => {
-    return await db.Household.destroy({
+    const members = await db.HouseholdMembership.findAll({
         where: { household_id: id },
     });
+    if (members.length > 0) {
+        throw new Error("Không thể xóa hộ khẩu có thành viên sinh sống.");
+    } else {
+        return await db.Household.destroy({
+            where: { household_id: id },
+        });
+    }
 };
 export default {
     createHousehold,
