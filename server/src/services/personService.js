@@ -2,6 +2,9 @@ import { Op } from "sequelize";
 import db from "../models/index.js";
 
 const Person = db.Person;
+const HouseholdMembership = db.HouseholdMembership;
+const Household = db.Household;
+const HouseholdHistory = db.HouseholdHistory;
 
 const getAllNhanKhau = async ({
     page = 1,
@@ -180,22 +183,129 @@ const getNhanKhauById = async (personId) => {
     return personData;
 };
 
-const updateNhanKhau = async (personId, updateData, membershipData) => {
+const updateNhanKhau = async (personId, personData, membershipData, userId) => {
+    // Tìm person
     const person = await Person.findByPk(personId);
 
     if (!person) {
         return null;
     }
 
-    await person.update(updateData);
-    if (membershipData) {
-        const membership = await db.HouseholdMembership.findOne({
-            where: { person_id: personId },
-        });
-        await membership.update(membershipData);
-    }
+    // Lấy giá trị cũ trước khi cập nhật
+    const oldValues = person.toJSON();
 
-    return await getNhanKhauById(personId);
+    // Bắt đầu transaction
+    const transaction = await db.sequelize.transaction();
+
+    try {
+        // 1. Cập nhật thông tin person
+        if (personData && Object.keys(personData).length > 0) {
+            await person.update(personData, { transaction });
+
+            // Ghi log cho TỪNG trường thay đổi
+            for (const [field, newValue] of Object.entries(personData)) {
+                if (oldValues[field] !== newValue) {
+                    // Lấy household_id để ghi log (lấy hộ đang active)
+                    const activeMembership = await HouseholdMembership.findOne({
+                        where: {
+                            person_id: personId,
+                            end_date: null,
+                        },
+                        transaction,
+                    });
+
+                    if (activeMembership) {
+                        // Mapping tên trường sang tiếng Việt
+                        const fieldNameMapping = {
+                            full_name: "Họ và tên",
+                            alias: "Bí danh",
+                            gender: "Giới tính",
+                            dob: "Ngày sinh",
+                            birthplace: "Nơi sinh",
+                            ethnicity: "Dân tộc",
+                            hometown: "Quê quán",
+                            occupation: "Nghề nghiệp",
+                            workplace: "Nơi làm việc",
+                            citizen_id_num: "Số CCCD",
+                            citizen_id_issued_date: "Ngày cấp CCCD",
+                            citizen_id_issued_place: "Nơi cấp CCCD",
+                            residency_status: "Trạng thái cư trú",
+                            residence_registered_date:
+                                "Ngày đăng ký thường trú",
+                            previous_address: "Địa chỉ trước đó",
+                        };
+
+                        const fieldNameVN = fieldNameMapping[field] || field;
+
+                        // Ghi log vào household_history
+                        await db.HouseholdHistory.create(
+                            {
+                                household_id: activeMembership.household_id,
+                                event_type: "other",
+                                field_changed: `person.${field}`,
+                                old_value: oldValues[field]
+                                    ? String(oldValues[field])
+                                    : null,
+                                new_value: newValue ? String(newValue) : null,
+                                changed_by_user_id: userId || null,
+                                note: `Cập nhật ${fieldNameVN} của ${
+                                    oldValues.full_name
+                                } từ "${oldValues[field] || "trống"}" thành "${
+                                    newValue || "trống"
+                                }"`,
+                            },
+                            { transaction }
+                        );
+                    }
+                }
+            }
+        }
+
+        // 2. Cập nhật membership (nếu có)
+        if (membershipData) {
+            const membership = await HouseholdMembership.findOne({
+                where: {
+                    person_id: personId,
+                    end_date: null, // Chỉ lấy membership active
+                },
+                transaction,
+            });
+
+            if (membership) {
+                // Lưu giá trị cũ của membership
+                const oldMembershipValues = membership.toJSON();
+
+                // Cập nhật membership
+                await membership.update(membershipData, { transaction });
+
+                // Ghi log cho membership changes
+                if (membershipData.relation_to_head !== undefined) {
+                    await db.HouseholdHistory.create(
+                        {
+                            household_id: membership.household_id,
+                            event_type: "updated",
+                            field_changed: "membership.relation_to_head",
+                            old_value: oldMembershipValues.relation_to_head,
+                            new_value: membershipData.relation_to_head,
+                            changed_by_user_id: userId || null,
+                            note: `Thay đổi quan hệ với chủ hộ của ${oldValues.full_name} từ "${oldMembershipValues.relation_to_head}" thành "${membershipData.relation_to_head}"`,
+                        },
+                        { transaction }
+                    );
+                }
+            }
+        }
+
+        // Commit transaction
+        await transaction.commit();
+
+        // Lấy lại thông tin sau khi cập nhật
+        return await getNhanKhauById(personId);
+    } catch (error) {
+        // Rollback nếu có lỗi
+        await transaction.rollback();
+        throw error;
+    }
 };
 
 export default {
