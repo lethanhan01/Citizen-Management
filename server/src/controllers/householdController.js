@@ -97,10 +97,91 @@ let deleteHousehold = async (req, res) => {
         });
     }
 };
+let addPersonToHousehold = async (req, res) => {
+    try {
+        const { hoKhauId } = req.params;
+        const personData = req.body;
+        const event_type = personData.event_type;
+
+        // Validate dữ liệu đầu vào
+        const requiredFields = ["full_name", "dob", "gender"];
+        const missingFields = requiredFields.filter(
+            (field) => !personData[field]
+        );
+
+        if (missingFields.length > 0) {
+            return res.status(400).json({
+                success: false,
+                message: `Thiếu thông tin bắt buộc: ${missingFields.join(
+                    ", "
+                )}`,
+            });
+        }
+
+        // Validate relation_to_head
+        if (!personData.relation_to_head) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Thiếu thông tin quan hệ với chủ hộ (relation_to_head)",
+            });
+        }
+
+        // Validate event_type (loại biến động)
+        const validEventTypes = ["birth", "moved_in"];
+        if (
+            personData.event_type &&
+            !validEventTypes.includes(personData.event_type)
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: `event_type phải là 'birth' hoặc 'moved_in'`,
+            });
+        }
+
+        // Gọi service để thêm nhân khẩu
+        const result = await householdService.addPersonToHousehold(
+            hoKhauId,
+            event_type,
+            personData,
+            req.user?.user_id // userId từ authentication middleware (nếu có)
+        );
+
+        res.status(201).json({
+            success: true,
+            message: "Thêm nhân khẩu vào hộ khẩu thành công",
+            data: result,
+        });
+    } catch (error) {
+        console.error("Error in addPersonToHousehold:", error);
+
+        // Xử lý các lỗi cụ thể
+        if (error.message.includes("Không tìm thấy hộ khẩu")) {
+            return res.status(404).json({
+                success: false,
+                message: error.message,
+            });
+        }
+
+        if (error.message.includes("Số CCCD đã tồn tại")) {
+            return res.status(409).json({
+                success: false,
+                message: error.message,
+            });
+        }
+
+        res.status(500).json({
+            success: false,
+            message: "Lỗi khi thêm nhân khẩu vào hộ khẩu",
+            error: error.message,
+        });
+    }
+};
 export {
     createHousehold,
     getAllHouseholds,
     getHouseholdById,
     updateHousehold,
     deleteHousehold,
+    addPersonToHousehold,
 };

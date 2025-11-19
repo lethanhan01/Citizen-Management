@@ -5,6 +5,7 @@ import {
     getHouseholdById,
     updateHousehold,
     deleteHousehold,
+    addPersonToHousehold,
 } from "../controllers/householdController.js";
 import {
     getAllNhanKhau,
@@ -17,6 +18,7 @@ const router = express.Router();
 let initWebRoutes = (app) => {
     router.post("/api/v1/ho-khau", createHousehold);
     router.get("/api/v1/ho-khau/:id", getHouseholdById);
+    router.post("/api/v1/ho-khau/:hoKhauId/nhan-khau", addPersonToHousehold);
     router.get("/api/v1/ho-khau", getAllHouseholds);
     router.put("/api/v1/ho-khau/:id", updateHousehold);
     router.delete("/api/v1/ho-khau/:id", deleteHousehold);

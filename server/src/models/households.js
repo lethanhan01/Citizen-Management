@@ -31,6 +31,13 @@ export default (sequelize, DataTypes) => {
                 otherKey: "person_id",
                 as: "residents",
             });
+            Household.hasMany(models.HouseholdHistory, {
+                foreignKey: "household_id",
+                sourceKey: "household_id",
+                as: "history",
+                onDelete: "CASCADE",
+                onUpdate: "CASCADE",
+            });
         }
     }
 
