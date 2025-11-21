@@ -38,6 +38,21 @@ export default (sequelize, DataTypes) => {
                 onDelete: "CASCADE",
                 onUpdate: "CASCADE",
             });
+
+            Household.hasMany(models.PersonEvent, {
+                foreignKey: "old_household_id",
+                sourceKey: "household_id",
+                as: "oldHousehold",
+                onDelete: "SET NULL",
+                onUpdate: "CASCADE",
+            });
+            Household.hasMany(models.PersonEvent, {
+                foreignKey: "new_household_id",
+                sourceKey: "household_id",
+                as: "newHousehold",
+                onDelete: "SET NULL",
+                onUpdate: "CASCADE",
+            });
         }
     }
 

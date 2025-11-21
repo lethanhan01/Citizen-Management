@@ -1,10 +1,13 @@
 import { Op } from "sequelize";
 import db from "../models/index.js";
+import personEventService from "./personEventService.js";
 
+// ✅ Import đầy đủ các models
 const Person = db.Person;
-const HouseholdMembership = db.HouseholdMembership;
 const Household = db.Household;
-const HouseholdHistory = db.HouseholdHistory;
+const HouseholdMembership = db.HouseholdMembership; // ✅ PHẢI CÓ DÒNG NÀY
+const HouseholdHistory = db.HouseholdHistory; // ✅ THÊM DÒNG NÀY
+const PersonEvent = db.PersonEvent;
 
 const getAllNhanKhau = async ({
     page = 1,
@@ -83,12 +86,12 @@ const getAllNhanKhau = async ({
         ],
         include: [
             {
-                model: db.HouseholdMembership,
+                model: HouseholdMembership,
                 as: "householdMemberships",
                 attributes: ["relation_to_head"],
             },
             {
-                model: db.Household,
+                model: Household,
                 as: "households",
                 attributes: ["household_id", "household_no", "address"],
                 through: {
@@ -146,17 +149,17 @@ const getNhanKhauById = async (personId) => {
         ],
         include: [
             {
-                model: db.Household,
+                model: Household,
                 as: "householdsAsHead",
                 attributes: ["household_id", "household_no", "address"],
             },
             {
-                model: db.HouseholdMembership,
+                model: HouseholdMembership,
                 as: "householdMemberships",
                 attributes: ["relation_to_head"],
             },
             {
-                model: db.Household,
+                model: Household,
                 as: "households",
                 attributes: ["household_id", "household_no", "address"],
                 through: {
@@ -183,6 +186,9 @@ const getNhanKhauById = async (personId) => {
     return personData;
 };
 
+/**
+ * Cập nhật thông tin nhân khẩu và tự động ghi log lịch sử
+ */
 const updateNhanKhau = async (personId, personData, membershipData, userId) => {
     // Tìm person
     const person = await Person.findByPk(personId);
@@ -238,7 +244,7 @@ const updateNhanKhau = async (personId, personData, membershipData, userId) => {
                         const fieldNameVN = fieldNameMapping[field] || field;
 
                         // Ghi log vào household_history
-                        await db.HouseholdHistory.create(
+                        await HouseholdHistory.create(
                             {
                                 household_id: activeMembership.household_id,
                                 event_type: "other",
@@ -259,6 +265,19 @@ const updateNhanKhau = async (personId, personData, membershipData, userId) => {
                     }
                 }
             }
+            await PersonEvent.create(
+                {
+                    person_id: personId,
+                    created_by: userId || null,
+                    event_date: new Date(),
+                    event_type: "other",
+                    place_or_destination: "Cập nhật thông tin nhân khẩu",
+                    old_household_id: null,
+                    new_household_id: null,
+                    note: `Cập nhật thông tin nhân khẩu ${oldValues.full_name}`,
+                },
+                { transaction }
+            );
         }
 
         // 2. Cập nhật membership (nếu có)
@@ -280,10 +299,10 @@ const updateNhanKhau = async (personId, personData, membershipData, userId) => {
 
                 // Ghi log cho membership changes
                 if (membershipData.relation_to_head !== undefined) {
-                    await db.HouseholdHistory.create(
+                    await HouseholdHistory.create(
                         {
                             household_id: membership.household_id,
-                            event_type: "updated",
+                            event_type: "other",
                             field_changed: "membership.relation_to_head",
                             old_value: oldMembershipValues.relation_to_head,
                             new_value: membershipData.relation_to_head,

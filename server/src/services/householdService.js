@@ -212,6 +212,17 @@ let addPersonToHousehold = async (
             userId,
             note || eventNoteMapping[event_type]
         );
+        await db.PersonEvent.create(
+            {
+                person_id: newPerson.person_id,
+                created_by: userId,
+                event_date: membershipStartDate,
+                event_type: event_type,
+                new_household_id: householdId,
+                note: note || eventNoteMapping[event_type],
+            },
+            { transaction }
+        );
 
         // Commit transaction
         await transaction.commit();
