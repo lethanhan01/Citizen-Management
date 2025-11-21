@@ -1,14 +1,16 @@
-import { useState } from 'react'
-import './App.css'
-import ElectricBorder from '@/components/ElectricBorder'
+import { useState } from 'react';
+import './App.css';
+import ElectricBorder from '@/components/ElectricBorder';
+import ThemeToggle from '@/components/ThemeToggle';
 
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [count, setCount] = useState(0);
 
   return (
     <>
       <div className="flex flex-col items-center justify-center min-h-screen gap-8 p-8">
+        <ThemeToggle />
         <h1 className="text-4xl font-bold">Vite + React</h1>
         
         <ElectricBorder
