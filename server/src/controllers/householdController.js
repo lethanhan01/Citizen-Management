@@ -177,6 +177,97 @@ let addPersonToHousehold = async (req, res) => {
         });
     }
 };
+let splitHousehold = async (req, res) => {
+    try {
+        const {
+            hoKhauCuId,
+            thongTinHoKhauMoi,
+            chuHoMoiId,
+            danhSachNhanKhauTachDi,
+        } = req.body;
+
+        // Validate input
+        if (!hoKhauCuId) {
+            return res.status(400).json({
+                success: false,
+                message: "Thiếu thông tin hoKhauCuId",
+            });
+        }
+
+        if (
+            !thongTinHoKhauMoi ||
+            !thongTinHoKhauMoi.household_no ||
+            !thongTinHoKhauMoi.address
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Thiếu thông tin hộ khẩu mới (household_no, address)",
+            });
+        }
+
+        if (!chuHoMoiId) {
+            return res.status(400).json({
+                success: false,
+                message: "Thiếu thông tin chuHoMoiId",
+            });
+        }
+
+        if (
+            !danhSachNhanKhauTachDi ||
+            !Array.isArray(danhSachNhanKhauTachDi) ||
+            danhSachNhanKhauTachDi.length === 0
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Thiếu hoặc sai định dạng danhSachNhanKhauTachDi",
+            });
+        }
+
+        // Kiểm tra chuHoMoiId có trong danhSachNhanKhauTachDi không
+        if (!danhSachNhanKhauTachDi.includes(String(chuHoMoiId))) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Chủ hộ mới phải nằm trong danh sách nhân khẩu tách đi",
+            });
+        }
+
+        const result = await householdService.splitHousehold(
+            hoKhauCuId,
+            thongTinHoKhauMoi,
+            chuHoMoiId,
+            danhSachNhanKhauTachDi
+        );
+
+        res.status(201).json({
+            success: true,
+            message: "Tách hộ khẩu thành công",
+            data: result,
+        });
+    } catch (error) {
+        console.error("Error in splitHousehold:", error);
+
+        if (error.message.includes("Không tìm thấy")) {
+            return res.status(404).json({
+                success: false,
+                message: error.message,
+            });
+        }
+
+        if (error.message.includes("không thuộc hộ")) {
+            return res.status(400).json({
+                success: false,
+                message: error.message,
+            });
+        }
+
+        res.status(500).json({
+            success: false,
+            message: "Lỗi khi tách hộ khẩu",
+            error: error.message,
+        });
+    }
+};
 export {
     createHousehold,
     getAllHouseholds,
@@ -184,4 +275,5 @@ export {
     updateHousehold,
     deleteHousehold,
     addPersonToHousehold,
+    splitHousehold,
 };
