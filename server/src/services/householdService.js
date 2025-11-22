@@ -491,6 +491,13 @@ let splitHousehold = async (
     }
 };
 
+let getHouseholdHistory = async (householdId) => {
+    return await HouseholdHistory.findAll({
+        where: { household_id: householdId },
+        order: [["changed_at", "DESC"]],
+    });
+};
+
 export default {
     createHousehold,
     getAllHouseholds,
@@ -499,4 +506,5 @@ export default {
     deleteHousehold,
     addPersonToHousehold,
     splitHousehold,
+    getHouseholdHistory,
 };

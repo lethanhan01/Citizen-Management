@@ -7,11 +7,13 @@ import {
     deleteHousehold,
     addPersonToHousehold,
     splitHousehold,
+    getHouseholdHistory,
 } from "../controllers/householdController.js";
 import {
     getAllNhanKhau,
     getNhanKhauById,
     updateNhanKhau,
+    getPersonEvents,
 } from "../controllers/personController.js";
 import pool from "../config/db.js";
 
@@ -23,10 +25,12 @@ let initWebRoutes = (app) => {
     router.get("/api/v1/ho-khau", getAllHouseholds);
     router.put("/api/v1/ho-khau/:id", updateHousehold);
     router.delete("/api/v1/ho-khau/:id", deleteHousehold);
+    router.get("/api/v1/ho-khau/:id/lich-su", getHouseholdHistory);
     router.get("/api/v1/nhan-khau/:id", getNhanKhauById);
     router.get("/api/v1/nhan-khau", getAllNhanKhau);
     router.put("/api/v1/nhan-khau/:id", updateNhanKhau);
     router.post("/api/v1/ho-khau/tach-khau", splitHousehold);
+    router.get("/api/v1/nhan-khau/:id/lich-su", getPersonEvents);
     return app.use("/", router);
 };
 
