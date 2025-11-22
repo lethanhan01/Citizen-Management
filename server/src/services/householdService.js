@@ -1,3 +1,4 @@
+import { Op } from "sequelize";
 import db from "../models/index.js";
 import householdHistoryService from "./householdHistoryService.js";
 
@@ -24,6 +25,7 @@ let getHouseholdById = async (id) => {
             {
                 model: db.Person,
                 as: "headPerson",
+                attributes: ["person_id", "full_name", "gender", "dob"],
             },
             {
                 model: db.Person,
@@ -58,9 +60,17 @@ let deleteHousehold = async (id) => {
     }
 };
 
+let deleteById = async (id, household_id, transaction) => {
+    return await db.HouseholdMembership.destroy({
+        where: { person_id: id, household_id: household_id },
+        transaction: transaction,
+    });
+};
+
 const Household = db.Household;
 const Person = db.Person;
 const HouseholdMembership = db.HouseholdMembership;
+const HouseholdHistory = db.HouseholdHistory;
 
 let addPersonToHousehold = async (
     householdId,
@@ -294,6 +304,193 @@ let addPersonToHousehold = async (
     }
 };
 
+let splitHousehold = async (
+    hoKhauCuId,
+    thongTinHoKhauMoi,
+    chuHoMoiId,
+    danhSachNhanKhauTachDi
+) => {
+    const transaction = await db.sequelize.transaction();
+    try {
+        const oldHousehold = await Household.findByPk(hoKhauCuId, {
+            transaction,
+        });
+        if (!oldHousehold) {
+            throw new Error(`Không tìm thấy hộ khẩu với ID: ${hoKhauCuId}`);
+        }
+        const newHeadPerson = await Person.findByPk(chuHoMoiId, {
+            transaction,
+        });
+        if (!newHeadPerson) {
+            throw new Error(`Không tìm thấy nhân khẩu với ID: ${chuHoMoiId}`);
+        }
+        const oldMemberships = await HouseholdMembership.findAll({
+            where: {
+                household_id: hoKhauCuId,
+                person_id: { [Op.in]: danhSachNhanKhauTachDi },
+                end_date: null,
+            },
+            transaction,
+        });
+        if (oldMemberships.length !== danhSachNhanKhauTachDi.length) {
+            throw new Error(
+                "Một số nhân khẩu không thuộc hộ khẩu cũ hoặc đã không còn active"
+            );
+        }
+        const totalOldMembers = await HouseholdMembership.count({
+            where: {
+                household_id: hoKhauCuId,
+                end_date: null,
+            },
+            transaction,
+        });
+        if (totalOldMembers <= danhSachNhanKhauTachDi.length) {
+            throw new Error(
+                "Không thể tách hộ khẩu khi số nhân khẩu tách đi bằng hoặc nhiều hơn số nhân khẩu hiện có."
+            );
+        }
+        const newHousehold = await Household.create(
+            {
+                household_no: thongTinHoKhauMoi.household_no,
+                address: thongTinHoKhauMoi.address,
+                head_person_id: null, // Sẽ cập nhật sau
+                household_type: thongTinHoKhauMoi.household_type || "family",
+                note:
+                    thongTinHoKhauMoi.note ||
+                    `Tách từ hộ khẩu ID: ${hoKhauCuId}`,
+            },
+            { transaction }
+        );
+        await HouseholdHistory.create(
+            {
+                household_id: newHousehold.household_id,
+                event_type: "split_household",
+                changed_by_user_id: null,
+                note: `Tạo hộ khẩu mới từ việc tách hộ ${oldHousehold.household_no}`,
+            },
+            { transaction }
+        );
+
+        const splitDate = new Date();
+        for (const personId of danhSachNhanKhauTachDi) {
+            const oldMembership = await HouseholdMembership.findOne({
+                where: {
+                    household_id: hoKhauCuId,
+                    person_id: personId,
+                    end_date: null,
+                },
+                transaction,
+            });
+            await oldMembership.update(
+                { end_date: splitDate },
+                { transaction }
+            );
+            await deleteById(personId, hoKhauCuId, transaction);
+            const isNewHead = String(personId) === String(chuHoMoiId);
+            await HouseholdMembership.create(
+                {
+                    household_id: newHousehold.household_id,
+                    person_id: personId,
+                    start_date: splitDate,
+                    is_head: isNewHead,
+                    relation_to_head: isNewHead
+                        ? "Chủ hộ"
+                        : oldMembership.relation_to_head,
+                    membership_type: oldMembership.membership_type,
+                },
+                { transaction }
+            );
+            await oldMembership.update(
+                { end_date: splitDate },
+                { transaction }
+            );
+            await newHousehold.update(
+                { head_person_id: chuHoMoiId },
+                { transaction }
+            );
+            const person = await Person.findByPk(personId, { transaction });
+            await HouseholdHistory.create(
+                {
+                    household_id: hoKhauCuId,
+                    event_type: "move_out",
+                    old_value: JSON.stringify({
+                        person_id: person.person_id,
+                        full_name: person.full_name,
+                        reason: "split_household",
+                    }),
+                    changed_by_user_id: null,
+                    note: `${person.full_name} rời khỏi hộ do tách hộ sang ${newHousehold.household_no}`,
+                },
+                { transaction }
+            );
+            await HouseholdHistory.create(
+                {
+                    household_id: newHousehold.household_id,
+                    event_type: "move_in",
+                    new_value: JSON.stringify({
+                        person_id: person.person_id,
+                        full_name: person.full_name,
+                        reason: "split_household",
+                        is_head: isNewHead,
+                    }),
+                    changed_by_user_id: null,
+                    note: `${person.full_name} ${
+                        isNewHead ? "(Chủ hộ)" : ""
+                    } gia nhập hộ do tách từ hộ ${oldHousehold.household_no}`,
+                },
+                { transaction }
+            );
+            await db.PersonEvent.create(
+                {
+                    person_id: personId,
+                    event_type: "move_out",
+                    event_date: splitDate,
+                    place_or_destination: newHousehold.address,
+                    old_household_id: hoKhauCuId,
+                    new_household_id: newHousehold.household_id,
+                    created_by: null,
+                    note: `Chuyển từ hộ ${oldHousehold.household_no} sang hộ ${newHousehold.household_no} do tách hộ`,
+                },
+                { transaction }
+            );
+        }
+
+        await HouseholdHistory.create(
+            {
+                household_id: hoKhauCuId,
+                event_type: "split_household",
+                changed_by_user_id: null,
+                new_value: JSON.stringify({
+                    new_household_id: newHousehold.household_id,
+                    new_household_no: newHousehold.household_no,
+                    members_count: danhSachNhanKhauTachDi.length,
+                }),
+                note: `Tách ${danhSachNhanKhauTachDi.length} nhân khẩu sang hộ mới ${newHousehold.household_no}`,
+            },
+            { transaction }
+        );
+
+        await transaction.commit();
+
+        const oldHouseholdDetail = await getHouseholdById(hoKhauCuId);
+        const newHouseholdDetail = await getHouseholdById(
+            newHousehold.household_id
+        );
+        return {
+            oldHousehold: oldHouseholdDetail,
+            newHousehold: newHouseholdDetail,
+            splitInfo: {
+                splitDate,
+                membersMoved: danhSachNhanKhauTachDi.length,
+                new_head_person_id: chuHoMoiId,
+            },
+        };
+    } catch (error) {
+        await transaction.rollback();
+        throw error;
+    }
+};
+
 export default {
     createHousehold,
     getAllHouseholds,
@@ -301,4 +498,5 @@ export default {
     updateHousehold,
     deleteHousehold,
     addPersonToHousehold,
+    splitHousehold,
 };
