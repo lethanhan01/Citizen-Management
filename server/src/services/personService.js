@@ -327,8 +327,16 @@ const updateNhanKhau = async (personId, personData, membershipData, userId) => {
     }
 };
 
+let getPersonEvents = async (personId) => {
+    return await PersonEvent.findAll({
+        where: { person_id: personId },
+        order: [["event_date", "DESC"]],
+    });
+};
+
 export default {
     getAllNhanKhau,
     getNhanKhauById,
     updateNhanKhau,
+    getPersonEvents,
 };

@@ -268,6 +268,22 @@ let splitHousehold = async (req, res) => {
         });
     }
 };
+let getHouseholdHistory = async (req, res) => {
+    try {
+        const householdId = req.params.id;
+        const history = await householdService.getHouseholdHistory(householdId);
+        return res.status(200).json({
+            message: "Lấy lịch sử hộ khẩu thành công",
+            data: history,
+        });
+    } catch (error) {
+        console.error("Lỗi khi lấy lịch sử hộ khẩu:", error);
+        return res.status(500).json({
+            message: "Lỗi máy chủ khi lấy lịch sử hộ khẩu",
+            error: error.message,
+        });
+    }
+};
 export {
     createHousehold,
     getAllHouseholds,
@@ -276,4 +292,5 @@ export {
     deleteHousehold,
     addPersonToHousehold,
     splitHousehold,
+    getHouseholdHistory,
 };

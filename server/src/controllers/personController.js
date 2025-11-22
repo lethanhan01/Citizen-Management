@@ -136,3 +136,20 @@ export const updateNhanKhau = async (req, res) => {
         });
     }
 };
+export const getPersonEvents = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const events = await personService.getPersonEvents(id);
+        return res.status(200).json({
+            success: true,
+            data: events,
+        });
+    } catch (error) {
+        console.error("Error in getPersonEvents:", error);
+        res.status(500).json({
+            success: false,
+            message: "Lỗi khi lấy sự kiện của nhân khẩu",
+            error: error.message,
+        });
+    }
+};
