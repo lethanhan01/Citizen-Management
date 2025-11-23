@@ -8,6 +8,7 @@ import {
     addPersonToHousehold,
     splitHousehold,
     getHouseholdHistory,
+    changeHouseholdHead,
 } from "../controllers/householdController.js";
 import {
     getAllNhanKhau,
@@ -26,6 +27,11 @@ let initWebRoutes = (app) => {
     router.put("/api/v1/ho-khau/:id", updateHousehold);
     router.delete("/api/v1/ho-khau/:id", deleteHousehold);
     router.get("/api/v1/ho-khau/:id/lich-su", getHouseholdHistory);
+    router.put(
+        "/api/v1/ho-khau/:hoKhauId/thay-doi-chu-ho",
+        changeHouseholdHead
+    );
+
     router.get("/api/v1/nhan-khau/:id", getNhanKhauById);
     router.get("/api/v1/nhan-khau", getAllNhanKhau);
     router.put("/api/v1/nhan-khau/:id", updateNhanKhau);

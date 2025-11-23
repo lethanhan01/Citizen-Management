@@ -284,6 +284,51 @@ let getHouseholdHistory = async (req, res) => {
         });
     }
 };
+
+let changeHouseholdHead = async (req, res) => {
+    try {
+        const { hoKhauId } = req.params;
+        const { chuHoMoiId, relationOldHead } = req.body;
+
+        if (!chuHoMoiId || !relationOldHead) {
+            return res.status(400).json({
+                success: false,
+                message: "Thiếu thông tin chuHoMoiId hoặc relationOlHead",
+            });
+        }
+        const result = await householdService.changeHouseholdHead(
+            hoKhauId,
+            chuHoMoiId,
+            relationOldHead
+        );
+        return res.status(200).json({
+            success: true,
+            message: "Chuyển chủ hộ thành công",
+            data: result,
+        });
+    } catch (error) {
+        console.log("Error in changeHouseholdHead:", error);
+        if (error.message.includes("Không tìm thấy")) {
+            return res.status(404).json({
+                success: false,
+                message: error.message,
+            });
+        }
+
+        if (error.message.includes("không phải là thành viên")) {
+            return res.status(400).json({
+                success: false,
+                message: error.message,
+            });
+        }
+
+        res.status(500).json({
+            success: false,
+            message: "Lỗi khi thay đổi chủ hộ",
+            error: error.message,
+        });
+    }
+};
 export {
     createHousehold,
     getAllHouseholds,
@@ -293,4 +338,5 @@ export {
     addPersonToHousehold,
     splitHousehold,
     getHouseholdHistory,
+    changeHouseholdHead,
 };

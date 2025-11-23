@@ -498,6 +498,146 @@ let getHouseholdHistory = async (householdId) => {
     });
 };
 
+let changeHouseholdHead = async (
+    householdId,
+    newHeadPersonId,
+    relationOldHead,
+    userId
+) => {
+    const transaction = await db.sequelize.transaction();
+    try {
+        const household = await Household.findByPk(householdId, {
+            transaction,
+        });
+        if (!household) {
+            throw new Error(`Không tìm thấy hộ khẩu với ID: ${householdId}`);
+        }
+        const newHeadPerson = await Person.findByPk(newHeadPersonId, {
+            transaction,
+        });
+        if (!newHeadPerson) {
+            throw new Error(
+                `Không tìm thấy nhân khẩu với ID: ${newHeadPersonId}`
+            );
+        }
+        const newHeadMembership = await HouseholdMembership.findOne({
+            where: {
+                household_id: householdId,
+                person_id: newHeadPersonId,
+                end_date: null,
+            },
+            transaction,
+        });
+        if (!newHeadMembership) {
+            throw new Error(
+                `Nhân khẩu với ID: ${newHeadPersonId} không thuộc hộ khẩu hoặc không còn active`
+            );
+        }
+        const oldHeadPersonId = household.head_person_id;
+        let oldHeadPerson = null;
+        let oldHeadMembership = null;
+        if (oldHeadPersonId) {
+            oldHeadPerson = await Person.findByPk(oldHeadPersonId, {
+                transaction,
+            });
+            oldHeadMembership = await HouseholdMembership.findOne({
+                where: {
+                    household_id: householdId,
+                    person_id: oldHeadPersonId,
+                    end_date: null,
+                },
+                transaction,
+            });
+        }
+        const changeDate = new Date();
+        await household.update(
+            { head_person_id: newHeadPersonId },
+            { transaction }
+        );
+        if (oldHeadMembership) {
+            const newRelationOldHead = relationOldHead || "Thành viên gia đình";
+            await oldHeadMembership.update(
+                { is_head: false, relation_to_head: newRelationOldHead },
+                { transaction }
+            );
+            await HouseholdHistory.create(
+                {
+                    household_id: householdId,
+                    event_type: "head_change",
+                    field_changed: "membership.is_head",
+                    old_value: "true",
+                    new_value: "false",
+                    changed_by_user_id: null,
+                    note: `${oldHeadPerson.full_name} không còn là chủ hộ, trở thành ${newRelationOldHead}`,
+                },
+                { transaction }
+            );
+            await db.PersonEvent.create(
+                {
+                    person_id: oldHeadPersonId,
+                    created_by: null,
+                    event_date: changeDate,
+                    event_type: "head_change",
+                    new_household_id: householdId,
+                    note: `Thay đổi chủ hộ, ${oldHeadPerson.full_name} không còn là chủ hộ, chuyển thành ${newRelationOldHead}`,
+                },
+                { transaction }
+            );
+        }
+        await newHeadMembership.update(
+            { is_head: true, relation_to_head: "Chủ hộ" },
+            { transaction }
+        );
+        await HouseholdHistory.create(
+            {
+                household_id: householdId,
+                event_type: "head_change",
+                field_changed: "household.head_person_id",
+                old_value: oldHeadPersonId ? String(oldHeadPersonId) : null,
+                new_value: String(newHeadPersonId),
+                changed_by_user_id: null,
+                note: `Thay đổi chủ hộ từ ${
+                    oldHeadPerson ? oldHeadPerson.full_name : "không có"
+                } sang ${newHeadPerson.full_name}`,
+            },
+            { transaction }
+        );
+        await db.PersonEvent.create(
+            {
+                person_id: newHeadPersonId,
+                created_by: null,
+                event_date: changeDate,
+                event_type: "head_change",
+                new_household_id: householdId,
+                note: `Thay đổi chủ hộ, ${newHeadPerson.full_name} trở thành chủ hộ`,
+            },
+            { transaction }
+        );
+        await transaction.commit();
+        const updatedHousehold = await getHouseholdById(householdId);
+        return {
+            household: updatedHousehold,
+            changeInfo: {
+                change_date: changeDate,
+                old_head: oldHeadPerson
+                    ? {
+                          person_id: oldHeadPerson.person_id,
+                          full_name: oldHeadPerson.full_name,
+                          new_relation: relationOldHead || "Thành viên",
+                      }
+                    : null,
+                new_head: {
+                    person_id: newHeadPerson.person_id,
+                    full_name: newHeadPerson.full_name,
+                },
+            },
+        };
+    } catch (error) {
+        await transaction.rollback();
+        throw error;
+    }
+};
+
 export default {
     createHousehold,
     getAllHouseholds,
@@ -507,4 +647,5 @@ export default {
     addPersonToHousehold,
     splitHousehold,
     getHouseholdHistory,
+    changeHouseholdHead,
 };
