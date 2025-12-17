@@ -5,11 +5,43 @@ import { lazy } from 'react'
 import AppLayout from "@/layouts/AppLayout.tsx";
 import PublicLayout from "@/layouts/PublicLayout.tsx";
 
-//Pages
-const Dashboard = lazy(() => import("../pages/Dashboard.tsx"));
-const Login = lazy(() => import("../pages/Login.tsx"));
+//Pages - Public
 const Home = lazy(() => import("../pages/Home.tsx"));
+const Login = lazy(() => import("../pages/Login.tsx"));
 const NotFound = lazy(() => import("../pages/NotFound.tsx"));
+
+//Pages - Main
+const Dashboard = lazy(() => import("../pages/Dashboard.tsx"));
+const Profile = lazy(() => import("../pages/profile/Profile.tsx"));
+
+//Pages - Citizens
+const CitizenList = lazy(() => import("../pages/citizens/CitizenList.tsx"));
+const CitizenDetail = lazy(() => import("../pages/citizens/CitizenDetail.tsx"));
+const HouseholdList = lazy(() => import("../pages/citizens/HouseholdList.tsx"));
+const HouseholdDetail = lazy(() => import("../pages/citizens/HouseholdDetail.tsx"));
+
+//Pages - Services - Residential
+const TempResidence = lazy(() => import("../pages/services/residential/TempResidence.tsx"));
+const TempAbsence = lazy(() => import("../pages/services/residential/TempAbsence.tsx"));
+
+//Pages - Services - People
+const AddNewArrival = lazy(() => import("../pages/services/people/AddNewArrival.tsx"));
+const AddNewborn = lazy(() => import("../pages/services/people/AddNewborn.tsx"));
+const UpdatePerson = lazy(() => import("../pages/services/people/UpdatePerson.tsx"));
+
+//Pages - Services - Household
+const SplitHousehold = lazy(() => import("../pages/services/household/SplitHousehold.tsx"));
+const MergeHousehold = lazy(() => import("../pages/services/household/MergeHousehold.tsx"));
+const ChangeOwner = lazy(() => import("../pages/services/household/ChangeOwner.tsx"));
+const HouseholdHistory = lazy(() => import("../pages/services/household/HouseholdHistory.tsx"));
+
+//Pages - Fees
+const FixedFees = lazy(() => import("../pages/fees/FixedFees.tsx"));
+const DonationCampaigns = lazy(() => import("../pages/fees/DonationCampaigns.tsx"));
+
+//Pages - Settings
+const AccountList = lazy(() => import("../pages/settings/AccountList.tsx"));
+const AddAccount = lazy(() => import("../pages/settings/AddAccount.tsx"));
 
 //Router
 const router = createBrowserRouter([
@@ -17,24 +49,45 @@ const router = createBrowserRouter([
         //Route Ứng dụng (với Sidebar + TopBar)
         element: <AppLayout />,
         children: [
-            {
-                path: '/dashboard',
-                element: <Dashboard />,
-            },
+            { path: '/dashboard', element: <Dashboard /> },
+            { path: '/profile', element: <Profile /> },
+            
+            // Citizens routes
+            { path: '/citizens', element: <CitizenList /> },
+            { path: '/citizens/:id', element: <CitizenDetail /> },
+            { path: '/households', element: <HouseholdList /> },
+            { path: '/households/:id', element: <HouseholdDetail /> },
+            
+            // Services - Residential
+            { path: '/services/temp-residence', element: <TempResidence /> },
+            { path: '/services/temp-absence', element: <TempAbsence /> },
+            
+            // Services - People
+            { path: '/services/add-new-arrival', element: <AddNewArrival /> },
+            { path: '/services/add-newborn', element: <AddNewborn /> },
+            { path: '/services/update-person', element: <UpdatePerson /> },
+            
+            // Services - Household
+            { path: '/services/split-household', element: <SplitHousehold /> },
+            { path: '/services/merge-household', element: <MergeHousehold /> },
+            { path: '/services/change-owner', element: <ChangeOwner /> },
+            { path: '/services/household-history', element: <HouseholdHistory /> },
+            
+            // Fees
+            { path: '/fees/fixed', element: <FixedFees /> },
+            { path: '/fees/donations', element: <DonationCampaigns /> },
+            
+            // Settings
+            { path: '/settings/accounts', element: <AccountList /> },
+            { path: '/settings/add-account', element: <AddAccount /> },
         ],
     },
     {
         //Route Công khai (không có Sidebar + TopBar)
         element: <PublicLayout />,
         children: [
-            {
-                path: '/',
-                element: <Home />,
-            },
-            {
-                path: '/login',
-                element: <Login />,
-            },
+            { path: '/', element: <Home /> },
+            { path: '/login', element: <Login /> },
         ],
     },
     {

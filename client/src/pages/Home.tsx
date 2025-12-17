@@ -2,6 +2,7 @@
 
 import { useNavigate } from "react-router-dom";
 import ThemeToggle from "@/components/ThemeToggle";
+import SpotlightCard from "@/components/SpotlightCard";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -14,24 +15,27 @@ export default function Home() {
         <ThemeToggle />
       </div>
 
-      {/* Tiêu đề */}
-      <h1 className="text-3xl font-bold text-first dark:text-fourth mb-8">
-        Citizen Management System
-      </h1>
+      {/* Tiêu đề và nút với Spotlight Card */}
+      <SpotlightCard className="custom-spotlight-card" spotlightColor="rgba(0, 229, 255, 0.2)">
+        <div className="flex flex-col items-center justify-center gap-8">
+          <h1 className="text-3xl font-bold text-first dark:text-fourth">
+            Citizen Management System
+          </h1>
 
-      {/* Nút đi tới hệ thống */}
-      <button
-        onClick={() => navigate("/login")}
-        className="
-          px-8 py-4 rounded-xl font-semibold text-lg
-          bg-first text-fourth 
-          dark:bg-third dark:text-first
-          shadow-md hover:shadow-lg active:scale-95
-          transition
-        "
-      >
-        Đi tới hệ thống quản lý dân cư
-      </button>
+          <button
+          onClick={() => navigate("/login")}
+          className="
+            px-8 py-4 rounded-xl font-semibold text-lg
+            bg-first text-fourth 
+            dark:bg-third dark:text-first
+            shadow-md hover:shadow-lg active:scale-95
+            transition
+          "
+        >
+          Đi tới hệ thống quản lý dân cư
+        </button>
+        </div>
+      </SpotlightCard>
     </div>
   );
 }

@@ -2,7 +2,13 @@
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
-
+@theme {
+  --color-first: #2c2b2d;
+  --color-second: #555555;
+  --color-third: #4cc0aa;
+  --color-fourth: #f7f7f7;
+  --color-fifth: #e2e2e2;
+}
 :root {
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
@@ -22,7 +28,7 @@
   --destructive-foreground: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --ring: #95c6bd;
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -58,7 +64,7 @@
   --destructive-foreground: oklch(0.637 0.237 25.331);
   --border: oklch(0.269 0 0);
   --input: oklch(0.269 0 0);
-  --ring: oklch(0.439 0 0);
+  --ring: #95c6bd;
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
@@ -115,9 +121,14 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
   }
   body {
     @apply bg-background text-foreground;
+  }
+  
+  /* Force ring color */
+  *:focus-visible {
+    --tw-ring-color: #95c6bd !important;
   }
 }

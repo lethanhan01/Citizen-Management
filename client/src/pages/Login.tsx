@@ -54,13 +54,8 @@ export default function Login() {
       <div className="flex flex-col w-full items-center">
 
         
-        {/* Logo */}
         <a className="flex items-center mb-6 text-2xl font-semibold text-first dark:text-fourth">
-          <img
-            className="w-10 h-10 mr-2"
-            src="https://flowbite.s3.amazonaws.com/blocks/marketing-ui/logo.svg"
-          />
-          CitizenSys
+          Hệ thống quản lý nhân khẩu
         </a>
 
         {/* FORM */}

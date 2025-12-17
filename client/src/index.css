@@ -3,10 +3,19 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --first:  #323643;
-  --second: #606470;
-  --third:  #93deff;
-  --fourth: #f7f7f7;
+  /* RGB values for Tailwind */
+  --first-rgb: 44 43 45;
+  --second-rgb: 85 85 85;
+  --third-rgb: 149 198 189;
+  --fourth-rgb: 247 247 247;
+  --fifth-rgb: 226 226 226;
+  
+  /* Hex values for direct use */
+  --first:  #2c2b2d;/*dark background*/
+  --second: #555555;/*?*/
+  --third:  #495da7;/*dark mode buttons*/
+  --fourth: #f7f7f7;/*light background*/
+  --fifth:  #ff0000;/*backup*/
 
   --background: var(--fourth);
   --foreground: var(--first);
@@ -25,7 +34,7 @@
   --muted: var(--second);
   --muted-foreground: var(--first);
 
-  --border: var(--second);
+  --border: #d1d5db;
   --input: var(--second);
   --ring: var(--third);
 
@@ -35,15 +44,20 @@
   --sidebar-primary-foreground: var(--first);
 
   --radius: 0.625rem;
+
+  /* Map to Tailwind base tokens */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-border: var(--border);
 }
 
 a {
   font-weight: 500;
-  color: #646cff;
+  color: inherit;
   text-decoration: inherit;
 }
 a:hover {
-  color: #535bf2;
+  color: inherit;
 }
 
 body {
@@ -56,14 +70,6 @@ body {
 h1 {
   font-size: 3.2em;
   line-height: 1.1;
-}
-
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
 }
 
 /* ============================= */
@@ -82,10 +88,10 @@ button:focus-visible {
   color: var(--fourth);
 }
 
-.input-theme:focus {
+ .input-theme:focus {
   outline: none !important;
-  box-shadow: none !important;
-  border-color: inherit !important;
+  box-shadow: 0 0 0 1px #95c6bd !important;
+  border-color: #95c6bd !important;
 }
 
 /* ============================= */
@@ -137,7 +143,7 @@ button:focus-visible {
   --muted: var(--second);
   --muted-foreground: var(--fourth);
 
-  --border: var(--second);
+  --border: #4b5563;
   --input: var(--second);
   --ring: var(--third);
 
@@ -145,16 +151,21 @@ button:focus-visible {
   --sidebar-foreground: var(--fourth);
   --sidebar-primary: var(--third);
   --sidebar-primary-foreground: var(--first);
+
+  /* Map to Tailwind base tokens */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-border: var(--border);
 }
 
 .dark button {
-  background-color: var(--third) !important;
-  color: var(--first) !important;
+  background-color: rgba(var(--third-rgb), 0.7) ;/*not really working*/
+  color: #f7f7f7 ;
 }
 
 .dark button:hover {
-  background-color: color-mix(in srgb, var(--third) 80%, white) !important;
-  color: var(--first) !important;
+  background-color: rgba(var(--third-rgb), 0.9) ;/*not really working*/
+  color: #000000 ;
 }
 
 @layer base {
@@ -165,4 +176,119 @@ button:focus-visible {
     background-color: var(--color-background);
     color: var(--color-foreground);
   }
+}
+
+/* ============================= */
+/*   SELECT DROPDOWN DARK MODE   */
+/* ============================= */
+
+.dark select {
+  color-scheme: dark;
+}
+
+.dark select option {
+  background-color: var(--first);
+  color: var(--fourth);
+}
+
+.light select option {
+  background-color: var(--fourth);
+  color: var(--first);
+}
+
+/* ============================= */
+/*   MODAL & BACKDROP STYLES     */
+/* ============================= */
+
+.modal-backdrop {
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+.modal-content {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+
+
+/* ============================= */
+/*   LUXURY BUTTON FOR SIDEBAR   */
+/* ============================= */
+
+.luxury-button {
+  position: relative;
+  background: transparent;
+  border: 1px solid transparent;
+  overflow: hidden;
+  transition: all 0.3s ease-in-out;
+}
+
+.light .luxury-button {
+  box-shadow: 0 4px 10px rgba(44, 45, 43, 0.15);
+}
+
+.dark .luxury-button {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.luxury-button:hover {
+  border-color: var(--third);
+  transform: scale(1.05);
+}
+
+.light .luxury-button:hover {
+  box-shadow: 0 8px 20px rgba(149, 198, 189, 0.3);
+}
+
+.dark .luxury-button:hover {
+  box-shadow: 0 8px 20px rgba(149, 198, 189, 0.4);
+}
+
+.button-text {
+  position: relative;
+  z-index: 2;
+}
+
+.hover-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 1.5rem;
+  transform: scale(0);
+  transition: transform 0.2s ease-in-out;
+  z-index: 1;
+}
+
+.light .hover-bg {
+  background: linear-gradient(to right, #e1f7ff, #86dfff);
+}
+
+.dark .hover-bg {
+  background: linear-gradient(to right, #c9f1ff, #36c9ff);
+}
+
+.luxury-button:hover .hover-bg {
+  transform: scale(1);
 }
