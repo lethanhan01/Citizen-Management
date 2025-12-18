@@ -15,7 +15,7 @@ export default function App() {
       </div>
 
       {/* Tiêu đề */}
-      <h1 className="text-3xl font-bold text-first dark:text-fourth mb-8">
+      <h1 className="text-3xl font-bold text-first dark:text-darkmodetext mb-8">
         Citizen Management System
       </h1>
 
@@ -24,7 +24,7 @@ export default function App() {
         onClick={() => navigate("/login")}
         className="
           px-8 py-4 rounded-xl font-semibold text-lg
-          bg-first text-fourth 
+          bg-first text-darkmodetext 
           dark:bg-third dark:text-first
           shadow-md hover:shadow-lg active:scale-95
           transition
@@ -35,3 +35,8 @@ export default function App() {
     </div>
   );
 }
+
+
+
+
+

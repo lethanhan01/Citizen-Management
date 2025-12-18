@@ -96,7 +96,7 @@ export default function Sidebar() {
       {/* Sidebar header */}
       <div className="h-16 flex items-center justify-between px-4">
         {!collapsed && (
-          <span className="text-lg font-semibold text-first dark:text-fourth">
+          <span className="text-lg font-semibold text-first dark:text-darkmodetext">
             Administrator
           </span>
         )}
@@ -105,7 +105,7 @@ export default function Sidebar() {
           className="p-2 -ml-1.5 hover:bg-second/10 dark:hover:bg-second/30 rounded-3xl transition"
           aria-label="Toggle sidebar"
         >
-          <Menu className="text-first dark:text-fourth" />
+          <Menu className="text-first dark:text-darkmodetext" />
         </button>
       </div>
 
@@ -148,7 +148,7 @@ function ParentMenuButton({
       className={`
         sidebar-radio-item
         w-full flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer font-semibold
-        text-first dark:text-fourth ${active ? "is-active" : ""}
+        text-first dark:text-darkmodetext ${active ? "is-active" : ""}
       `}
     >
       {icon}
@@ -215,7 +215,7 @@ function SidebarItem({
         className={`
           sidebar-radio-item
           w-full flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer font-semibold
-          text-first dark:text-fourth ${isActive ? "is-active" : ""}
+          text-first dark:text-darkmodetext ${isActive ? "is-active" : ""}
         `}
       >
         {item.icon}
@@ -250,3 +250,8 @@ function SidebarItem({
     </div>
   );
 }
+
+
+
+
+

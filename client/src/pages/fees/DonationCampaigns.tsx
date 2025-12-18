@@ -160,7 +160,7 @@ export default function DonationCampaigns() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-first dark:text-fourth">Chiến dịch quyên góp</h2>
+        <h2 className="text-2xl font-bold text-first dark:text-darkmodetext">Chiến dịch quyên góp</h2>
         <button
           onClick={handleAddNewCampaign}
           className="flex items-center gap-2 px-4 py-2 rounded-lg bg-third text-first hover:bg-third/90 transition"
@@ -187,13 +187,13 @@ export default function DonationCampaigns() {
             >
               <div className="flex items-center gap-3">
                 {isExpanded ? (
-                  <ChevronDown className="w-5 h-5 text-first dark:text-fourth" />
+                  <ChevronDown className="w-5 h-5 text-first dark:text-darkmodetext" />
                 ) : (
-                  <ChevronRight className="w-5 h-5 text-first dark:text-fourth" />
+                  <ChevronRight className="w-5 h-5 text-first dark:text-darkmodetext" />
                 )}
                 <div className="text-left">
-                  <h3 className="text-lg font-semibold text-first dark:text-fourth">{campaign.name}</h3>
-                  <p className="text-xs text-second dark:text-fourth/70">{campaign.description}</p>
+                  <h3 className="text-lg font-semibold text-first dark:text-darkmodetext">{campaign.name}</h3>
+                  <p className="text-xs text-second dark:text-darkmodetext/70">{campaign.description}</p>
                 </div>
               </div>
               <button
@@ -222,35 +222,35 @@ export default function DonationCampaigns() {
 
                 {/* Table */}
                 <div>
-                  <h4 className="text-sm font-semibold text-first dark:text-fourth mb-3">
+                  <h4 className="text-sm font-semibold text-first dark:text-darkmodetext mb-3">
                     Danh sách đóng góp
                   </h4>
                   <div className="overflow-x-auto border border-second/30 dark:border-second/30 rounded-lg">
                     <table className="min-w-full text-sm">
                       <thead className="bg-second/10 dark:bg-second/20">
                         <tr className="text-left">
-                          <th className="py-2 px-3 text-first dark:text-fourth">Mã hộ</th>
-                          <th className="py-2 px-3 text-first dark:text-fourth">Chủ hộ</th>
-                          <th className="py-2 px-3 text-first dark:text-fourth">Địa chỉ</th>
-                          <th className="py-2 px-3 text-first dark:text-fourth">Số tiền</th>
-                          <th className="py-2 px-3 text-first dark:text-fourth">Ngày đóng góp</th>
+                          <th className="py-2 px-3 text-first dark:text-darkmodetext">Mã hộ</th>
+                          <th className="py-2 px-3 text-first dark:text-darkmodetext">Chủ hộ</th>
+                          <th className="py-2 px-3 text-first dark:text-darkmodetext">Địa chỉ</th>
+                          <th className="py-2 px-3 text-first dark:text-darkmodetext">Số tiền</th>
+                          <th className="py-2 px-3 text-first dark:text-darkmodetext">Ngày đóng góp</th>
                         </tr>
                       </thead>
                       <tbody>
                         {campaign.donations.map((d, idx) => (
                           <tr key={idx} className="border-t border-second/20 dark:border-second/30">
-                            <td className="py-2 px-3 text-first dark:text-fourth">{d.householdCode}</td>
-                            <td className="py-2 px-3 text-first dark:text-fourth">{d.headName}</td>
-                            <td className="py-2 px-3 text-first dark:text-fourth">{d.address}</td>
-                            <td className="py-2 px-3 text-first dark:text-fourth font-semibold">
+                            <td className="py-2 px-3 text-first dark:text-darkmodetext">{d.householdCode}</td>
+                            <td className="py-2 px-3 text-first dark:text-darkmodetext">{d.headName}</td>
+                            <td className="py-2 px-3 text-first dark:text-darkmodetext">{d.address}</td>
+                            <td className="py-2 px-3 text-first dark:text-darkmodetext font-semibold">
                               {d.amount.toLocaleString()} VND
                             </td>
-                            <td className="py-2 px-3 text-first dark:text-fourth">{d.donatedDate}</td>
+                            <td className="py-2 px-3 text-first dark:text-darkmodetext">{d.donatedDate}</td>
                           </tr>
                         ))}
                         {campaign.donations.length === 0 && (
                           <tr>
-                            <td colSpan={5} className="py-4 text-center text-second dark:text-fourth/70">
+                            <td colSpan={5} className="py-4 text-center text-second dark:text-darkmodetext/70">
                               Chưa có hộ nào đóng góp
                             </td>
                           </tr>
@@ -272,27 +272,27 @@ export default function DonationCampaigns() {
           onClick={() => setShowDonationModal(false)}
         >
           <div
-            className="bg-white dark:bg-first rounded-xl shadow-2xl p-6 w-full max-w-md"
+            className="bg-card text-card-foreground rounded-xl shadow-2xl p-6 w-full max-w-md"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-first dark:text-fourth">Thêm đóng góp</h3>
+              <h3 className="text-lg font-semibold text-first dark:text-darkmodetext">Thêm đóng góp</h3>
               <button
                 onClick={() => setShowDonationModal(false)}
                 className="p-2 hover:bg-second/10 dark:hover:bg-second/30 rounded-lg"
               >
-                <X className="w-5 h-5 text-first dark:text-fourth" />
+                <X className="w-5 h-5 text-first dark:text-darkmodetext" />
               </button>
             </div>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-first dark:text-fourth mb-2">
+                <label className="block text-sm font-medium text-first dark:text-darkmodetext mb-2">
                   Chọn hộ gia đình <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={selectedHouseholdCode}
                   onChange={(e) => setSelectedHouseholdCode(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-second/40 dark:border-second/30 bg-white dark:bg-transparent text-first dark:text-fourth focus:outline-none focus:ring-2 focus:ring-third"
+                  className="w-full px-3 py-2 rounded-lg border border-input bg-card text-card-foreground focus:outline-none focus:ring-1 focus:ring-selectring"
                 >
                   <option value="">-- Chọn hộ --</option>
                   {MOCK_ALL_HOUSEHOLDS.map((h) => (
@@ -304,7 +304,7 @@ export default function DonationCampaigns() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-first dark:text-fourth mb-2">
+                <label className="block text-sm font-medium text-first dark:text-darkmodetext mb-2">
                   Số tiền quyên góp (VND) <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -315,11 +315,11 @@ export default function DonationCampaigns() {
                     setDonationAmount(value);
                   }}
                   placeholder="Nhập số tiền"
-                  className="w-full px-3 py-2 rounded-lg border border-second/40 dark:border-second/30 bg-white dark:bg-transparent text-first dark:text-fourth focus:outline-none focus:ring-2 focus:ring-third"
+                  className="w-full px-3 py-2 rounded-lg border border-input bg-card text-card-foreground focus:outline-none focus:ring-1 focus:ring-selectring"
                 />
               </div>
 
-              <p className="text-xs text-second dark:text-fourth/60">
+              <p className="text-xs text-second dark:text-darkmodetext/60">
                 Số tiền quyên góp sẽ được lưu lại cho hộ này trong chiến dịch.
               </p>
 
@@ -327,7 +327,7 @@ export default function DonationCampaigns() {
                 <button
                   onClick={() => setShowDonationModal(false)}
                   disabled={isLoading}
-                  className="flex-1 px-4 py-2 rounded-lg border border-second/40 dark:border-second/30 text-first dark:text-fourth hover:bg-second/10 dark:hover:bg-second/30 disabled:opacity-50"
+                  className="flex-1 px-4 py-2 rounded-lg border border-second/40 dark:border-second/30 text-first dark:text-darkmodetext hover:bg-second/10 dark:hover:bg-second/30 disabled:opacity-50"
                 >
                   Hủy bỏ
                 </button>
@@ -361,21 +361,21 @@ export default function DonationCampaigns() {
           onClick={() => setShowNewCampaignModal(false)}
         >
           <div
-            className="bg-white dark:bg-first rounded-xl shadow-2xl p-6 w-full max-w-md"
+            className="bg-card text-card-foreground rounded-xl shadow-2xl p-6 w-full max-w-md"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-first dark:text-fourth">Tạo chiến dịch mới</h3>
+              <h3 className="text-lg font-semibold text-first dark:text-darkmodetext">Tạo chiến dịch mới</h3>
               <button
                 onClick={() => setShowNewCampaignModal(false)}
                 className="p-2 hover:bg-second/10 dark:hover:bg-second/30 rounded-lg"
               >
-                <X className="w-5 h-5 text-first dark:text-fourth" />
+                <X className="w-5 h-5 text-first dark:text-darkmodetext" />
               </button>
             </div>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-first dark:text-fourth mb-2">
+                <label className="block text-sm font-medium text-first dark:text-darkmodetext mb-2">
                   Tên chiến dịch <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -383,12 +383,12 @@ export default function DonationCampaigns() {
                   value={newCampaignName}
                   onChange={(e) => setNewCampaignName(e.target.value)}
                   placeholder="VD: Hỗ trợ miền Trung"
-                  className="w-full px-3 py-2 rounded-lg border border-second/40 dark:border-second/30 bg-white dark:bg-transparent text-first dark:text-fourth focus:outline-none focus:ring-2 focus:ring-third"
+                  className="w-full px-3 py-2 rounded-lg border border-input bg-card text-card-foreground focus:outline-none focus:ring-1 focus:ring-selectring"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-first dark:text-fourth mb-2">
+                <label className="block text-sm font-medium text-first dark:text-darkmodetext mb-2">
                   Mô tả chiến dịch
                 </label>
                 <textarea
@@ -396,7 +396,7 @@ export default function DonationCampaigns() {
                   onChange={(e) => setNewCampaignDesc(e.target.value)}
                   placeholder="Mô tả mục đích và nội dung chiến dịch"
                   rows={3}
-                  className="w-full px-3 py-2 rounded-lg border border-second/40 dark:border-second/30 bg-white dark:bg-transparent text-first dark:text-fourth focus:outline-none focus:ring-2 focus:ring-third"
+                  className="w-full px-3 py-2 rounded-lg border border-input bg-card text-card-foreground focus:outline-none focus:ring-1 focus:ring-selectring"
                 />
               </div>
 
@@ -404,7 +404,7 @@ export default function DonationCampaigns() {
                 <button
                   onClick={() => setShowNewCampaignModal(false)}
                   disabled={isLoading}
-                  className="flex-1 px-4 py-2 rounded-lg border border-second/40 dark:border-second/30 text-first dark:text-fourth hover:bg-second/10 dark:hover:bg-second/30 disabled:opacity-50"
+                  className="flex-1 px-4 py-2 rounded-lg border border-second/40 dark:border-second/30 text-first dark:text-darkmodetext hover:bg-second/10 dark:hover:bg-second/30 disabled:opacity-50"
                 >
                   Hủy bỏ
                 </button>
@@ -445,14 +445,14 @@ function StatCard({
 }) {
   return (
     <div className="p-4 bg-second/10 dark:bg-second/20 rounded-lg">
-      <p className="text-xs text-second dark:text-fourth/70 mb-1">{label}</p>
+      <p className="text-xs text-second dark:text-darkmodetext/70 mb-1">{label}</p>
       <p
         className={`text-2xl font-bold ${
           color === "green"
             ? "text-green-600 dark:text-green-400"
             : color === "blue"
             ? "text-blue-600 dark:text-blue-400"
-            : "text-first dark:text-fourth"
+            : "text-first dark:text-darkmodetext"
         }`}
       >
         {value}
@@ -460,3 +460,8 @@ function StatCard({
     </div>
   );
 }
+
+
+
+
+

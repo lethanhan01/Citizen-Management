@@ -137,7 +137,7 @@ export default function TempResidence() {
       {/* Progress Bar */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-first dark:text-fourth">
+          <span className="text-sm font-medium text-first dark:text-darkmodetext">
             Hoàn thành: {progressPercentage}%
           </span>
         </div>
@@ -158,14 +158,14 @@ export default function TempResidence() {
       {/* Form Card */}
       <form
         onSubmit={handleSubmit}
-        className="bg-white dark:bg-transparent dark:border dark:border-second/40 dark:backdrop-blur-md rounded-xl p-8 shadow-sm dark:shadow-none space-y-6"
+        className="bg-card text-card-foreground border border-border rounded-xl p-6 shadow-sm space-y-6"
       >
         {/* Title */}
         <div>
-          <h2 className="text-2xl font-bold text-first dark:text-fourth mb-2">
+          <h2 className="text-2xl font-bold text-first dark:text-darkmodetext mb-2">
             Biểu mẫu Đăng kí tạm trú
           </h2>
-          <p className="text-sm text-second dark:text-fourth/70">
+          <p className="text-sm text-second dark:text-darkmodetext/70">
             Vui lòng điền đầy đủ và chính xác các thông tin dưới đây. Các mục có
             dấu <span className="text-red-500">*</span> là bắt buộc.
           </p>
@@ -173,7 +173,7 @@ export default function TempResidence() {
 
         {/* Section 1: Thông tin người khai báo */}
         <div className="space-y-4 border-t border-second/20 dark:border-second/30 pt-6">
-          <h3 className="text-lg font-semibold text-first dark:text-fourth">
+          <h3 className="text-lg font-semibold text-first dark:text-darkmodetext">
             1. Thông tin người khai báo
           </h3>
 
@@ -212,7 +212,7 @@ export default function TempResidence() {
 
             {/* Giới tính */}
             <div>
-              <label className="block text-sm font-medium text-first dark:text-fourth mb-2">
+              <label className="block text-sm font-medium text-first dark:text-darkmodetext mb-2">
                 Giới tính <span className="text-red-500">*</span>
               </label>
               <select
@@ -226,8 +226,8 @@ export default function TempResidence() {
                       ? "border-red-500 dark:border-red-500"
                       : "border-second/40 dark:border-second/30"
                   }
-                  text-first dark:text-fourth
-                  focus:outline-none focus:ring-2 focus:ring-third transition
+                  text-first dark:text-darkmodetext
+                  focus:outline-none focus:ring-1 focus:ring-selectring transition
                 `}
               >
                 <option value="">-- Chọn giới tính --</option>
@@ -255,7 +255,7 @@ export default function TempResidence() {
 
         {/* Section 2: Thông tin đăng kí tạm trú */}
         <div className="space-y-4 border-t border-second/20 dark:border-second/30 pt-6">
-          <h3 className="text-lg font-semibold text-first dark:text-fourth">
+          <h3 className="text-lg font-semibold text-first dark:text-darkmodetext">
             2. Thông tin đăng kí tạm trú
           </h3>
 
@@ -273,7 +273,7 @@ export default function TempResidence() {
 
           {/* Thời hạn tạm trú */}
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-first dark:text-fourth">
+            <label className="block text-sm font-medium text-first dark:text-darkmodetext">
               Thời hạn tạm trú <span className="text-red-500">*</span>
             </label>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -325,7 +325,7 @@ export default function TempResidence() {
             className="
               px-6 py-2.5 rounded-lg font-medium
               border border-second/40 dark:border-second/30
-              text-first dark:text-fourth
+              text-first dark:text-darkmodetext
               hover:bg-second/10 dark:hover:bg-second/30
               disabled:opacity-50 disabled:cursor-not-allowed
               transition
@@ -391,15 +391,15 @@ function FormField({
         ? "border-red-500 dark:border-red-500"
         : "border-second/40 dark:border-second/30"
     }
-    text-first dark:text-fourth
-    placeholder:text-second dark:placeholder:text-fourth/40
-    focus:outline-none focus:ring-2 focus:ring-third transition
+    text-first dark:text-darkmodetext
+    placeholder:text-second dark:placeholder:text-darkmodetext/40
+    focus:outline-none focus:ring-1 focus:ring-selectring transition
   `;
 
   return (
     <div>
       {!hideLabel && (
-        <label className="block text-sm font-medium text-first dark:text-fourth mb-2">
+        <label className="block text-sm font-medium text-first dark:text-darkmodetext mb-2">
           {label}
           {required && <span className="text-red-500"> *</span>}
         </label>
@@ -425,4 +425,9 @@ function FormField({
     </div>
   );
 }
+
+
+
+
+
 

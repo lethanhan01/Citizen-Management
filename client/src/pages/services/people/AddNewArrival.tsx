@@ -146,10 +146,10 @@ export default function AddNewArrival() {
     <div className="space-y-6">
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-first dark:text-fourth">
+          <h2 className="text-2xl font-bold text-first dark:text-darkmodetext">
             Thêm nhân khẩu - Mới đến
           </h2>
-          <span className="text-sm font-medium text-first dark:text-fourth">
+          <span className="text-sm font-medium text-first dark:text-darkmodetext">
             Hoàn thành: {progressPercentage}%
           </span>
         </div>
@@ -169,9 +169,9 @@ export default function AddNewArrival() {
 
       <form
         onSubmit={handleSubmit}
-        className="bg-white dark:bg-transparent dark:border dark:border-second/40 dark:backdrop-blur-md rounded-xl p-8 shadow-sm dark:shadow-none space-y-8"
+        className="bg-card text-card-foreground border border-border rounded-xl p-6 shadow-sm space-y-8"
       >
-        <p className="text-second dark:text-fourth/70">
+        <p className="text-second dark:text-darkmodetext/70">
           Nhập đầy đủ thông tin như trong trang chi tiết công dân. Mã hộ gia đình
           chỉ điền khi thêm vào hộ sẵn có (ví dụ: kết hôn). Nếu bỏ trống, hệ
           thống sẽ tự sinh mã hộ mới.
@@ -323,7 +323,7 @@ export default function AddNewArrival() {
             />
           </div>
 
-          <label className="flex items-center gap-2 text-sm text-first dark:text-fourth">
+          <label className="flex items-center gap-2 text-sm text-first dark:text-darkmodetext">
             <input
               type="checkbox"
               checked={formData.isHead}
@@ -340,7 +340,7 @@ export default function AddNewArrival() {
             type="button"
             onClick={handleCancel}
             disabled={isLoading}
-            className="px-6 py-2.5 rounded-lg font-medium border border-second/40 dark:border-second/30 text-first dark:text-fourth hover:bg-second/10 dark:hover:bg-second/30 disabled:opacity-50 transition"
+            className="px-6 py-2.5 rounded-lg font-medium border border-second/40 dark:border-second/30 text-first dark:text-darkmodetext hover:bg-second/10 dark:hover:bg-second/30 disabled:opacity-50 transition"
           >
             Huỷ bỏ
           </button>
@@ -397,14 +397,14 @@ function FormField({
         ? "border-red-500 dark:border-red-500"
         : "border-second/40 dark:border-second/30"
     }
-    text-first dark:text-fourth
-    placeholder:text-second dark:placeholder:text-fourth/40
-    focus:outline-none focus:ring-2 focus:ring-third transition
+    text-first dark:text-darkmodetext
+    placeholder:text-second dark:placeholder:text-darkmodetext/40
+    focus:outline-none focus:ring-1 focus:ring-selectring transition
   `;
 
   return (
     <div className="space-y-1">
-      <label className="block text-sm font-medium text-first dark:text-fourth">
+      <label className="block text-sm font-medium text-first dark:text-darkmodetext">
         {label}
         {required && <span className="text-red-500"> *</span>}
       </label>
@@ -439,7 +439,7 @@ function FormField({
         />
       )}
       {helperText && (
-        <p className="text-xs text-second dark:text-fourth/60">{helperText}</p>
+        <p className="text-xs text-second dark:text-darkmodetext/60">{helperText}</p>
       )}
       {error && <p className="text-xs text-red-500">{error}</p>}
     </div>
@@ -448,8 +448,13 @@ function FormField({
 
 function SectionTitle({ title }: { title: string }) {
   return (
-    <h3 className="text-lg font-semibold text-first dark:text-fourth">
+    <h3 className="text-lg font-semibold text-first dark:text-darkmodetext">
       {title}
     </h3>
   );
 }
+
+
+
+
+

@@ -302,12 +302,12 @@ export default function HouseholdList() {
                 w-full pl-10 pr-4 py-2.5 rounded-lg
                 bg-white dark:bg-transparent dark:border
                 border border-second/40 dark:border-second/30
-                text-first dark:text-fourth
-                placeholder:text-second dark:placeholder:text-fourth/40
-                focus:outline-none focus:ring-2 focus:ring-third transition
+                text-first dark:text-darkmodetext
+                placeholder:text-second dark:placeholder:text-darkmodetext/40
+                focus:outline-none focus:ring-1 focus:ring-selectring transition
               "
             />
-            <Search className="w-5 h-5 absolute left-3 top-2.5 text-second dark:text-fourth/60" />
+            <Search className="w-5 h-5 absolute left-3 top-2.5 text-second dark:text-darkmodetext/60" />
           </div>
 
           {/* Sort Controls */}
@@ -321,8 +321,8 @@ export default function HouseholdList() {
                 px-4 py-2 rounded-lg text-sm font-medium
                 bg-white dark:bg-transparent dark:border
                 border border-second/40 dark:border-second/30
-                text-first dark:text-fourth
-                focus:outline-none focus:ring-2 focus:ring-third transition
+                text-first dark:text-darkmodetext
+                focus:outline-none focus:ring-1 focus:ring-selectring transition
               "
             >
               <option value="headName">Sắp xếp theo tên chủ hộ</option>
@@ -332,7 +332,7 @@ export default function HouseholdList() {
         </div>
 
         {/* Table Container */}
-        <div className="flex-1 bg-white dark:bg-transparent dark:border dark:border-second/40 dark:backdrop-blur-md rounded-xl shadow-sm dark:shadow-none overflow-hidden flex flex-col">
+        <div className="flex-1 bg-card text-card-foreground border border-border rounded-xl shadow-sm overflow-hidden flex flex-col">
           {isLoading ? (
             <div className="flex-1 flex items-center justify-center">
               <Loader className="w-8 h-8 text-third animate-spin" />
@@ -340,7 +340,7 @@ export default function HouseholdList() {
           ) : paginatedHouseholds.length === 0 ? (
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center">
-                <p className="text-second dark:text-fourth/70 text-lg">
+                <p className="text-second dark:text-darkmodetext/70 text-lg">
                   Không tìm thấy hộ khẩu nào
                 </p>
               </div>
@@ -352,22 +352,22 @@ export default function HouseholdList() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-second/40 dark:border-second/30 bg-second/5 dark:bg-second/10">
-                      <th className="px-4 py-3 text-left text-first dark:text-fourth font-semibold">
+                      <th className="px-4 py-3 text-left text-first dark:text-darkmodetext font-semibold">
                         Mã hộ khẩu
                       </th>
-                      <th className="px-4 py-3 text-left text-first dark:text-fourth font-semibold">
+                      <th className="px-4 py-3 text-left text-first dark:text-darkmodetext font-semibold">
                         Tên chủ hộ
                       </th>
-                      <th className="px-4 py-3 text-left text-first dark:text-fourth font-semibold">
+                      <th className="px-4 py-3 text-left text-first dark:text-darkmodetext font-semibold">
                         Địa chỉ
                       </th>
-                      <th className="px-4 py-3 text-left text-first dark:text-fourth font-semibold">
+                      <th className="px-4 py-3 text-left text-first dark:text-darkmodetext font-semibold">
                         Số người
                       </th>
-                      <th className="px-4 py-3 text-left text-first dark:text-fourth font-semibold">
+                      <th className="px-4 py-3 text-left text-first dark:text-darkmodetext font-semibold">
                         Ngày đăng kí
                       </th>
-                      <th className="px-4 py-3 text-center text-first dark:text-fourth font-semibold">
+                      <th className="px-4 py-3 text-center text-first dark:text-darkmodetext font-semibold">
                         Hành động
                       </th>
                     </tr>
@@ -379,19 +379,19 @@ export default function HouseholdList() {
                         className="border-b border-second/20 dark:border-second/20 hover:bg-second/5 dark:hover:bg-second/10 transition cursor-pointer"
                         onClick={() => handleViewHousehold(household)}
                       >
-                        <td className="px-4 py-3 text-first dark:text-fourth font-medium">
+                        <td className="px-4 py-3 text-first dark:text-darkmodetext font-medium">
                           {household.code}
                         </td>
-                        <td className="px-4 py-3 text-first dark:text-fourth">
+                        <td className="px-4 py-3 text-first dark:text-darkmodetext">
                           {household.headName}
                         </td>
-                        <td className="px-4 py-3 text-first dark:text-fourth max-w-xs truncate">
+                        <td className="px-4 py-3 text-first dark:text-darkmodetext max-w-xs truncate">
                           {household.address}
                         </td>
-                        <td className="px-4 py-3 text-first dark:text-fourth">
+                        <td className="px-4 py-3 text-first dark:text-darkmodetext">
                           {household.memberCount}
                         </td>
-                        <td className="px-4 py-3 text-first dark:text-fourth">
+                        <td className="px-4 py-3 text-first dark:text-darkmodetext">
                           {new Date(household.registrationDate).toLocaleDateString(
                             "vi-VN"
                           )}
@@ -416,7 +416,7 @@ export default function HouseholdList() {
 
               {/* Pagination */}
               <div className="border-t border-second/40 dark:border-second/30 px-4 py-3 flex items-center justify-between bg-second/5 dark:bg-second/10">
-                <p className="text-sm text-second dark:text-fourth/70">
+                <p className="text-sm text-second dark:text-darkmodetext/70">
                   Hiển thị {startIdx + 1}-{Math.min(startIdx + ITEMS_PER_PAGE, filteredHouseholds.length)} của{" "}
                   {filteredHouseholds.length}
                 </p>
@@ -426,7 +426,7 @@ export default function HouseholdList() {
                     disabled={currentPage === 1}
                     className="p-2 rounded-md hover:bg-second/20 dark:hover:bg-second/30 disabled:opacity-50 transition"
                   >
-                    <ChevronLeft className="w-5 h-5 text-first dark:text-fourth" />
+                    <ChevronLeft className="w-5 h-5 text-first dark:text-darkmodetext" />
                   </button>
 
                   <div className="flex items-center gap-1">
@@ -440,7 +440,7 @@ export default function HouseholdList() {
                             ${
                               currentPage === page
                                 ? "bg-third text-first"
-                                : "hover:bg-second/20 dark:hover:bg-second/30 text-first dark:text-fourth"
+                                : "hover:bg-second/20 dark:hover:bg-second/30 text-first dark:text-darkmodetext"
                             }
                           `}
                         >
@@ -457,7 +457,7 @@ export default function HouseholdList() {
                     disabled={currentPage === totalPages}
                     className="p-2 rounded-md hover:bg-second/20 dark:hover:bg-second/30 disabled:opacity-50 transition"
                   >
-                    <ChevronRight className="w-5 h-5 text-first dark:text-fourth" />
+                    <ChevronRight className="w-5 h-5 text-first dark:text-darkmodetext" />
                   </button>
                 </div>
               </div>
@@ -475,3 +475,8 @@ export default function HouseholdList() {
     </div>
   );
 }
+
+
+
+
+

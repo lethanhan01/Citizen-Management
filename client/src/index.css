@@ -2,6 +2,21 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@theme {
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-selectring: var(--selectring);
+}
+
 :root {
   /* RGB values for Tailwind */
   --first-rgb: 44 43 45;
@@ -17,23 +32,35 @@
   --fourth: #f7f7f7;/*light background*/
   --fifth:  #e6e6e6;/*some hover ring*/
   --sixth: #d3d3d3; /*test*/
+  --seventh: #313132; /*dark mode card background*/
+  --eighth: #f3f3f3; /*light mode card background*/
+  --darkmodetext: #ffffff; /*dark mode text*/
+  --lightmodetext: #000000; /*light mode text*/
+  --selectring: #9b9b9b; /*input focus ring*/
+  
+
+
+  /* Inline hex preservation (used in components) */
+  --hex-dark-bg-static: #2c2b2d; /* matches --first */
+  --hex-hover-gray-static: #d3d3d3; /* matches --sixth */
+  --hex-white-static: #ffffff; /* plain white */
 
   --background: var(--fourth);
-  --foreground: var(--first);
-  --card: var(--fourth);
-  --card-foreground: var(--first);
+  --foreground: var(--lightmodetext);
+  --card: var(--eighth);
+  --card-foreground: var(--lightmodetext);
 
   --primary: var(--third);
-  --primary-foreground: var(--first);
+  --primary-foreground: var(--lightmodetext);
 
   --secondary: var(--second);
   --secondary-foreground: #ffffff;
 
   --accent: var(--third);
-  --accent-foreground: var(--first);
+  --accent-foreground: var(--lightmodetext);
 
   --muted: var(--second);
-  --muted-foreground: var(--first);
+  --muted-foreground: var(--lightmodetext);
 
   --border: #d1d5db;
   --input: var(--second);
@@ -42,14 +69,9 @@
   --sidebar: var(--second);
   --sidebar-foreground: var(--fourth);
   --sidebar-primary: var(--third);
-  --sidebar-primary-foreground: var(--first);
+  --sidebar-primary-foreground: var(--lightmodetext);
 
   --radius: 0.625rem;
-
-  /* Map to Tailwind base tokens */
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-border: var(--border);
 }
 
 a {
@@ -91,8 +113,8 @@ h1 {
 
  .input-theme:focus {
   outline: none !important;
-  box-shadow: 0 0 0 1px #95c6bd !important;
-  border-color: #95c6bd !important;
+  box-shadow: 0 0 0 1px #919191 !important;
+  border-color: #b4b4b4 !important;
 }
 
 /* ============================= */
@@ -127,10 +149,10 @@ h1 {
   color-scheme: dark;
 
   --background: var(--first);
-  --foreground: var(--fourth);
+  --foreground: var(--darkmodetext);
 
-  --card: var(--second);
-  --card-foreground: var(--fourth);
+  --card: var(--seventh);
+  --card-foreground: var(--darkmodetext);
 
   --primary: var(--third);
   --primary-foreground: var(--first);
@@ -142,21 +164,16 @@ h1 {
   --accent-foreground: var(--first);
 
   --muted: var(--second);
-  --muted-foreground: var(--fourth);
+  --muted-foreground: var(--darkmodetext);
 
   --border: #4b5563;
   --input: var(--second);
   --ring: var(--third);
 
   --sidebar: var(--first);
-  --sidebar-foreground: var(--fourth);
+  --sidebar-foreground: var(--darkmodetext);
   --sidebar-primary: var(--third);
   --sidebar-primary-foreground: var(--first);
-
-  /* Map to Tailwind base tokens */
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-border: var(--border);
 }
 
 /* Removed global dark button override to avoid unintended transparency on all buttons */

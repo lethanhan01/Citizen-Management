@@ -171,7 +171,7 @@ export default function AccountList() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4">
-        <h2 className="text-2xl font-bold text-first dark:text-fourth">Danh sách tài khoản</h2>
+        <h2 className="text-2xl font-bold text-first dark:text-darkmodetext">Danh sách tài khoản</h2>
         <button
           onClick={() => openModal()}
           className="flex items-center gap-2 px-4 py-2 bg-third text-first rounded-lg hover:bg-third/90 transition"
@@ -181,7 +181,7 @@ export default function AccountList() {
         </button>
       </div>
 
-      <div className="bg-white dark:bg-transparent dark:border dark:border-second/40 dark:backdrop-blur-md rounded-xl p-6 shadow-sm dark:shadow-none space-y-4">
+      <div className="bg-card text-card-foreground border border-border rounded-xl p-6 shadow-sm space-y-4">
         {/* Search + Sort */}
         <div className="flex flex-col lg:flex-row gap-3 lg:items-center justify-between">
           <div className="relative w-full lg:w-1/2">
@@ -189,7 +189,7 @@ export default function AccountList() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Tìm theo họ tên, username, email, SĐT"
-              className="w-full pl-10 pr-3 py-2.5 rounded-lg border border-second/40 dark:border-second/30 bg-white dark:bg-transparent text-first dark:text-fourth placeholder:text-second dark:placeholder:text-fourth/40 focus:outline-none focus:ring-2 focus:ring-third"
+              className="w-full pl-10 pr-3 py-2.5 rounded-lg border border-input bg-card text-card-foreground placeholder:text-second dark:placeholder:text-darkmodetext/40 focus:outline-none focus:ring-1 focus:ring-selectring"
             />
             <Search className="w-4 h-4 text-second absolute left-3 top-3" />
           </div>
@@ -204,7 +204,7 @@ export default function AccountList() {
         {/* Bulk bar */}
         {selectedIds.length > 0 && (
           <div className="flex flex-wrap items-center gap-3 p-3 rounded-lg bg-second/10 dark:bg-second/20 border border-second/30 dark:border-second/30">
-            <span className="text-sm font-medium text-first dark:text-fourth">
+            <span className="text-sm font-medium text-first dark:text-darkmodetext">
               Đã chọn {selectedIds.length} tài khoản
             </span>
             <div className="flex gap-2 flex-wrap">
@@ -249,12 +249,12 @@ export default function AccountList() {
                     className="w-4 h-4 rounded"
                   />
                 </th>
-                <th className="py-3 px-3 text-first dark:text-fourth">Họ và tên</th>
-                <th className="py-3 px-3 text-first dark:text-fourth">Username</th>
-                <th className="py-3 px-3 text-first dark:text-fourth">Vai trò</th>
-                <th className="py-3 px-3 text-first dark:text-fourth">Trạng thái</th>
-                <th className="py-3 px-3 text-first dark:text-fourth">Ngày tạo</th>
-                <th className="py-3 px-3 text-first dark:text-fourth text-center">Hành động</th>
+                <th className="py-3 px-3 text-first dark:text-darkmodetext">Họ và tên</th>
+                <th className="py-3 px-3 text-first dark:text-darkmodetext">Username</th>
+                <th className="py-3 px-3 text-first dark:text-darkmodetext">Vai trò</th>
+                <th className="py-3 px-3 text-first dark:text-darkmodetext">Trạng thái</th>
+                <th className="py-3 px-3 text-first dark:text-darkmodetext">Ngày tạo</th>
+                <th className="py-3 px-3 text-first dark:text-darkmodetext text-center">Hành động</th>
               </tr>
             </thead>
             <tbody>
@@ -271,9 +271,9 @@ export default function AccountList() {
                       className="w-4 h-4 rounded"
                     />
                   </td>
-                  <td className="py-3 px-3 text-first dark:text-fourth font-medium">{acc.fullName}</td>
-                  <td className="py-3 px-3 text-first dark:text-fourth">{acc.username}</td>
-                  <td className="py-3 px-3 text-first dark:text-fourth">{ROLE_LABEL[acc.role]}</td>
+                  <td className="py-3 px-3 text-first dark:text-darkmodetext font-medium">{acc.fullName}</td>
+                  <td className="py-3 px-3 text-first dark:text-darkmodetext">{acc.username}</td>
+                  <td className="py-3 px-3 text-first dark:text-darkmodetext">{ROLE_LABEL[acc.role]}</td>
                   <td className="py-3 px-3">
                     <span
                       className={`px-2 py-1 rounded-full text-xs font-semibold ${
@@ -285,7 +285,7 @@ export default function AccountList() {
                       {acc.status}
                     </span>
                   </td>
-                  <td className="py-3 px-3 text-first dark:text-fourth">{acc.createdAt}</td>
+                  <td className="py-3 px-3 text-first dark:text-darkmodetext">{acc.createdAt}</td>
                   <td className="py-3 px-3 text-center">
                     <div className="flex items-center justify-center gap-2">
                       <button
@@ -306,7 +306,7 @@ export default function AccountList() {
               ))}
               {filteredAccounts.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="py-4 text-center text-second dark:text-fourth/70">
+                  <td colSpan={7} className="py-4 text-center text-second dark:text-darkmodetext/70">
                     Không có tài khoản nào
                   </td>
                 </tr>
@@ -323,15 +323,15 @@ export default function AccountList() {
           onClick={closeModal}
         >
           <div
-            className="modal-content bg-white dark:bg-first rounded-xl shadow-2xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto"
+            className="modal-content bg-card text-card-foreground rounded-xl shadow-2xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-first dark:text-fourth">
+              <h3 className="text-lg font-semibold text-first dark:text-darkmodetext">
                 {editingAccount ? "Chỉnh sửa tài khoản" : "Thêm tài khoản mới"}
               </h3>
               <button onClick={closeModal} className="p-2 hover:bg-second/10 dark:hover:bg-second/30 rounded-lg">
-                <X className="w-5 h-5 text-first dark:text-fourth" />
+                <X className="w-5 h-5 text-first dark:text-darkmodetext" />
               </button>
             </div>
 
@@ -364,13 +364,13 @@ export default function AccountList() {
                 onChange={(v) => setFormData({ ...formData, cccd: v })}
               />
               <div>
-                <label className="block text-sm font-medium text-first dark:text-fourth mb-1">
+                <label className="block text-sm font-medium text-first dark:text-darkmodetext mb-1">
                   Vai trò
                 </label>
                 <select
                   value={formData.role}
                   onChange={(e) => setFormData({ ...formData, role: e.target.value as Role })}
-                  className="w-full px-3 py-2 rounded-lg border border-second/40 dark:border-second/30 bg-white dark:bg-transparent text-first dark:text-fourth focus:outline-none focus:ring-2 focus:ring-third"
+                  className="w-full px-3 py-2 rounded-lg border border-input bg-card text-card-foreground focus:outline-none focus:ring-1 focus:ring-selectring"
                 >
                   <option value="admin">Quản trị viên</option>
                   <option value="staff">Nhân viên</option>
@@ -379,13 +379,13 @@ export default function AccountList() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-first dark:text-fourth mb-1">
+                <label className="block text-sm font-medium text-first dark:text-darkmodetext mb-1">
                   Trạng thái
                 </label>
                 <select
                   value={formData.status}
                   onChange={(e) => setFormData({ ...formData, status: e.target.value as Status })}
-                  className="w-full px-3 py-2 rounded-lg border border-second/40 dark:border-second/30 bg-white dark:bg-transparent text-first dark:text-fourth focus:outline-none focus:ring-2 focus:ring-third"
+                  className="w-full px-3 py-2 rounded-lg border border-input bg-card text-card-foreground focus:outline-none focus:ring-1 focus:ring-selectring"
                 >
                   <option value="Hoạt động">Hoạt động</option>
                   <option value="Khóa">Khóa</option>
@@ -404,7 +404,7 @@ export default function AccountList() {
               <button
                 onClick={closeModal}
                 disabled={isLoading}
-                className="flex-1 px-4 py-2 rounded-lg border border-second/40 dark:border-second/30 text-first dark:text-fourth hover:bg-second/10 dark:hover:bg-second/30 disabled:opacity-50"
+                className="flex-1 px-4 py-2 rounded-lg border border-second/40 dark:border-second/30 text-first dark:text-darkmodetext hover:bg-second/10 dark:hover:bg-second/30 disabled:opacity-50"
               >
                 Hủy bỏ
               </button>
@@ -440,7 +440,7 @@ function SortButton({ label, active, onClick }: { label: string; active: boolean
       className={`px-3 py-2 rounded-lg border text-sm font-medium transition ${
         active
           ? "bg-third text-first border-third"
-          : "border-second/40 dark:border-second/30 text-first dark:text-fourth hover:bg-second/10 dark:hover:bg-second/30"
+          : "border-second/40 dark:border-second/30 text-first dark:text-darkmodetext hover:bg-second/10 dark:hover:bg-second/30"
       }`}
     >
       {label}
@@ -463,15 +463,20 @@ function Field({
 }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-first dark:text-fourth mb-1">
+      <label className="block text-sm font-medium text-first dark:text-darkmodetext mb-1">
         {label} {required && <span className="text-red-500">*</span>}
       </label>
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full px-3 py-2 rounded-lg border border-second/40 dark:border-second/30 bg-white dark:bg-transparent text-first dark:text-fourth focus:outline-none focus:ring-2 focus:ring-third"
+        className="w-full px-3 py-2 rounded-lg border border-input bg-card text-card-foreground focus:outline-none focus:ring-1 focus:ring-selectring"
       />
     </div>
   );
 }
+
+
+
+
+

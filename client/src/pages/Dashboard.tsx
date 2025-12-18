@@ -7,20 +7,20 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-first dark:text-fourth">
+      <h2 className="text-2xl font-bold text-foreground">
         Thống kê tổng quan
       </h2>
 
       {/* TABS */}
-      <div className="flex gap-4 border-b border-second/40 dark:border-second/30">
+      <div className="flex gap-4 border-b border-border">
         <button
           onClick={() => setActiveTab("citizens")}
           className={`
             px-4 py-2 font-medium transition border-b-2
             ${
               activeTab === "citizens"
-                ? "border-third text-first dark:text-fourth"
-                : "border-transparent text-second dark:text-fourth/70 hover:text-first dark:hover:text-fourth"
+                ? "border-primary text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground"
             }
           `}
         >
@@ -32,8 +32,8 @@ export default function Dashboard() {
             px-4 py-2 font-medium transition border-b-2
             ${
               activeTab === "fees"
-                ? "border-third text-first dark:text-fourth"
-                : "border-transparent text-second dark:text-fourth/70 hover:text-first dark:hover:text-fourth"
+                ? "border-primary text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground"
             }
           `}
         >
@@ -103,17 +103,22 @@ function StatCard({
   color: string;
 }) {
   return (
-    <div className="bg-white dark:bg-transparent dark:border dark:border-second/40 dark:backdrop-blur-md rounded-xl p-6 shadow-sm dark:shadow-none">
+    <div className="bg-card text-card-foreground border border-border rounded-xl p-6 shadow-sm">
       <div className="flex items-center gap-4">
         <div className={`w-12 h-12 rounded-lg ${color} flex items-center justify-center text-white font-bold text-xl`}>
           {value.charAt(0)}
         </div>
         <div>
-          <p className="text-sm text-second dark:text-fourth/70">{title}</p>
-          <p className="text-2xl font-bold text-first dark:text-fourth">{value}</p>
-          <p className="text-xs text-second dark:text-fourth/70">{subtitle}</p>
+          <p className="text-sm text-muted-foreground">{title}</p>
+          <p className="text-2xl font-bold text-foreground">{value}</p>
+          <p className="text-xs text-muted-foreground">{subtitle}</p>
         </div>
       </div>
     </div>
   );
 }
+
+
+
+
+

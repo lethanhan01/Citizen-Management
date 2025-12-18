@@ -12,9 +12,9 @@ export default function ThemeToggleButton() {
       className="
         fixed bottom-4 right-4 z-50
         w-10 h-10 rounded-full
-        bg-white text-first dark:bg-[#2c2b2d] dark:text-first
+        bg-card text-foreground dark:bg-[var(--hex-dark-bg-static)]
         flex items-center justify-center
-        shadow-md hover:shadow-lg hover:bg-[#d3d3d3]/50 dark:hover:bg-white/10 
+        shadow-md hover:shadow-lg hover:bg-[var(--hex-hover-gray-static)]/50 dark:hover:bg-[var(--hex-white-static)]/10
         transition active:scale-95 font-bold
       "
       aria-label="Chuyển đổi chế độ sáng/tối"
@@ -27,3 +27,8 @@ export default function ThemeToggleButton() {
     </button>
   );
 }
+
+
+
+
+

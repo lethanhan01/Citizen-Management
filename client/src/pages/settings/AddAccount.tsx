@@ -44,11 +44,11 @@ export default function AddAccount() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-first dark:text-fourth">Thêm tài khoản mới</h2>
+        <h2 className="text-2xl font-bold text-foreground">Thêm tài khoản mới</h2>
       </div>
 
-      <div className="bg-white dark:bg-transparent dark:border dark:border-second/40 dark:backdrop-blur-md rounded-xl p-6 shadow-sm dark:shadow-none space-y-6">
-        <p className="text-second dark:text-fourth/70 mb-6">
+      <div className="bg-card text-card-foreground border border-border rounded-xl p-6 shadow-sm space-y-6">
+        <p className="text-muted-foreground mb-6">
           Nhập thông tin tài khoản. Mật khẩu mặc định có thể thay đổi sau khi người dùng đăng nhập lần đầu.
         </p>
 
@@ -61,11 +61,11 @@ export default function AddAccount() {
           <Field label="CCCD" value={form.cccd} onChange={(v) => update("cccd", v)} />
 
           <div>
-            <label className="block text-sm font-medium text-first dark:text-fourth mb-1">Vai trò</label>
+            <label className="block text-sm font-medium text-foreground mb-1">Vai trò</label>
             <select
               value={form.role}
               onChange={(e) => update("role", e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-second/40 dark:border-second/30 bg-white dark:bg-transparent text-first dark:text-fourth focus:outline-none focus:ring-2 focus:ring-third"
+              className="w-full px-3 py-2 rounded-lg border border-input bg-card text-card-foreground focus:outline-none focus:ring-1 focus:ring-selectring"
             >
               <option value="admin">Quản trị viên</option>
               <option value="staff">Nhân viên</option>
@@ -74,11 +74,11 @@ export default function AddAccount() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-first dark:text-fourth mb-1">Trạng thái</label>
+            <label className="block text-sm font-medium text-foreground mb-1">Trạng thái</label>
             <select
               value={form.status}
               onChange={(e) => update("status", e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-second/40 dark:border-second/30 bg-white dark:bg-transparent text-first dark:text-fourth focus:outline-none focus:ring-2 focus:ring-third"
+              className="w-full px-3 py-2 rounded-lg border border-input bg-card text-card-foreground focus:outline-none focus:ring-1 focus:ring-selectring"
             >
               <option value="Hoạt động">Hoạt động</option>
               <option value="Khóa">Khóa</option>
@@ -90,7 +90,7 @@ export default function AddAccount() {
           <button
             onClick={handleSubmit}
             disabled={isLoading || !form.fullName.trim() || !form.username.trim()}
-            className="w-full md:w-fit px-5 py-2 rounded-lg bg-third text-first hover:bg-third/90 disabled:opacity-50 flex items-center justify-center gap-2"
+            className="w-full md:w-fit px-5 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {isLoading ? <Loader className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}Tạo tài khoản
           </button>
@@ -114,14 +114,19 @@ function Field({
 }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-first dark:text-fourth mb-1">
+      <label className="block text-sm font-medium text-foreground mb-1">
         {label} {required && <span className="text-red-500">*</span>}
       </label>
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full px-3 py-2 rounded-lg border border-second/40 dark:border-second/30 bg-white dark:bg-transparent text-first dark:text-fourth focus:outline-none focus:ring-2 focus:ring-third"
+        className="w-full px-3 py-2 rounded-lg border border-input bg-card text-card-foreground focus:outline-none focus:ring-1 focus:ring-selectring"
       />
     </div>
   );
 }
+
+
+
+
+

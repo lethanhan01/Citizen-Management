@@ -10,7 +10,7 @@ const LoadingFallback = () => <div>Đang tải trang...</div>;
 
 const AppLayout = () => {
   return (
-    <div className="flex h-screen w-full bg-fourth dark:bg-first">
+    <div className="flex h-screen w-full bg-background">
       {/* SIDEBAR */}
       <Sidebar />
 
@@ -20,7 +20,7 @@ const AppLayout = () => {
         <TopBar />
 
         {/* PAGE CONTENT */}
-        <main className="flex-1 p-8 text-first dark:text-fourth overflow-auto min-h-0">
+        <main className="flex-1 p-8 text-foreground overflow-auto min-h-0">
           <ErrorBoundary FallbackComponent={ErrorFallback}>
             <Suspense fallback={<LoadingFallback />}>
               <Outlet />
@@ -36,3 +36,8 @@ const AppLayout = () => {
 };
 
 export default AppLayout;
+
+
+
+
+

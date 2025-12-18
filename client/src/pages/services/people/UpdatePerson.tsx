@@ -197,12 +197,12 @@ export default function UpdatePerson() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-first dark:text-fourth">
+      <h2 className="text-2xl font-bold text-first dark:text-darkmodetext">
         Thay đổi thông tin nhân khẩu
       </h2>
 
       {/* Search */}
-      <div className="bg-white dark:bg-transparent dark:border dark:border-second/40 dark:backdrop-blur-md rounded-xl p-4 shadow-sm dark:shadow-none">
+      <div className="bg-card text-card-foreground border border-border rounded-xl p-6 shadow-sm">
         <div className="flex flex-col md:flex-row md:items-center gap-3">
           <div className="flex items-center gap-2 flex-1">
             <Search className="w-4 h-4 text-second" />
@@ -210,21 +210,21 @@ export default function UpdatePerson() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Tìm theo họ tên, CCCD, mã hộ"
-              className="w-full px-3 py-2 rounded-lg border border-second/40 dark:border-second/30 bg-white dark:bg-transparent text-first dark:text-fourth focus:outline-none focus:ring-2 focus:ring-third"
+              className="w-full px-3 py-2 rounded-lg border border-input bg-card text-card-foreground focus:outline-none focus:ring-1 focus:ring-selectring"
             />
           </div>
-          <span className="text-sm text-second dark:text-fourth/70">
+          <span className="text-sm text-second dark:text-darkmodetext/70">
             Kết quả: {filtered.length}
           </span>
         </div>
       </div>
 
       {/* Table */}
-      <div className="bg-white dark:bg-transparent dark:border dark:border-second/40 dark:backdrop-blur-md rounded-xl p-4 shadow-sm dark:shadow-none">
+      <div className="bg-card text-card-foreground border border-border rounded-xl p-6 shadow-sm">
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm">
             <thead>
-              <tr className="text-left text-second dark:text-fourth/70 border-b border-second/20 dark:border-second/30">
+              <tr className="text-left text-second dark:text-darkmodetext/70 border-b border-second/20 dark:border-second/30">
                 <th className="py-3 px-2">Họ tên</th>
                 <th className="py-3 px-2">CCCD</th>
                 <th className="py-3 px-2">Mã hộ</th>
@@ -239,12 +239,12 @@ export default function UpdatePerson() {
                   key={c.id}
                   className="border-b border-second/10 dark:border-second/20 hover:bg-second/10 dark:hover:bg-second/20 transition"
                 >
-                  <td className="py-3 px-2 font-medium text-first dark:text-fourth">
+                  <td className="py-3 px-2 font-medium text-first dark:text-darkmodetext">
                     {c.fullName}
                   </td>
-                  <td className="py-3 px-2 text-first dark:text-fourth">{c.cccd}</td>
-                  <td className="py-3 px-2 text-first dark:text-fourth">{c.householdCode}</td>
-                  <td className="py-3 px-2 text-first dark:text-fourth">{c.address}</td>
+                  <td className="py-3 px-2 text-first dark:text-darkmodetext">{c.cccd}</td>
+                  <td className="py-3 px-2 text-first dark:text-darkmodetext">{c.householdCode}</td>
+                  <td className="py-3 px-2 text-first dark:text-darkmodetext">{c.address}</td>
                   <td className="py-3 px-2">
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-semibold ${
@@ -261,7 +261,7 @@ export default function UpdatePerson() {
                   <td className="py-3 px-2 text-center">
                     <button
                       onClick={() => startEdit(c)}
-                      className="p-2 rounded-lg border border-second/30 hover:bg-second/20 dark:hover:bg-second/30 text-first dark:text-fourth"
+                      className="p-2 rounded-lg border border-second/30 hover:bg-second/20 dark:hover:bg-second/30 text-first dark:text-darkmodetext"
                       aria-label="Chỉnh sửa"
                     >
                       <Pencil className="w-4 h-4" />
@@ -271,7 +271,7 @@ export default function UpdatePerson() {
               ))}
               {filtered.length === 0 && (
                 <tr>
-                  <td className="py-4 text-center text-second dark:text-fourth/70" colSpan={6}>
+                  <td className="py-4 text-center text-second dark:text-darkmodetext/70" colSpan={6}>
                     Không tìm thấy kết quả
                   </td>
                 </tr>
@@ -292,16 +292,16 @@ export default function UpdatePerson() {
             className="flex-1 bg-black/40 dark:bg-black/50"
             onClick={closeDrawer}
           />
-          <div className="w-full md:w-[45%] lg:w-[38%] h-full bg-white dark:bg-first border-l border-second/30 p-6 overflow-y-auto shadow-2xl">
+          <div className="w-full md:w-[45%] lg:w-[38%] h-full bg-card text-card-foreground border-l border-border p-6 overflow-y-auto shadow-2xl">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-first dark:text-fourth">
+              <h3 className="text-lg font-semibold text-first dark:text-darkmodetext">
                 Chỉnh sửa thông tin
               </h3>
               <button
                 onClick={closeDrawer}
                 className="p-2 rounded-lg hover:bg-second/10 dark:hover:bg-second/30"
               >
-                <X className="w-5 h-5 text-first dark:text-fourth" />
+                <X className="w-5 h-5 text-first dark:text-darkmodetext" />
               </button>
             </div>
 
@@ -418,7 +418,7 @@ export default function UpdatePerson() {
                   />
                 </div>
 
-                <label className="flex items-center gap-2 text-sm text-first dark:text-fourth">
+                <label className="flex items-center gap-2 text-sm text-first dark:text-darkmodetext">
                   <input
                     type="checkbox"
                     checked={formData.isHead || false}
@@ -431,7 +431,7 @@ export default function UpdatePerson() {
 
               {/* Status toggles */}
               <Section title="Trạng thái đặc biệt">
-                <label className="flex items-center gap-2 text-sm text-first dark:text-fourth">
+                <label className="flex items-center gap-2 text-sm text-first dark:text-darkmodetext">
                   <input
                     type="checkbox"
                     checked={formData.isDeceased || false}
@@ -440,7 +440,7 @@ export default function UpdatePerson() {
                   />
                   Đã qua đời
                 </label>
-                <p className="text-xs text-second dark:text-fourth/60">
+                <p className="text-xs text-second dark:text-darkmodetext/60">
                   "Chuyển đi nơi khác" sẽ đổi trạng thái sang Đã chuyển đi và vẫn giữ hồ sơ.
                 </p>
               </Section>
@@ -448,7 +448,7 @@ export default function UpdatePerson() {
               <div className="flex flex-col sm:flex-row gap-3 justify-end border-t border-second/20 dark:border-second/30 pt-4">
                 <button
                   onClick={markMovedAway}
-                  className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-second/40 dark:border-second/30 text-first dark:text-fourth hover:bg-second/10 dark:hover:bg-second/30"
+                  className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-second/40 dark:border-second/30 text-first dark:text-darkmodetext hover:bg-second/10 dark:hover:bg-second/30"
                   type="button"
                 >
                   <UserX className="w-4 h-4" />
@@ -456,7 +456,7 @@ export default function UpdatePerson() {
                 </button>
                 <button
                   onClick={toggleDeceased}
-                  className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-second/40 dark:border-second/30 text-first dark:text-fourth hover:bg-second/10 dark:hover:bg-second/30"
+                  className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-second/40 dark:border-second/30 text-first dark:text-darkmodetext hover:bg-second/10 dark:hover:bg-second/30"
                   type="button"
                 >
                   <HeartPulse className="w-4 h-4" />
@@ -482,7 +482,7 @@ export default function UpdatePerson() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="space-y-3">
-      <h4 className="text-sm font-semibold text-first dark:text-fourth">{title}</h4>
+      <h4 className="text-sm font-semibold text-first dark:text-darkmodetext">{title}</h4>
       {children}
     </div>
   );
@@ -502,14 +502,14 @@ function Field({ label, value, onChange, type = "text", options, error }: FieldP
     w-full px-3 py-2 rounded-lg
     bg-white dark:bg-transparent dark:border
     border ${error ? "border-red-500" : "border-second/40 dark:border-second/30"}
-    text-first dark:text-fourth
-    placeholder:text-second dark:placeholder:text-fourth/40
-    focus:outline-none focus:ring-2 focus:ring-third
+    text-first dark:text-darkmodetext
+    placeholder:text-second dark:placeholder:text-darkmodetext/40
+    focus:outline-none focus:ring-1 focus:ring-selectring
   `;
 
   return (
     <div className="space-y-1">
-      <label className="text-sm font-medium text-first dark:text-fourth">{label}</label>
+      <label className="text-sm font-medium text-first dark:text-darkmodetext">{label}</label>
       {type === "textarea" ? (
         <textarea
           className={base}
@@ -542,3 +542,8 @@ function Field({ label, value, onChange, type = "text", options, error }: FieldP
     </div>
   );
 }
+
+
+
+
+

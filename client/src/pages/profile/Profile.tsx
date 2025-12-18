@@ -87,10 +87,10 @@ export default function Profile() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-first dark:text-fourth">Thông tin tài khoản</h2>
+      <h2 className="text-2xl font-bold text-first dark:text-darkmodetext">Thông tin tài khoản</h2>
 
       {/* Account Info Card */}
-      <div className="bg-white dark:bg-transparent dark:border dark:border-second/40 dark:backdrop-blur-md rounded-xl p-6 shadow-sm dark:shadow-none">
+      <div className="bg-card text-card-foreground border border-border rounded-xl p-6 shadow-sm">
         <div className="flex items-start gap-6 mb-6">
           {/* Avatar */}
           <div className="flex-shrink-0">
@@ -119,7 +119,7 @@ export default function Profile() {
         <div className="flex flex-wrap gap-3 pt-4 border-t border-second/20 dark:border-second/30">
           <button
             onClick={handleChangePassword}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-second/40 dark:border-second/30 text-first dark:text-fourth hover:bg-second/10 dark:hover:bg-second/30 transition"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-second/40 dark:border-second/30 text-first dark:text-darkmodetext hover:bg-second/10 dark:hover:bg-second/30 transition"
           >
             <Lock className="w-4 h-4" />
             Đổi mật khẩu
@@ -141,23 +141,23 @@ export default function Profile() {
           onClick={() => setShowPasswordModal(false)}
         >
           <div
-            className="bg-white dark:bg-first rounded-xl shadow-2xl p-6 w-full max-w-md"
+            className="bg-card text-card-foreground rounded-xl shadow-2xl p-6 w-full max-w-md"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-first dark:text-fourth">Đổi mật khẩu</h3>
+              <h3 className="text-lg font-semibold text-first dark:text-darkmodetext">Đổi mật khẩu</h3>
               <button
                 onClick={() => setShowPasswordModal(false)}
                 className="p-2 hover:bg-second/10 dark:hover:bg-second/30 rounded-lg"
               >
-                <Lock className="w-5 h-5 text-first dark:text-fourth" />
+                <Lock className="w-5 h-5 text-first dark:text-darkmodetext" />
               </button>
             </div>
 
             <div className="space-y-4">
               {/* Old Password */}
               <div>
-                <label className="block text-sm font-medium text-first dark:text-fourth mb-2">
+                <label className="block text-sm font-medium text-first dark:text-darkmodetext mb-2">
                   Mật khẩu cũ <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
@@ -166,7 +166,7 @@ export default function Profile() {
                     value={oldPassword}
                     onChange={(e) => setOldPassword(e.target.value)}
                     placeholder="Nhập mật khẩu cũ"
-                    className="w-full px-3 py-2 pr-10 rounded-lg border border-second/40 dark:border-second/30 bg-white dark:bg-transparent text-first dark:text-fourth focus:outline-none focus:ring-2 focus:ring-third"
+                    className="w-full px-3 py-2 pr-10 rounded-lg border border-input bg-card text-card-foreground focus:outline-none focus:ring-1 focus:ring-selectring"
                   />
                   <button
                     type="button"
@@ -184,7 +184,7 @@ export default function Profile() {
 
               {/* New Password */}
               <div>
-                <label className="block text-sm font-medium text-first dark:text-fourth mb-2">
+                <label className="block text-sm font-medium text-first dark:text-darkmodetext mb-2">
                   Mật khẩu mới <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
@@ -193,7 +193,7 @@ export default function Profile() {
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     placeholder="Nhập mật khẩu mới"
-                    className="w-full px-3 py-2 pr-10 rounded-lg border border-second/40 dark:border-second/30 bg-white dark:bg-transparent text-first dark:text-fourth focus:outline-none focus:ring-2 focus:ring-third"
+                    className="w-full px-3 py-2 pr-10 rounded-lg border border-input bg-card text-card-foreground focus:outline-none focus:ring-1 focus:ring-selectring"
                   />
                   <button
                     type="button"
@@ -211,7 +211,7 @@ export default function Profile() {
 
               {/* Confirm Password */}
               <div>
-                <label className="block text-sm font-medium text-first dark:text-fourth mb-2">
+                <label className="block text-sm font-medium text-first dark:text-darkmodetext mb-2">
                   Nhập lại mật khẩu mới <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
@@ -220,7 +220,7 @@ export default function Profile() {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Nhập lại mật khẩu mới"
-                    className="w-full px-3 py-2 pr-10 rounded-lg border border-second/40 dark:border-second/30 bg-white dark:bg-transparent text-first dark:text-fourth focus:outline-none focus:ring-2 focus:ring-third"
+                    className="w-full px-3 py-2 pr-10 rounded-lg border border-input bg-card text-card-foreground focus:outline-none focus:ring-1 focus:ring-selectring"
                   />
                   <button
                     type="button"
@@ -242,7 +242,7 @@ export default function Profile() {
                 <button
                   onClick={() => setShowPasswordModal(false)}
                   disabled={isLoading}
-                  className="flex-1 px-4 py-2 rounded-lg border border-second/40 dark:border-second/30 text-first dark:text-fourth hover:bg-second/10 dark:hover:bg-second/30 disabled:opacity-50"
+                  className="flex-1 px-4 py-2 rounded-lg border border-second/40 dark:border-second/30 text-first dark:text-darkmodetext hover:bg-second/10 dark:hover:bg-second/30 disabled:opacity-50"
                 >
                   Hủy bỏ
                 </button>
@@ -273,20 +273,20 @@ export default function Profile() {
           onClick={() => setShowLogoutConfirm(false)}
         >
           <div
-            className="bg-white dark:bg-first rounded-xl shadow-2xl p-6 w-full max-w-sm"
+            className="bg-card text-card-foreground rounded-xl shadow-2xl p-6 w-full max-w-sm"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="text-center space-y-4">
               <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 mx-auto flex items-center justify-center">
                 <LogOut className="w-6 h-6 text-red-600 dark:text-red-400" />
               </div>
-              <h3 className="text-lg font-semibold text-first dark:text-fourth">Xác nhận đăng xuất</h3>
-              <p className="text-sm text-second dark:text-fourth/70">Bạn có chắc chắn muốn đăng xuất?</p>
+              <h3 className="text-lg font-semibold text-first dark:text-darkmodetext">Xác nhận đăng xuất</h3>
+              <p className="text-sm text-second dark:text-darkmodetext/70">Bạn có chắc chắn muốn đăng xuất?</p>
 
               <div className="flex gap-3 pt-2">
                 <button
                   onClick={() => setShowLogoutConfirm(false)}
-                  className="flex-1 px-4 py-2 rounded-lg border border-second/40 dark:border-second/30 text-first dark:text-fourth hover:bg-second/10 dark:hover:bg-second/30"
+                  className="flex-1 px-4 py-2 rounded-lg border border-second/40 dark:border-second/30 text-first dark:text-darkmodetext hover:bg-second/10 dark:hover:bg-second/30"
                 >
                   Không
                 </button>
@@ -308,8 +308,13 @@ export default function Profile() {
 function InfoField({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <label className="block text-xs font-medium text-second dark:text-fourth/70 mb-1">{label}</label>
-      <p className="text-sm text-first dark:text-fourth font-medium">{value}</p>
+      <label className="block text-xs font-medium text-second dark:text-darkmodetext/70 mb-1">{label}</label>
+      <p className="text-sm text-first dark:text-darkmodetext font-medium">{value}</p>
     </div>
   );
 }
+
+
+
+
+

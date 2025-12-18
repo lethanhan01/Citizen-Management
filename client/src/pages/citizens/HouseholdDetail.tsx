@@ -7,12 +7,12 @@ export default function HouseholdDetail() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-first dark:text-fourth">
+      <h2 className="text-2xl font-bold text-foreground">
         Chi tiết hộ khẩu #{id}
       </h2>
 
-      <div className="bg-white dark:bg-transparent dark:border dark:border-second/40 dark:backdrop-blur-md rounded-xl p-6 shadow-sm dark:shadow-none">
-        <p className="text-second dark:text-fourth/70">
+      <div className="bg-card text-card-foreground border border-border rounded-xl p-6 shadow-sm">
+        <p className="text-muted-foreground">
           Thông tin chi tiết hộ khẩu và danh sách thành viên
         </p>
         {/* Detail info sẽ được thêm sau */}
@@ -20,3 +20,8 @@ export default function HouseholdDetail() {
     </div>
   );
 }
+
+
+
+
+

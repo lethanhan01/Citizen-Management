@@ -19,32 +19,6 @@ export default function CitizenDetailPanel({
   const navigate = useNavigate();
   const { theme } = useTheme();
 
-  const palette = theme === "dark"
-    ? {
-        overlay: "rgba(0,0,0,0.5)",
-        bg: "#2c2b2d",
-        headerBg: "#2c2b2d",
-        border: "rgba(255,255,255,0.18)",
-        textPrimary: "#ffffff",
-        textSecondary: "rgba(255,255,255,0.70)",
-        icon: "#ffffff",
-        primaryBtnBg: "#495da7",
-        primaryBtnText: "#ffffff",
-        secondaryBtnText: "#ffffff",
-      }
-    : {
-        overlay: "rgba(0,0,0,0.30)",
-        bg: "#ffffff",
-        headerBg: "#ffffff",
-        border: "rgba(85,85,85,0.40)",
-        textPrimary: "#2c2b2d",
-        textSecondary: "#555555",
-        icon: "#2c2b2d",
-        primaryBtnBg: "#495da7",
-        primaryBtnText: "#2c2b2d",
-        secondaryBtnText: "#2c2b2d",
-      };
-
   if (!citizen) return null;
 
   const handleViewHousehold = () => {
@@ -60,8 +34,7 @@ export default function CitizenDetailPanel({
       {/* Overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-40 transition-opacity"
-          style={{ backgroundColor: palette.overlay }}
+          className="fixed inset-0 z-40 bg-black/50 dark:bg-black/30 transition-opacity cursor-pointer"
           onClick={onClose}
         />
       )}
@@ -70,32 +43,27 @@ export default function CitizenDetailPanel({
       <div
         className={`
           fixed top-0 right-0 h-full w-full md:w-[40%] lg:w-[35%]
-          
+          bg-card text-card-foreground
           shadow-2xl
           transform transition-transform duration-300 ease-in-out
           overflow-y-auto
-          z-51
+          z-51 border-l border-border
           ${isOpen ? "translate-x-0" : "translate-x-full"}
         `}
-        style={{ backgroundColor: palette.bg, borderLeft: `1px solid ${palette.border}` }}
       >
         {/* Header */}
         <div
-          className="sticky top-0 flex items-center justify-between p-6"
-          style={{
-            backgroundColor: palette.headerBg,
-            borderBottom: `1px solid ${palette.border}`,
-          }}
+          className="sticky top-0 flex items-center justify-between p-6 bg-card border-b border-border"
         >
-          <h3 className="text-lg font-bold" style={{ color: palette.textPrimary }}>
+          <h3 className="text-lg font-bold text-foreground">
             Chi tiết công dân
           </h3>
           <button
             onClick={onClose}
-            className="p-2 rounded-md transition hover:opacity-90"
+            className="p-2 rounded-md transition hover:opacity-90 text-foreground"
             aria-label="Close"
           >
-            <X className="w-5 h-5" style={{ color: palette.icon }} />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
@@ -132,10 +100,10 @@ export default function CitizenDetailPanel({
             </span>
             {citizen.isDeceased && (
               <span
-                className="px-3 py-1 rounded-full text-sm font-medium"
+                className="px-3 py-1 rounded-full text-sm font-medium text-muted-foreground"
                 style={theme === "dark"
-                  ? { backgroundColor: "rgba(17,24,39,0.30)", color: "#9CA3AF" }
-                  : { backgroundColor: "#F3F4F6", color: "#374151" }}
+                  ? { backgroundColor: "rgba(17,24,39,0.30)" }
+                  : { backgroundColor: "#F3F4F6" }}
               >
                 Đã qua đời
               </span>
@@ -144,61 +112,59 @@ export default function CitizenDetailPanel({
 
           {/* Basic Info */}
           <div className="space-y-4">
-            <h4 className="font-semibold" style={{ color: palette.textPrimary }}>
+            <h4 className="font-semibold text-foreground">
               Thông tin cơ bản
             </h4>
-            <DetailRow label="CCCD/CMND" value={citizen.cccd} colors={{ primary: palette.textPrimary, secondary: palette.textSecondary }} />
-            <DetailRow label="Họ và tên" value={citizen.fullName} colors={{ primary: palette.textPrimary, secondary: palette.textSecondary }} />
-            <DetailRow label="Ngày sinh" value={citizen.dateOfBirth} colors={{ primary: palette.textPrimary, secondary: palette.textSecondary }} />
-            <DetailRow label="Giới tính" value={citizen.gender} colors={{ primary: palette.textPrimary, secondary: palette.textSecondary }} />
-            <DetailRow label="Dân tộc" value={citizen.nationality || "N/A"} colors={{ primary: palette.textPrimary, secondary: palette.textSecondary }} />
-            <DetailRow label="Nguyên quán" value="N/A" colors={{ primary: palette.textPrimary, secondary: palette.textSecondary }} />
+            <DetailRow label="CCCD/CMND" value={citizen.cccd} />
+            <DetailRow label="Họ và tên" value={citizen.fullName} />
+            <DetailRow label="Ngày sinh" value={citizen.dateOfBirth} />
+            <DetailRow label="Giới tính" value={citizen.gender} />
+            <DetailRow label="Dân tộc" value={citizen.nationality || "N/A"} />
+            <DetailRow label="Nguyên quán" value="N/A" />
           </div>
 
           {/* Work Info */}
-          <div className="space-y-4 pt-4" style={{ borderTop: `1px solid ${palette.border}` }}>
-            <h4 className="font-semibold" style={{ color: palette.textPrimary }}>
+          <div className="space-y-4 pt-4 border-t border-border">
+            <h4 className="font-semibold text-foreground">
               Thông tin công việc
             </h4>
-            <DetailRow label="Nghề nghiệp" value={citizen.occupation || "N/A"} colors={{ primary: palette.textPrimary, secondary: palette.textSecondary }} />
-            <DetailRow label="Nơi làm việc" value={citizen.workplace || "N/A"} colors={{ primary: palette.textPrimary, secondary: palette.textSecondary }} />
+            <DetailRow label="Nghề nghiệp" value={citizen.occupation || "N/A"} />
+            <DetailRow label="Nơi làm việc" value={citizen.workplace || "N/A"} />
           </div>
 
           {/* ID Info */}
-          <div className="space-y-4 pt-4" style={{ borderTop: `1px solid ${palette.border}` }}>
-            <h4 className="font-semibold" style={{ color: palette.textPrimary }}>
+          <div className="space-y-4 pt-4 border-t border-border">
+            <h4 className="font-semibold text-foreground">
               Giấy tờ chứng thực
             </h4>
-            <DetailRow label="Số CCCD/CMND" value={citizen.cccd} colors={{ primary: palette.textPrimary, secondary: palette.textSecondary }} />
-            <DetailRow label="Ngày cấp" value={citizen.cmndCccdIssueDate || "N/A"} colors={{ primary: palette.textPrimary, secondary: palette.textSecondary }} />
-            <DetailRow label="Nơi cấp" value={citizen.cmndCccdIssuePlace || "N/A"} colors={{ primary: palette.textPrimary, secondary: palette.textSecondary }} />
+            <DetailRow label="Số CCCD/CMND" value={citizen.cccd} />
+            <DetailRow label="Ngày cấp" value={citizen.cmndCccdIssueDate || "N/A"} />
+            <DetailRow label="Nơi cấp" value={citizen.cmndCccdIssuePlace || "N/A"} />
           </div>
 
           {/* Residence Info */}
-          <div className="space-y-4 pt-4" style={{ borderTop: `1px solid ${palette.border}` }}>
-            <h4 className="font-semibold" style={{ color: palette.textPrimary }}>
+          <div className="space-y-4 pt-4 border-t border-border">
+            <h4 className="font-semibold text-foreground">
               Thông tin thường trú
             </h4>
-            <DetailRow label="Mã hộ gia đình" value={citizen.householdCode} colors={{ primary: palette.textPrimary, secondary: palette.textSecondary }} />
-            <DetailRow label="Địa chỉ" value={citizen.address} colors={{ primary: palette.textPrimary, secondary: palette.textSecondary }} />
+            <DetailRow label="Mã hộ gia đình" value={citizen.householdCode} />
+            <DetailRow label="Địa chỉ" value={citizen.address} />
             <DetailRow
               label="Ngày đăng ký"
               value={citizen.permanentResidenceDate || "N/A"}
-              colors={{ primary: palette.textPrimary, secondary: palette.textSecondary }}
             />
 
             {citizen.relationshipToHead && (
               <DetailRow
                 label="Mối quan hệ"
                 value={citizen.relationshipToHead}
-                colors={{ primary: palette.textPrimary, secondary: palette.textSecondary }}
               />
             )}
           </div>
 
           {/* Actions */}
-          <div className="space-y-3 pt-4" style={{ borderTop: `1px solid ${palette.border}` }}>
-            <h4 className="font-semibold" style={{ color: palette.textPrimary }}>
+          <div className="space-y-3 pt-4 border-t border-border">
+            <h4 className="font-semibold text-foreground">
               Hành động
             </h4>
 
@@ -208,8 +174,8 @@ export default function CitizenDetailPanel({
                 w-full px-4 py-2 rounded-lg
                 transition flex items-center justify-center gap-2 hover:opacity-90
                 font-medium text-sm
+                bg-primary text-white
               "
-              style={{ backgroundColor: palette.primaryBtnBg, color: palette.primaryBtnText }}
             >
               <LinkIcon className="w-4 h-4" />
               Xem toàn bộ hộ gia đình
@@ -221,8 +187,8 @@ export default function CitizenDetailPanel({
                 w-full px-4 py-2 rounded-lg
                 transition flex items-center justify-center gap-2 hover:opacity-90
                 font-medium text-sm
+                border border-border text-foreground
               "
-              style={{ border: `1px solid ${palette.border}`, color: palette.secondaryBtnText }}
             >
               <Eye className="w-4 h-4" />
               Chỉnh sửa thông tin
@@ -230,7 +196,7 @@ export default function CitizenDetailPanel({
           </div>
 
           {/* Deceased Checkbox */}
-          <div className="pt-4" style={{ borderTop: `1px solid ${palette.border}` }}>
+          <div className="pt-4 border-t border-border">
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
@@ -238,7 +204,7 @@ export default function CitizenDetailPanel({
                 readOnly
                 className="w-4 h-4 rounded"
               />
-              <span className="text-sm" style={{ color: palette.textPrimary }}>
+              <span className="text-sm text-foreground">
                 Đã qua đời
               </span>
             </label>
@@ -249,15 +215,20 @@ export default function CitizenDetailPanel({
   );
 }
 
-function DetailRow({ label, value, colors }: { label: string; value: string; colors: { primary: string; secondary: string } }) {
+function DetailRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between items-start gap-4">
-      <span className="text-sm font-medium" style={{ color: colors.secondary }}>
+      <span className="text-sm font-medium text-muted-foreground">
         {label}:
       </span>
-      <span className="text-sm font-medium" style={{ color: colors.primary }}>
+      <span className="text-sm font-medium text-foreground">
         {value}
       </span>
     </div>
   );
 }
+
+
+
+
+

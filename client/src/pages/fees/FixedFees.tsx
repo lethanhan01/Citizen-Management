@@ -133,22 +133,22 @@ export default function FixedFees() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-first dark:text-fourth">Khoản thu phí cố định</h2>
+      <h2 className="text-2xl font-bold text-foreground">Khoản thu phí cố định</h2>
 
       {/* Accordion Item */}
-      <div className="bg-white dark:bg-transparent dark:border dark:border-second/40 dark:backdrop-blur-md rounded-xl shadow-sm dark:shadow-none overflow-hidden">
+      <div className="bg-card text-card-foreground border border-border rounded-xl shadow-sm overflow-hidden">
         {/* Header */}
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className="w-full flex items-center justify-between p-5 hover:bg-second/5 dark:hover:bg-second/10 transition"
+          className="w-full flex items-center justify-between p-5 hover:bg-muted/10 transition"
         >
           <div className="flex items-center gap-3">
             {isExpanded ? (
-              <ChevronDown className="w-5 h-5 text-first dark:text-fourth" />
+              <ChevronDown className="w-5 h-5 text-foreground" />
             ) : (
-              <ChevronRight className="w-5 h-5 text-first dark:text-fourth" />
+              <ChevronRight className="w-5 h-5 text-foreground" />
             )}
-            <h3 className="text-lg font-semibold text-first dark:text-fourth">{category.name}</h3>
+            <h3 className="text-lg font-semibold text-foreground">{category.name}</h3>
           </div>
           <button
             onClick={(e) => {
@@ -156,15 +156,15 @@ export default function FixedFees() {
               setEditingRate(category.ratePerPersonPerMonth);
               setShowRateModal(true);
             }}
-            className="p-2 rounded-lg border border-second/40 dark:border-second/30 hover:bg-second/10 dark:hover:bg-second/30"
+            className="p-2 rounded-lg border border-input hover:bg-muted/10"
           >
-            <Edit className="w-4 h-4 text-first dark:text-fourth" />
+            <Edit className="w-4 h-4 text-first dark:text-darkmodetext" />
           </button>
         </button>
 
         {/* Content */}
         {isExpanded && (
-          <div className="p-5 border-t border-second/20 dark:border-second/30 space-y-6">
+          <div className="p-5 border-t border-border space-y-6">
             {/* Stats */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <StatCard label="Mức thu" value={`${category.ratePerPersonPerMonth.toLocaleString()} VND`} subtext="/ tháng / người" />
@@ -175,33 +175,33 @@ export default function FixedFees() {
 
             {/* Paid Table */}
             <div>
-              <h4 className="text-sm font-semibold text-first dark:text-fourth mb-3">Hộ đã thu ({stats.paid})</h4>
-              <div className="overflow-x-auto border border-second/30 dark:border-second/30 rounded-lg">
+              <h4 className="text-sm font-semibold text-foreground mb-3">Hộ đã thu ({stats.paid})</h4>
+              <div className="overflow-x-auto border border-border rounded-lg">
                 <table className="min-w-full text-sm">
-                  <thead className="bg-second/10 dark:bg-second/20">
+                  <thead className="bg-muted/10">
                     <tr className="text-left">
-                      <th className="py-2 px-3 text-first dark:text-fourth">Mã hộ</th>
-                      <th className="py-2 px-3 text-first dark:text-fourth">Chủ hộ</th>
-                      <th className="py-2 px-3 text-first dark:text-fourth">Số người</th>
-                      <th className="py-2 px-3 text-first dark:text-fourth">Tổng tiền</th>
-                      <th className="py-2 px-3 text-first dark:text-fourth">Ngày thu</th>
+                      <th className="py-2 px-3 text-foreground">Mã hộ</th>
+                      <th className="py-2 px-3 text-foreground">Chủ hộ</th>
+                      <th className="py-2 px-3 text-foreground">Số người</th>
+                      <th className="py-2 px-3 text-foreground">Tổng tiền</th>
+                      <th className="py-2 px-3 text-foreground">Ngày thu</th>
                     </tr>
                   </thead>
                   <tbody>
                     {paidHouseholds.map((h) => (
-                      <tr key={h.householdCode} className="border-t border-second/20 dark:border-second/30">
-                        <td className="py-2 px-3 text-first dark:text-fourth">{h.householdCode}</td>
-                        <td className="py-2 px-3 text-first dark:text-fourth">{h.headName}</td>
-                        <td className="py-2 px-3 text-first dark:text-fourth">{h.memberCount}</td>
-                        <td className="py-2 px-3 text-first dark:text-fourth font-semibold">
+                      <tr key={h.householdCode} className="border-t border-border">
+                        <td className="py-2 px-3 text-foreground">{h.householdCode}</td>
+                        <td className="py-2 px-3 text-foreground">{h.headName}</td>
+                        <td className="py-2 px-3 text-foreground">{h.memberCount}</td>
+                        <td className="py-2 px-3 text-foreground font-semibold">
                           {h.totalAmount?.toLocaleString()} VND
                         </td>
-                        <td className="py-2 px-3 text-first dark:text-fourth">{h.paidDate}</td>
+                        <td className="py-2 px-3 text-foreground">{h.paidDate}</td>
                       </tr>
                     ))}
                     {paidHouseholds.length === 0 && (
                       <tr>
-                        <td colSpan={5} className="py-4 text-center text-second dark:text-fourth/70">
+                        <td colSpan={5} className="py-4 text-center text-muted-foreground">
                           Chưa có hộ nào đã thu
                         </td>
                       </tr>
@@ -213,42 +213,42 @@ export default function FixedFees() {
 
             {/* Unpaid Table */}
             <div>
-              <h4 className="text-sm font-semibold text-first dark:text-fourth mb-3">Hộ chưa thu ({stats.unpaid})</h4>
-              <div className="overflow-x-auto border border-second/30 dark:border-second/30 rounded-lg">
+              <h4 className="text-sm font-semibold text-foreground mb-3">Hộ chưa thu ({stats.unpaid})</h4>
+              <div className="overflow-x-auto border border-border rounded-lg">
                 <table className="min-w-full text-sm">
-                  <thead className="bg-second/10 dark:bg-second/20">
+                  <thead className="bg-muted/10">
                     <tr className="text-left">
-                      <th className="py-2 px-3 text-first dark:text-fourth">Mã hộ</th>
-                      <th className="py-2 px-3 text-first dark:text-fourth">Chủ hộ</th>
-                      <th className="py-2 px-3 text-first dark:text-fourth">Địa chỉ</th>
-                      <th className="py-2 px-3 text-first dark:text-fourth">Số người</th>
-                      <th className="py-2 px-3 text-first dark:text-fourth">Dự kiến</th>
-                      <th className="py-2 px-3 text-center text-first dark:text-fourth">Hành động</th>
+                      <th className="py-2 px-3 text-foreground">Mã hộ</th>
+                      <th className="py-2 px-3 text-foreground">Chủ hộ</th>
+                      <th className="py-2 px-3 text-foreground">Địa chỉ</th>
+                      <th className="py-2 px-3 text-foreground">Số người</th>
+                      <th className="py-2 px-3 text-foreground">Dự kiến</th>
+                      <th className="py-2 px-3 text-center text-foreground">Hành động</th>
                     </tr>
                   </thead>
                   <tbody>
                     {unpaidHouseholds.map((h) => (
-                      <tr key={h.householdCode} className="border-t border-second/20 dark:border-second/30">
-                        <td className="py-2 px-3 text-first dark:text-fourth">{h.householdCode}</td>
-                        <td className="py-2 px-3 text-first dark:text-fourth">{h.headName}</td>
-                        <td className="py-2 px-3 text-first dark:text-fourth">{h.address}</td>
-                        <td className="py-2 px-3 text-first dark:text-fourth">{h.memberCount}</td>
-                        <td className="py-2 px-3 text-first dark:text-fourth">
+                      <tr key={h.householdCode} className="border-t border-border">
+                        <td className="py-2 px-3 text-foreground">{h.householdCode}</td>
+                        <td className="py-2 px-3 text-foreground">{h.headName}</td>
+                        <td className="py-2 px-3 text-foreground">{h.address}</td>
+                        <td className="py-2 px-3 text-foreground">{h.memberCount}</td>
+                        <td className="py-2 px-3 text-foreground">
                           {(h.memberCount * category.ratePerPersonPerMonth).toLocaleString()} VND
                         </td>
                         <td className="py-2 px-3 text-center">
                           <button
                             onClick={() => handleAddPayment(h)}
-                            className="p-1.5 rounded-lg border border-second/30 hover:bg-second/20 dark:hover:bg-second/30"
+                            className="p-1.5 rounded-lg border border-input hover:bg-muted/20"
                           >
-                            <Plus className="w-4 h-4 text-third" />
+                            <Plus className="w-4 h-4 text-primary" />
                           </button>
                         </td>
                       </tr>
                     ))}
                     {unpaidHouseholds.length === 0 && (
                       <tr>
-                        <td colSpan={6} className="py-4 text-center text-second dark:text-fourth/70">
+                        <td colSpan={6} className="py-4 text-center text-muted-foreground">
                           Tất cả hộ đã thu
                         </td>
                       </tr>
@@ -264,30 +264,30 @@ export default function FixedFees() {
       {/* Rate Edit Modal */}
       {showRateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowRateModal(false)}>
-          <div className="bg-white dark:bg-first rounded-xl shadow-2xl p-6 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-card text-card-foreground rounded-xl shadow-2xl p-6 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-first dark:text-fourth">Điều chỉnh mức thu</h3>
+              <h3 className="text-lg font-semibold text-first dark:text-darkmodetext">Điều chỉnh mức thu</h3>
               <button onClick={() => setShowRateModal(false)} className="p-2 hover:bg-second/10 dark:hover:bg-second/30 rounded-lg">
-                <X className="w-5 h-5 text-first dark:text-fourth" />
+                <X className="w-5 h-5 text-first dark:text-darkmodetext" />
               </button>
             </div>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-first dark:text-fourth mb-2">
+                <label className="block text-sm font-medium text-first dark:text-darkmodetext mb-2">
                   Mức thu (VND / tháng / người)
                 </label>
                 <input
                   type="number"
                   value={editingRate}
                   onChange={(e) => setEditingRate(Number(e.target.value))}
-                  className="w-full px-3 py-2 rounded-lg border border-second/40 dark:border-second/30 bg-white dark:bg-transparent text-first dark:text-fourth focus:outline-none focus:ring-2 focus:ring-third"
+                  className="w-full px-3 py-2 rounded-lg border border-input bg-card text-card-foreground focus:outline-none focus:ring-1 focus:ring-selectring"
                 />
               </div>
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowRateModal(false)}
                   disabled={isLoading}
-                  className="flex-1 px-4 py-2 rounded-lg border border-second/40 dark:border-second/30 text-first dark:text-fourth hover:bg-second/10 dark:hover:bg-second/30 disabled:opacity-50"
+                  className="flex-1 px-4 py-2 rounded-lg border border-second/40 dark:border-second/30 text-first dark:text-darkmodetext hover:bg-second/10 dark:hover:bg-second/30 disabled:opacity-50"
                 >
                   Hủy bỏ
                 </button>
@@ -317,43 +317,43 @@ export default function FixedFees() {
       {/* Payment Modal */}
       {showPaymentModal && selectedHousehold && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowPaymentModal(false)}>
-          <div className="bg-white dark:bg-first rounded-xl shadow-2xl p-6 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-card text-card-foreground rounded-xl shadow-2xl p-6 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-first dark:text-fourth">Xác nhận đã thu tiền</h3>
+              <h3 className="text-lg font-semibold text-first dark:text-darkmodetext">Xác nhận đã thu tiền</h3>
               <button onClick={() => setShowPaymentModal(false)} className="p-2 hover:bg-second/10 dark:hover:bg-second/30 rounded-lg">
-                <X className="w-5 h-5 text-first dark:text-fourth" />
+                <X className="w-5 h-5 text-first dark:text-darkmodetext" />
               </button>
             </div>
             <div className="space-y-4">
               <div className="p-3 bg-second/10 dark:bg-second/20 rounded-lg space-y-1">
-                <p className="text-sm text-second dark:text-fourth/70">Mã hộ: {selectedHousehold.householdCode}</p>
-                <p className="font-semibold text-first dark:text-fourth">{selectedHousehold.headName}</p>
-                <p className="text-sm text-second dark:text-fourth/70">Số người: {selectedHousehold.memberCount}</p>
+                <p className="text-sm text-second dark:text-darkmodetext/70">Mã hộ: {selectedHousehold.householdCode}</p>
+                <p className="font-semibold text-first dark:text-darkmodetext">{selectedHousehold.headName}</p>
+                <p className="text-sm text-second dark:text-darkmodetext/70">Số người: {selectedHousehold.memberCount}</p>
               </div>
               <div className="p-4 bg-third/10 rounded-lg">
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm text-second dark:text-fourth/70">Mức thu:</span>
-                  <span className="text-sm text-first dark:text-fourth">{category.ratePerPersonPerMonth.toLocaleString()} VND / người</span>
+                  <span className="text-sm text-second dark:text-darkmodetext/70">Mức thu:</span>
+                  <span className="text-sm text-first dark:text-darkmodetext">{category.ratePerPersonPerMonth.toLocaleString()} VND / người</span>
                 </div>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-second dark:text-fourth/70">Số người:</span>
-                  <span className="text-sm text-first dark:text-fourth">× {selectedHousehold.memberCount}</span>
+                  <span className="text-sm text-second dark:text-darkmodetext/70">Số người:</span>
+                  <span className="text-sm text-first dark:text-darkmodetext">× {selectedHousehold.memberCount}</span>
                 </div>
                 <div className="flex items-center justify-between pt-2 border-t border-second/30">
-                  <span className="font-semibold text-first dark:text-fourth">Tổng tiền:</span>
+                  <span className="font-semibold text-first dark:text-darkmodetext">Tổng tiền:</span>
                   <span className="text-lg font-bold text-third">
                     {(selectedHousehold.memberCount * category.ratePerPersonPerMonth).toLocaleString()} VND
                   </span>
                 </div>
               </div>
-              <p className="text-xs text-second dark:text-fourth/60">
+              <p className="text-xs text-second dark:text-darkmodetext/60">
                 Xác nhận đã thu tiền mặt từ hộ này. Hệ thống sẽ lưu lại thông tin.
               </p>
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowPaymentModal(false)}
                   disabled={isLoading}
-                  className="flex-1 px-4 py-2 rounded-lg border border-second/40 dark:border-second/30 text-first dark:text-fourth hover:bg-second/10 dark:hover:bg-second/30 disabled:opacity-50"
+                  className="flex-1 px-4 py-2 rounded-lg border border-second/40 dark:border-second/30 text-first dark:text-darkmodetext hover:bg-second/10 dark:hover:bg-second/30 disabled:opacity-50"
                 >
                   Hủy bỏ
                 </button>
@@ -396,7 +396,7 @@ function StatCard({
 }) {
   return (
     <div className="p-4 bg-second/10 dark:bg-second/20 rounded-lg">
-      <p className="text-xs text-second dark:text-fourth/70 mb-1">{label}</p>
+      <p className="text-xs text-second dark:text-darkmodetext/70 mb-1">{label}</p>
       <p
         className={`text-2xl font-bold ${
           color === "green"
@@ -405,12 +405,17 @@ function StatCard({
             ? "text-red-600 dark:text-red-400"
             : color === "blue"
             ? "text-blue-600 dark:text-blue-400"
-            : "text-first dark:text-fourth"
+            : "text-first dark:text-darkmodetext"
         }`}
       >
         {value}
       </p>
-      {subtext && <p className="text-xs text-second dark:text-fourth/70">{subtext}</p>}
+      {subtext && <p className="text-xs text-second dark:text-darkmodetext/70">{subtext}</p>}
     </div>
   );
 }
+
+
+
+
+

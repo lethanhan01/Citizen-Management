@@ -102,27 +102,27 @@ export default function ChangeOwner() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-first dark:text-fourth">Thay đổi chủ hộ</h2>
+      <h2 className="text-2xl font-bold text-first dark:text-darkmodetext">Thay đổi chủ hộ</h2>
 
       {/* Search */}
-      <div className="bg-white dark:bg-transparent dark:border dark:border-second/40 dark:backdrop-blur-md rounded-xl p-4 shadow-sm dark:shadow-none">
+      <div className="bg-card text-card-foreground border border-border rounded-xl p-4 shadow-sm">
         <div className="flex items-center gap-2">
           <Search className="w-4 h-4 text-second" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Tìm theo mã hộ, tên chủ hộ"
-            className="w-full px-3 py-2 rounded-lg border border-second/40 dark:border-second/30 bg-white dark:bg-transparent text-first dark:text-fourth focus:outline-none focus:ring-2 focus:ring-third"
+            className="w-full px-3 py-2 rounded-lg border border-input bg-card text-card-foreground focus:outline-none focus:ring-1 focus:ring-selectring"
           />
         </div>
       </div>
 
       {/* Table */}
-      <div className="bg-white dark:bg-transparent dark:border dark:border-second/40 dark:backdrop-blur-md rounded-xl p-4 shadow-sm dark:shadow-none">
+      <div className="bg-card text-card-foreground border border-border rounded-xl p-4 shadow-sm">
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm">
             <thead>
-              <tr className="text-left text-second dark:text-fourth/70 border-b border-second/20 dark:border-second/30">
+              <tr className="text-left text-second dark:text-darkmodetext/70 border-b border-border">
                 <th className="py-3 px-2">Mã hộ</th>
                 <th className="py-3 px-2">Chủ hộ hiện tại</th>
                 <th className="py-3 px-2">Địa chỉ</th>
@@ -134,16 +134,16 @@ export default function ChangeOwner() {
               {filtered.map((h) => (
                 <tr
                   key={h.id}
-                  className="border-b border-second/10 dark:border-second/20 hover:bg-second/10 dark:hover:bg-second/20 transition"
+                  className="border-b border-border/50 hover:bg-muted/10 transition"
                 >
-                  <td className="py-3 px-2 font-medium text-first dark:text-fourth">{h.code}</td>
-                  <td className="py-3 px-2 text-first dark:text-fourth">{h.headName}</td>
-                  <td className="py-3 px-2 text-first dark:text-fourth">{h.address}</td>
-                  <td className="py-3 px-2 text-first dark:text-fourth">{h.members.length}</td>
+                  <td className="py-3 px-2 font-medium text-first dark:text-darkmodetext">{h.code}</td>
+                  <td className="py-3 px-2 text-first dark:text-darkmodetext">{h.headName}</td>
+                  <td className="py-3 px-2 text-first dark:text-darkmodetext">{h.address}</td>
+                  <td className="py-3 px-2 text-first dark:text-darkmodetext">{h.members.length}</td>
                   <td className="py-3 px-2 text-center">
                     <button
                       onClick={() => handleSelect(h)}
-                      className="p-2 rounded-lg border border-second/30 hover:bg-second/20 dark:hover:bg-second/30 text-first dark:text-fourth"
+                      className="p-2 rounded-lg border border-border hover:bg-muted/20 text-first dark:text-darkmodetext"
                     >
                       <UserCheck className="w-4 h-4" />
                     </button>
@@ -152,7 +152,7 @@ export default function ChangeOwner() {
               ))}
               {filtered.length === 0 && (
                 <tr>
-                  <td className="py-4 text-center text-second dark:text-fourth/70" colSpan={5}>
+                  <td className="py-4 text-center text-second dark:text-darkmodetext/70" colSpan={5}>
                     Không tìm thấy
                   </td>
                 </tr>
@@ -166,36 +166,36 @@ export default function ChangeOwner() {
       {selected && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={closeForm}>
           <div
-            className="bg-white dark:bg-first rounded-xl shadow-2xl p-6 w-full max-w-lg"
+            className="bg-card text-card-foreground rounded-xl shadow-2xl p-6 w-full max-w-lg"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-first dark:text-fourth">
+              <h3 className="text-lg font-semibold text-first dark:text-darkmodetext">
                 Thay đổi chủ hộ - {selected.code}
               </h3>
-              <button onClick={closeForm} className="p-2 hover:bg-second/10 dark:hover:bg-second/30 rounded-lg">
-                <X className="w-5 h-5 text-first dark:text-fourth" />
+              <button onClick={closeForm} className="p-2 hover:bg-muted/10 rounded-lg">
+                <X className="w-5 h-5 text-first dark:text-darkmodetext" />
               </button>
             </div>
 
             <div className="space-y-4">
-              <div className="p-3 bg-second/10 dark:bg-second/20 rounded-lg">
-                <p className="text-sm text-second dark:text-fourth/70">Hộ:</p>
-                <p className="font-semibold text-first dark:text-fourth">{selected.code} - {selected.headName}</p>
-                <p className="text-xs text-second dark:text-fourth/70">{selected.address}</p>
+              <div className="p-3 bg-muted/10 rounded-lg">
+                <p className="text-sm text-second dark:text-darkmodetext/70">Hộ:</p>
+                <p className="font-semibold text-first dark:text-darkmodetext">{selected.code} - {selected.headName}</p>
+                <p className="text-xs text-second dark:text-darkmodetext/70">{selected.address}</p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-first dark:text-fourth mb-2">
+                <label className="block text-sm font-medium text-first dark:text-darkmodetext mb-2">
                   Chọn chủ hộ mới <span className="text-red-500">*</span>
                 </label>
-                <div className="space-y-2 border border-second/30 dark:border-second/30 rounded-lg p-3">
+                <div className="space-y-2 border border-border rounded-lg p-3">
                   {selected.members
                     .filter((m) => !m.isHead)
                     .map((member) => (
                       <label
                         key={member.id}
-                        className="flex items-center gap-2 p-2 hover:bg-second/10 dark:hover:bg-second/20 rounded-lg cursor-pointer"
+                        className="flex items-center gap-2 p-2 hover:bg-muted/10 rounded-lg cursor-pointer"
                       >
                         <input
                           type="radio"
@@ -209,13 +209,13 @@ export default function ChangeOwner() {
                           className="w-4 h-4"
                         />
                         <div className="flex-1">
-                          <span className="text-sm font-medium text-first dark:text-fourth">{member.fullName}</span>
-                          <span className="text-xs text-second dark:text-fourth/70 ml-2">({member.relationship})</span>
+                          <span className="text-sm font-medium text-first dark:text-darkmodetext">{member.fullName}</span>
+                          <span className="text-xs text-second dark:text-darkmodetext/70 ml-2">({member.relationship})</span>
                         </div>
                       </label>
                     ))}
                   {selected.members.filter((m) => !m.isHead).length === 0 && (
-                    <p className="text-sm text-second dark:text-fourth/70 text-center py-2">
+                    <p className="text-sm text-second dark:text-darkmodetext/70 text-center py-2">
                       Không có thành viên khác trong hộ
                     </p>
                   )}
@@ -223,7 +223,7 @@ export default function ChangeOwner() {
                 {errors.newHead && <p className="text-xs text-red-500 mt-1">{errors.newHead}</p>}
               </div>
 
-              <p className="text-xs text-second dark:text-fourth/60">
+              <p className="text-xs text-second dark:text-darkmodetext/60">
                 Người được chọn sẽ trở thành chủ hộ mới. Chủ hộ cũ sẽ trở thành thành viên thường.
               </p>
             </div>
@@ -232,7 +232,7 @@ export default function ChangeOwner() {
               <button
                 onClick={closeForm}
                 disabled={isLoading}
-                className="flex-1 px-4 py-2 rounded-lg border border-second/40 dark:border-second/30 text-first dark:text-fourth hover:bg-second/10 dark:hover:bg-second/30 disabled:opacity-50"
+                className="flex-1 px-4 py-2 rounded-lg border border-input text-first dark:text-darkmodetext hover:bg-muted/10 disabled:opacity-50"
               >
                 Huỷ bỏ
               </button>
@@ -260,3 +260,11 @@ export default function ChangeOwner() {
     </div>
   );
 }
+
+
+
+
+
+
+
+

@@ -68,7 +68,7 @@ export default function TopBar({
   return (
     <header className="h-16 px-8 bg-white dark:bg-white/3 dark:backdrop-blur-md shadow-sm flex items-center justify-between relative z-40">
 
-      <h1 className="text-xl leading-tight font-bold text-first dark:text-fourth !text-base !leading-tight">
+      <h1 className="text-xl leading-tight font-bold text-first dark:text-darkmodetext !text-base !leading-tight">
         {getPageTitle()}
       </h1>
 
@@ -81,19 +81,19 @@ export default function TopBar({
               pl-10 pr-4 py-2 rounded-lg text-sm w-56
               bg-second/10 dark:bg-second/20
               border border-second/40 dark:border-second/30
-              text-first dark:text-fourth
-              placeholder:text-second dark:placeholder:text-fourth/40
-              focus:outline-none focus:ring-1 focus:ring-third transition
+              text-first dark:text-darkmodetext
+              placeholder:text-second dark:placeholder:text-darkmodetext/40
+              focus:outline-none focus:ring-1 focus:ring-selectring transition
             "
             placeholder="Tìm kiếm..."
             onChange={(e) => onSearch?.(e.target.value)}
           />
-          <Search className="w-4 h-4 absolute left-3 top-2.5 text-second dark:text-fourth/60" />
+          <Search className="w-4 h-4 absolute left-3 top-2.5 text-second dark:text-darkmodetext/60" />
         </div>
 
         {/* NOTIFICATION */}
         <button className="relative p-2 rounded-lg hover:bg-second/20 dark:hover:bg-second/30 transition">
-          <Bell className="w-5 h-5 text-first dark:text-fourth" />
+          <Bell className="w-5 h-5 text-first dark:text-darkmodetext" />
           <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
         </button>
 
@@ -108,13 +108,13 @@ export default function TopBar({
           </button>
 
           {showDropdown && (
-            <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-first border border-second/40 dark:border-second/30 rounded-lg shadow-lg py-2 z-50">
+            <div className="absolute right-0 mt-2 w-48 bg-card text-card-foreground border border-border rounded-lg shadow-lg py-2 z-50">
               <button
                 onClick={() => {
                   navigate("/profile");
                   setShowDropdown(false);
                 }}
-                className="w-full px-4 py-2 text-left text-sm text-first dark:text-fourth hover:text-blue-500 dark:hover:text-black  transition flex items-center gap-2"
+                className="w-full px-4 py-2 text-left text-sm text-first dark:text-darkmodetext hover:text-blue-500 transition flex items-center gap-2"
               >
                 <User className="w-4 h-4" />
                 Thông tin tài khoản
@@ -122,7 +122,7 @@ export default function TopBar({
               <hr className="my-1 border-second/20 dark:border-second/30" />
               <button
                 onClick={handleLogout}
-                className="w-full px-4 py-2 text-left text-sm text-black hover:text-red-500 dark:hover:text-black  transition flex items-center gap-2"
+                className="w-full px-4 py-2 text-left text-sm hover:text-red-500 dark:hover:text-red-500 transition flex items-center gap-2"
               >
                 <LogOut className="w-4 h-4" />
                 Đăng xuất
@@ -134,3 +134,8 @@ export default function TopBar({
     </header>
   );
 }
+
+
+
+
+

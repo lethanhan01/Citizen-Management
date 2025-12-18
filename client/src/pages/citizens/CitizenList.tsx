@@ -206,12 +206,12 @@ export default function CitizenList() {
                 w-full pl-10 pr-4 py-2.5 rounded-lg
                 bg-white dark:bg-transparent dark:border
                 border border-second/40 dark:border-second/30
-                text-first dark:text-fourth
-                placeholder:text-second dark:placeholder:text-fourth/40
-                focus:outline-none focus:ring-2 focus:ring-third transition
+                text-first dark:text-darkmodetext
+                placeholder:text-second dark:placeholder:text-darkmodetext/40
+                focus:outline-none focus:ring-1 focus:ring-selectring transition
               "
             />
-            <Search className="w-5 h-5 absolute left-3 top-2.5 text-second dark:text-fourth/60" />
+            <Search className="w-5 h-5 absolute left-3 top-2.5 text-second dark:text-darkmodetext/60" />
           </div>
 
           {/* Sort & Filter Controls */}
@@ -223,8 +223,8 @@ export default function CitizenList() {
                 px-4 py-2 rounded-lg text-sm font-medium
                 bg-white dark:bg-transparent dark:border
                 border border-second/40 dark:border-second/30
-                text-first dark:text-fourth
-                focus:outline-none focus:ring-2 focus:ring-third transition
+                text-first dark:text-darkmodetext
+                focus:outline-none focus:ring-1 focus:ring-selectring transition
               "
             >
               <option value="name">Sắp xếp theo tên</option>
@@ -242,8 +242,8 @@ export default function CitizenList() {
                 px-4 py-2 rounded-lg text-sm font-medium
                 bg-white dark:bg-transparent dark:border
                 border border-second/40 dark:border-second/30
-                text-first dark:text-fourth
-                focus:outline-none focus:ring-2 focus:ring-third transition
+                text-first dark:text-darkmodetext
+                focus:outline-none focus:ring-1 focus:ring-selectring transition
               "
             >
               <option value="all">Tất cả giới tính</option>
@@ -261,8 +261,8 @@ export default function CitizenList() {
                 px-4 py-2 rounded-lg text-sm font-medium
                 bg-white dark:bg-transparent dark:border
                 border border-second/40 dark:border-second/30
-                text-first dark:text-fourth
-                focus:outline-none focus:ring-2 focus:ring-third transition
+                text-first dark:text-darkmodetext
+                focus:outline-none focus:ring-1 focus:ring-selectring transition
               "
             >
               <option value="all">Tất cả trạng thái</option>
@@ -275,7 +275,7 @@ export default function CitizenList() {
         </div>
 
         {/* Table Container */}
-        <div className="flex-1 bg-white dark:bg-transparent dark:border dark:border-second/40 dark:backdrop-blur-md rounded-xl shadow-sm dark:shadow-none overflow-hidden flex flex-col">
+        <div className="flex-1 bg-card text-card-foreground border border-border rounded-xl shadow-sm overflow-hidden flex flex-col">
           {isLoading ? (
             <div className="flex-1 flex items-center justify-center">
               <Loader className="w-8 h-8 text-third animate-spin" />
@@ -283,7 +283,7 @@ export default function CitizenList() {
           ) : paginatedCitizens.length === 0 ? (
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center">
-                <p className="text-second dark:text-fourth/70 text-lg">
+                <p className="text-second dark:text-darkmodetext/70 text-lg">
                   Không tìm thấy công dân nào
                 </p>
               </div>
@@ -295,31 +295,31 @@ export default function CitizenList() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-second/40 dark:border-second/30 bg-second/5 dark:bg-second/10">
-                      <th className="px-4 py-3 text-left text-first dark:text-fourth font-semibold">
+                      <th className="px-4 py-3 text-left text-first dark:text-darkmodetext font-semibold">
                         STT
                       </th>
-                      <th className="px-4 py-3 text-left text-first dark:text-fourth font-semibold">
+                      <th className="px-4 py-3 text-left text-first dark:text-darkmodetext font-semibold">
                         CCCD
                       </th>
-                      <th className="px-4 py-3 text-left text-first dark:text-fourth font-semibold">
+                      <th className="px-4 py-3 text-left text-first dark:text-darkmodetext font-semibold">
                         Họ tên
                       </th>
-                      <th className="px-4 py-3 text-left text-first dark:text-fourth font-semibold">
+                      <th className="px-4 py-3 text-left text-first dark:text-darkmodetext font-semibold">
                         Ngày sinh
                       </th>
-                      <th className="px-4 py-3 text-left text-first dark:text-fourth font-semibold">
+                      <th className="px-4 py-3 text-left text-first dark:text-darkmodetext font-semibold">
                         Giới tính
                       </th>
-                      <th className="px-4 py-3 text-left text-first dark:text-fourth font-semibold">
+                      <th className="px-4 py-3 text-left text-first dark:text-darkmodetext font-semibold">
                         Mã hộ
                       </th>
-                      <th className="px-4 py-3 text-left text-first dark:text-fourth font-semibold">
+                      <th className="px-4 py-3 text-left text-first dark:text-darkmodetext font-semibold">
                         Địa chỉ
                       </th>
-                      <th className="px-4 py-3 text-left text-first dark:text-fourth font-semibold">
+                      <th className="px-4 py-3 text-left text-first dark:text-darkmodetext font-semibold">
                         Trạng thái
                       </th>
-                      <th className="px-4 py-3 text-center text-first dark:text-fourth font-semibold">
+                      <th className="px-4 py-3 text-center text-first dark:text-darkmodetext font-semibold">
                         Hành động
                       </th>
                     </tr>
@@ -330,25 +330,25 @@ export default function CitizenList() {
                         key={citizen.id}
                         className="border-b border-second/20 dark:border-second/20 hover:bg-second/5 dark:hover:bg-second/10 transition"
                       >
-                        <td className="px-4 py-3 text-first dark:text-fourth">
+                        <td className="px-4 py-3 text-first dark:text-darkmodetext">
                           {startIdx + idx + 1}
                         </td>
-                        <td className="px-4 py-3 text-first dark:text-fourth">
+                        <td className="px-4 py-3 text-first dark:text-darkmodetext">
                           {citizen.cccd}
                         </td>
-                        <td className="px-4 py-3 text-first dark:text-fourth font-medium">
+                        <td className="px-4 py-3 text-first dark:text-darkmodetext font-medium">
                           {citizen.fullName}
                         </td>
-                        <td className="px-4 py-3 text-first dark:text-fourth">
+                        <td className="px-4 py-3 text-first dark:text-darkmodetext">
                           {new Date(citizen.dateOfBirth).toLocaleDateString("vi-VN")}
                         </td>
-                        <td className="px-4 py-3 text-first dark:text-fourth">
+                        <td className="px-4 py-3 text-first dark:text-darkmodetext">
                           {citizen.gender}
                         </td>
-                        <td className="px-4 py-3 text-first dark:text-fourth">
+                        <td className="px-4 py-3 text-first dark:text-darkmodetext">
                           {citizen.householdCode}
                         </td>
-                        <td className="px-4 py-3 text-first dark:text-fourth max-w-xs truncate">
+                        <td className="px-4 py-3 text-first dark:text-darkmodetext max-w-xs truncate">
                           {citizen.address}
                         </td>
                         <td className="px-4 py-3">
@@ -394,7 +394,7 @@ export default function CitizenList() {
 
               {/* Pagination */}
               <div className="border-t border-second/40 dark:border-second/30 px-4 py-3 flex items-center justify-between bg-second/5 dark:bg-second/10">
-                <p className="text-sm text-second dark:text-fourth/70">
+                <p className="text-sm text-second dark:text-darkmodetext/70">
                   Hiển thị {startIdx + 1}-{Math.min(startIdx + ITEMS_PER_PAGE, filteredCitizens.length)} của {filteredCitizens.length}
                 </p>
                 <div className="flex gap-2">
@@ -403,7 +403,7 @@ export default function CitizenList() {
                     disabled={currentPage === 1}
                     className="p-2 rounded-md hover:bg-second/20 dark:hover:bg-second/30 disabled:opacity-50 transition"
                   >
-                    <ChevronLeft className="w-5 h-5 text-first dark:text-fourth" />
+                    <ChevronLeft className="w-5 h-5 text-first dark:text-darkmodetext" />
                   </button>
 
                   <div className="flex items-center gap-1">
@@ -416,7 +416,7 @@ export default function CitizenList() {
                           ${
                             currentPage === page
                               ? "bg-third text-first"
-                              : "hover:bg-second/20 dark:hover:bg-second/30 text-first dark:text-fourth"
+                              : "hover:bg-second/20 dark:hover:bg-second/30 text-first dark:text-darkmodetext"
                           }
                         `}
                       >
@@ -430,7 +430,7 @@ export default function CitizenList() {
                     disabled={currentPage === totalPages}
                     className="p-2 rounded-md hover:bg-second/20 dark:hover:bg-second/30 disabled:opacity-50 transition"
                   >
-                    <ChevronRight className="w-5 h-5 text-first dark:text-fourth" />
+                    <ChevronRight className="w-5 h-5 text-first dark:text-darkmodetext" />
                   </button>
                 </div>
               </div>
@@ -448,4 +448,9 @@ export default function CitizenList() {
     </div>
   );
 }
+
+
+
+
+
 
