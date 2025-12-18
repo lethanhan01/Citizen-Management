@@ -71,37 +71,3 @@ jobs:
                   name: server-dist
                   path: server/dist
 
-    deploy-client:
-        name: Deploy client to Vercel (main only)
-        needs: build
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        runs-on: ubuntu-latest
-        env:
-            VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-            VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-            VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        steps:
-            - name: Checkout repository
-              uses: actions/checkout@v4
-
-            - name: Setup Node.js
-              uses: actions/setup-node@v4
-              with:
-                  node-version: "24.x"
-                  cache: "npm"
-                  cache-dependency-path: client/package-lock.json
-
-            - name: Install Vercel CLI
-              run: npm install --global vercel@latest
-
-            - name: Pull Vercel environment configuration
-              working-directory: client
-              run: vercel pull --yes --environment=production --token=${{ env.VERCEL_TOKEN }}
-
-            - name: Build client with Vercel
-              working-directory: client
-              run: vercel build --prod --token=${{ env.VERCEL_TOKEN }}
-
-            - name: Deploy client to Vercel
-              working-directory: client
-              run: vercel deploy --prebuilt --prod --token=${{ env.VERCEL_TOKEN }}
