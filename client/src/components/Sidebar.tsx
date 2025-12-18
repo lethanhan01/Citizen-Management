@@ -89,7 +89,7 @@ export default function Sidebar() {
     <aside
       className={`
         sticky top-0 h-screen max-h-screen transition-all duration-300
-        bg-white dark:bg-transparent dark:backdrop-blur-md shadow-md overflow-y-auto flex-shrink-0 z-50
+        bg-white dark:bg-white/5 dark:backdrop-blur-md shadow-md overflow-y-auto flex-shrink-0 z-50
         ${collapsed ? "w-16" : "w-60"}
       `}
     >

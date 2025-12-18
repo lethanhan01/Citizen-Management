@@ -6,7 +6,7 @@ export interface Citizen {
   gender: "Nam" | "Nữ";
   householdCode: string;
   address: string;
-  status: "Thường trú" | "Tạm trú" | "Đã chuyển đi";
+  status: "Thường trú" | "Tạm trú" | "Tạm vắng" | "Đã chuyển đi";
   nationality?: string;
   occupation?: string;
   workplace?: string;

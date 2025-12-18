@@ -66,7 +66,7 @@ export default function TopBar({
   }, []);
 
   return (
-    <header className="h-16 px-8 bg-white dark:bg-transparent dark:backdrop-blur-md shadow-sm flex items-center justify-between relative z-40">
+    <header className="h-16 px-8 bg-white dark:bg-white/3 dark:backdrop-blur-md shadow-sm flex items-center justify-between relative z-40">
 
       <h1 className="text-xl leading-tight font-bold text-first dark:text-fourth !text-base !leading-tight">
         {getPageTitle()}

@@ -16,6 +16,7 @@
   --third:  #495da7;/*dark mode buttons*/
   --fourth: #f7f7f7;/*light background*/
   --fifth:  #e6e6e6;/*some hover ring*/
+  --sixth: #d3d3d3; /*test*/
 
   --background: var(--fourth);
   --foreground: var(--first);
@@ -158,15 +159,7 @@ h1 {
   --color-border: var(--border);
 }
 
-.dark button {
-  background-color: rgba(var(--third-rgb), 0.7) ;/*not really working*/
-  color: #f7f7f7 ;
-}
-
-.dark button:hover {
-  background-color: rgba(var(--third-rgb), 0.9) ;/*not really working*/
-  color: #f7f7f7 ;
-}
+/* Removed global dark button override to avoid unintended transparency on all buttons */
 
 @layer base {
   * {

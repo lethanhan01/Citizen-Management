@@ -7,9 +7,9 @@ export default {
       colors: {
         first: '#2c2b2d',
         second: '#555555',
-        third: '#95c6bd',
+        third: '#495da7',
         fourth: '#f7f7f7',
-        fifth: '#e2e2e2',
+        fifth: '#e6e6e6',
       },
     },
   },

@@ -97,6 +97,25 @@ const mockCitizens: Citizen[] = [
     isDeceased: false,
     relationshipToHead: "Vợ",
   },
+  {
+    id: "6",
+    cccd: "092012345683",
+    fullName: "Phạm Văn F",
+    dateOfBirth: "1985-11-02",
+    gender: "Nam",
+    householdCode: "HH004",
+    address: "Số 15 Đường Hồ Tùng Mậu, Phường 4",
+    status: "Tạm vắng",
+    nationality: "Kinh",
+    occupation: "Kỹ sư xây dựng",
+    workplace: "Công ty XD Hoàng Gia",
+    cmndCccdIssueDate: "2019-04-18",
+    cmndCccdIssuePlace: "Công an Hà Nội",
+    permanentResidenceDate: "2010-09-12",
+    isDeceased: false,
+    relationshipToHead: "Chủ hộ",
+    isHead: true,
+  },
 ];
 
 const ITEMS_PER_PAGE = 10;
@@ -104,7 +123,7 @@ const ITEMS_PER_PAGE = 10;
 export default function CitizenList() {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<"name" | "age" | "status">("name");
-  const [filterStatus, setFilterStatus] = useState<"all" | "Thường trú" | "Tạm trú" | "Đã chuyển đi">("all");
+  const [filterStatus, setFilterStatus] = useState<"all" | "Thường trú" | "Tạm trú" | "Tạm vắng" | "Đã chuyển đi">("all");
   const [filterGender, setFilterGender] = useState<"all" | "Nam" | "Nữ">("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedCitizen, setSelectedCitizen] = useState<Citizen | null>(null);
@@ -136,7 +155,8 @@ export default function CitizenList() {
       const order: Record<Citizen["status"], number> = {
         "Thường trú": 1,
         "Tạm trú": 2,
-        "Đã chuyển đi": 3,
+        "Tạm vắng": 3,
+        "Đã chuyển đi": 4,
       };
       result.sort((a, b) => order[a.status] - order[b.status] || a.fullName.localeCompare(b.fullName));
     }
@@ -234,7 +254,7 @@ export default function CitizenList() {
             <select
               value={filterStatus}
               onChange={(e) => {
-                setFilterStatus(e.target.value as "all" | "Thường trú" | "Tạm trú" | "Đã chuyển đi");
+                setFilterStatus(e.target.value as "all" | "Thường trú" | "Tạm trú" | "Tạm vắng" | "Đã chuyển đi");
                 setCurrentPage(1);
               }}
               className="
@@ -248,6 +268,7 @@ export default function CitizenList() {
               <option value="all">Tất cả trạng thái</option>
               <option value="Thường trú">Thường trú</option>
               <option value="Tạm trú">Tạm trú</option>
+              <option value="Tạm vắng">Tạm vắng</option>
               <option value="Đã chuyển đi">Đã chuyển đi</option>
             </select>
           </div>
@@ -339,6 +360,8 @@ export default function CitizenList() {
                                       ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
                                       : citizen.status === "Tạm trú"
                                       ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
+                                      : citizen.status === "Tạm vắng"
+                                      ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
                                       : "bg-gray-200 text-gray-700 dark:bg-gray-800/60 dark:text-gray-300"
                                   }
                             `}
@@ -347,6 +370,8 @@ export default function CitizenList() {
                                   ? "🟢"
                                   : citizen.status === "Tạm trú"
                                   ? "🟡"
+                                  : citizen.status === "Tạm vắng"
+                                  ? "🔵"
                                   : "⚪"} {citizen.status}
                           </span>
                         </td>
