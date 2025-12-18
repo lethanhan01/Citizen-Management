@@ -17,7 +17,7 @@ export default function HouseholdDetailPanel({
   onClose,
 }: HouseholdDetailPanelProps) {
   const navigate = useNavigate();
-  const { theme } = useTheme();
+  useTheme();
 
   if (!household) return null;
 
