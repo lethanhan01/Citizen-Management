@@ -10,11 +10,11 @@ export default function ThemeToggleButton() {
     <button
       onClick={toggleTheme}
       className="
-        fixed bottom-6 right-6 z-40
-        w-12 h-12 rounded-full
-        bg-third text-first
+        fixed bottom-4 right-4 z-50
+        w-10 h-10 rounded-full
+        bg-white text-first
         flex items-center justify-center
-        shadow-md hover:shadow-lg hover:bg-third/90
+        shadow-md hover:shadow-lg hover:bg-white/90 dark:hover:bg-white/10
         transition active:scale-95 font-bold
       "
       aria-label="Chuyển đổi chế độ sáng/tối"

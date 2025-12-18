@@ -15,7 +15,7 @@
   --second: #555555;/*?*/
   --third:  #495da7;/*dark mode buttons*/
   --fourth: #f7f7f7;/*light background*/
-  --fifth:  #ff0000;/*backup*/
+  --fifth:  #e6e6e6;/*some hover ring*/
 
   --background: var(--fourth);
   --foreground: var(--first);
@@ -165,7 +165,7 @@ h1 {
 
 .dark button:hover {
   background-color: rgba(var(--third-rgb), 0.9) ;/*not really working*/
-  color: #000000 ;
+  color: #f7f7f7 ;
 }
 
 @layer base {
@@ -176,6 +176,111 @@ h1 {
     background-color: var(--color-background);
     color: var(--color-foreground);
   }
+}
+
+/* ============================= */
+/*   SIDEBAR RADIO BUTTON STYLE  */
+/* ============================= */
+
+.sidebar-radio-item {
+  position: relative;
+  background: transparent;
+  border: none;
+  transition: background-color 0.15s ease, opacity 0.15s ease;
+  outline: none;
+}
+
+/* Left accent bar (hidden by default) */
+.sidebar-radio-item::before {
+  content: "";
+  position: absolute;
+  left: -5.5px;
+  top: 12px;
+  width: 3px;
+  height: calc(100% - 24px);
+  background-color: var(--third);
+  border-radius: 6px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+/* Hover backgrounds - more visible */
+.light .sidebar-radio-item:hover {
+  background-color: rgba(62, 45, 45, 0.15);
+}
+.dark .sidebar-radio-item:hover {
+  background-color: rgba(255, 255, 255, 0.305);
+}
+
+/* Show accent bar on hover */
+.sidebar-radio-item:hover::before {
+  opacity: 0.6;
+}
+
+/* Active/Focus states - stronger colors and full opacity bar */
+.sidebar-radio-item.is-active {
+  background-color: rgba(var(--third-rgb), 0.2);
+}
+.light .sidebar-radio-item.is-active {
+  background-color: rgba(var(--third-rgb), 0.15);
+}
+.dark .sidebar-radio-item.is-active {
+  background-color: rgba(var(--third-rgb), 0.25);
+}
+
+.sidebar-radio-item.is-active::before {
+  opacity: 1;
+}
+
+.sidebar-radio-item:focus-visible {
+  background-color: rgba(var(--third-rgb), 0.2);
+}
+.sidebar-radio-item:focus-visible::before {
+  opacity: 1;
+}
+
+/* Child variant: lighter colors */
+.sidebar-radio-child {
+  /* border-radius handled by Tailwind rounded-md */
+}
+
+.light .sidebar-radio-child:hover {
+  background-color: rgba(122, 122, 122, 0.1);
+}
+.dark .sidebar-radio-child:hover {
+  background-color: rgba(214, 214, 214, 0.39);
+}
+
+.sidebar-radio-child:hover::before {
+  opacity: 0.5;
+}
+
+.sidebar-radio-child.is-active {
+  background-color: rgba(46, 46, 46, 0.15);
+}
+.light .sidebar-radio-child.is-active {
+  background-color: rgba(159, 159, 159, 0.12);
+}
+.dark .sidebar-radio-child.is-active {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.sidebar-radio-child.is-active::before {
+  opacity: 1;
+}
+
+.sidebar-radio-child:focus-visible {/*using tab key to navigate*/
+  background-color: rgba(64, 163, 255, 0.15);
+}
+.sidebar-radio-child:focus-visible::before {
+  opacity: 1;
+}
+
+.sidebar-radio-child::before {
+  width: 3px;
+  height: calc(100% - 20px);    /* ← Adjust the 8px for shorter/longer bar */
+  top: 10px;                    /* ← Adjust vertical position */
+  background-color: rgba(209, 203, 255, 0.9);
 }
 
 /* ============================= */
@@ -252,7 +357,7 @@ h1 {
 }
 
 .luxury-button:hover {
-  border-color: var(--third);
+  border-color: var(--fifth);
   transform: scale(1.05);
 }
 
@@ -275,14 +380,14 @@ h1 {
   left: 0;
   right: 0;
   bottom: 0;
-  border-radius: 1.5rem;
+  border-radius: inherit; /* match parent rounding (e.g., rounded-full) */
   transform: scale(0);
   transition: transform 0.2s ease-in-out;
   z-index: 1;
 }
 
 .light .hover-bg {
-  background: linear-gradient(to right, #e1f7ff, #86dfff);
+  background: linear-gradient(to right, #ff8fda, #76dbff);
 }
 
 .dark .hover-bg {

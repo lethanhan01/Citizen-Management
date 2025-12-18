@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Search, Eye, Edit2, ChevronLeft, ChevronRight, Loader } from "lucide-react";
+import { Search, Eye, ChevronLeft, ChevronRight, Loader } from "lucide-react";
 import CitizenDetailPanel from "@/components/CitizenDetailPanel";
 import type { Citizen } from "@/types/citizen";
 
@@ -358,13 +358,6 @@ export default function CitizenList() {
                               title="Xem chi tiết"
                             >
                               <Eye className="w-4 h-4 text-third" />
-                            </button>
-                            <button
-                              onClick={() => {}}
-                              className="p-1.5 hover:bg-second/20 dark:hover:bg-second/30 rounded-md transition"
-                              title="Chỉnh sửa"
-                            >
-                              <Edit2 className="w-4 h-4 text-blue-500" />
                             </button>
                           </div>
                         </td>

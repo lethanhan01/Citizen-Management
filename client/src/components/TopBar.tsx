@@ -101,9 +101,10 @@ export default function TopBar({
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setShowDropdown(!showDropdown)}
-            className="w-10 h-10 rounded-full bg-gradient-to-br from-third to-third/80 text-first font-bold flex items-center justify-center cursor-pointer hover:shadow-md transition"
+            className="luxury-button relative w-10 h-10 rounded-full bg-gradient-to-br from-third to-third/80 text-first font-bold flex items-center justify-center cursor-pointer"
           >
-            {userInitial}
+            <div className="hover-bg" />
+            <span className="button-text">{userInitial}</span>
           </button>
 
           {showDropdown && (
@@ -113,7 +114,7 @@ export default function TopBar({
                   navigate("/profile");
                   setShowDropdown(false);
                 }}
-                className="w-full px-4 py-2 text-left text-sm text-first dark:text-fourth hover:bg-second/10 dark:hover:bg-second/30 transition flex items-center gap-2"
+                className="w-full px-4 py-2 text-left text-sm text-first dark:text-fourth hover:text-blue-500 dark:hover:text-black  transition flex items-center gap-2"
               >
                 <User className="w-4 h-4" />
                 Thông tin tài khoản
@@ -121,7 +122,7 @@ export default function TopBar({
               <hr className="my-1 border-second/20 dark:border-second/30" />
               <button
                 onClick={handleLogout}
-                className="w-full px-4 py-2 text-left text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition flex items-center gap-2"
+                className="w-full px-4 py-2 text-left text-sm text-black hover:text-red-500 dark:hover:text-black  transition flex items-center gap-2"
               >
                 <LogOut className="w-4 h-4" />
                 Đăng xuất

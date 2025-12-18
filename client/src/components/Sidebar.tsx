@@ -102,7 +102,7 @@ export default function Sidebar() {
         )}
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="p-2 hover:bg-second/10 dark:hover:bg-second/30 rounded-3xl transition"
+          className="p-2 -ml-1.5 hover:bg-second/10 dark:hover:bg-second/30 rounded-3xl transition"
           aria-label="Toggle sidebar"
         >
           <Menu className="text-first dark:text-fourth" />
@@ -133,36 +133,35 @@ function ParentMenuButton({
   isOpen,
   collapsed,
   onClick,
+  active = false,
 }: {
   icon: React.ReactNode;
   label: string;
   isOpen: boolean;
   collapsed: boolean;
   onClick: () => void;
+  active?: boolean;
 }) {
   return (
     <button
       onClick={onClick}
-      className="
-        luxury-button
-        w-full flex items-center gap-3 px-3 py-2 rounded-3xl cursor-pointer font-semibold
-        text-first dark:text-fourth
-      "
+      className={`
+        sidebar-radio-item
+        w-full flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer font-semibold
+        text-first dark:text-fourth ${active ? "is-active" : ""}
+      `}
     >
-      <div className="hover-bg" />
-      <span className="button-text flex items-center gap-3 w-full">
-        {icon}
-        {!collapsed && (
-          <>
-            <span className="text-sm flex-1 text-left font-semibold">{label}</span>
-            {isOpen ? (
-              <ChevronDown className="w-4 h-4" />
-            ) : (
-              <ChevronRight className="w-4 h-4" />
-            )}
-          </>
-        )}
-      </span>
+      {icon}
+      {!collapsed && (
+        <>
+          <span className="text-sm flex-1 text-left font-semibold">{label}</span>
+          {isOpen ? (
+            <ChevronDown className="w-4 h-4" />
+          ) : (
+            <ChevronRight className="w-4 h-4" />
+          )}
+        </>
+      )}
     </button>
   );
 }
@@ -181,12 +180,8 @@ function ChildMenuButton({
     <Link
       to={href}
       className={`
-        block px-3 py-1.5 rounded-3xl text-sm transition
-        ${
-          isActive
-            ? "bg-third/20 text-first dark:text-fourth font-medium"
-            : "text-second dark:text-fourth/70 hover:bg-second/10 dark:hover:bg-second/30"
-        }
+        sidebar-radio-item sidebar-radio-child
+        block px-3 py-1.5 rounded-md text-sm ${isActive ? "is-active" : ""}
       `}
     >
       {label}
@@ -209,18 +204,18 @@ function SidebarItem({
 }) {
   const hasSubmenu = item.submenu && item.submenu.length > 0;
   const isActive = item.href === currentPath;
+  const isSectionActive = hasSubmenu
+    ? item.submenu!.some((s) => s.href === currentPath)
+    : false;
 
   if (!hasSubmenu && item.href) {
     return (
       <Link
         to={item.href}
         className={`
-          flex items-center gap-3 px-3 py-2 rounded-3xl cursor-pointer transition font-semibold
-          ${
-            isActive
-              ? "bg-third text-first font-medium"
-              : "text-first dark:text-fourth hover:bg-second/10 dark:hover:bg-second/30"
-          }
+          sidebar-radio-item
+          w-full flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer font-semibold
+          text-first dark:text-fourth ${isActive ? "is-active" : ""}
         `}
       >
         {item.icon}
@@ -237,10 +232,11 @@ function SidebarItem({
         isOpen={isOpen}
         collapsed={collapsed}
         onClick={onToggle}
+        active={isSectionActive || isOpen}
       />
 
       {!collapsed && isOpen && hasSubmenu && (
-        <div className="ml-4 mt-1 space-y-1 border-l-2 border-second/20 dark:border-second/30 pl-2">
+        <div className="ml-4 mt-1 space-y-1 pl-2">
           {item.submenu!.map((subItem) => (
             <ChildMenuButton
               key={subItem.href}
