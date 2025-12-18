@@ -17,6 +17,8 @@ const SpotlightCard: React.FC<SpotlightCardProps> = ({
   spotlightColor = 'rgba(147, 222, 255, 0.25)',
   darkSpotlightColor = 'rgba(0, 229, 255, 0.25)'
 }) => {
+  const childrenArray = React.Children.toArray(children);
+  const [firstChild, ...restChildren] = childrenArray;
   const divRef = useRef<HTMLDivElement>(null);
   const [isFocused, setIsFocused] = useState<boolean>(false);
   const [position, setPosition] = useState<Position>({ x: 0, y: 0 });
@@ -73,8 +75,10 @@ const SpotlightCard: React.FC<SpotlightCardProps> = ({
       onBlur={handleBlur}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      className={`relative rounded-3xl border border-gray-300 dark:border-neutral-800 bg-white dark:bg-neutral-900 overflow-hidden p-8 ${className}`}
+      className={`relative rounded-3xl border border-gray-300 dark:border-neutral-800 bg-white dark:bg-neutral-900 overflow-hidden p-8 text-center align-middle w-fit ${className}`}
+      style={{ width: 'fit-content' }}
     >
+      {firstChild}
       <div
         className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 ease-in-out"
         style={{
@@ -82,7 +86,7 @@ const SpotlightCard: React.FC<SpotlightCardProps> = ({
           background: `radial-gradient(circle at ${position.x}px ${position.y}px, ${currentSpotlightColor}, transparent 20%)`
         }}
       />
-      {children}
+      {restChildren}
     </div>
   );
 };

@@ -2,6 +2,7 @@
 
 import { useNavigate } from "react-router-dom";
 import ThemeToggle from "@/components/ThemeToggle";
+import heroGif from "@/assets/lakhe2.gif";
 
 export default function App() {
   const navigate = useNavigate();
@@ -13,6 +14,13 @@ export default function App() {
       <div className="absolute top-6 right-6">
         <ThemeToggle />
       </div>
+
+      {/* Hình động */}
+      <img
+        src={heroGif}
+        alt="Citizen Management System illustration"
+        className="w-full max-w-3xl rounded-2xl shadow-2xl mb-10 border border-second/30"
+      />
 
       {/* Tiêu đề */}
       <h1 className="text-3xl font-bold text-first dark:text-fourth mb-8">

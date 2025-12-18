@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Sun, Moon } from "lucide-react";
-import { useTheme } from '@/context/ThemeProvider';
+import { useTheme } from "@/context/ThemeProvider";
+import heroGif from "@/assets/lakhe2.gif";
 
 // Mini theme toggle với icon
 function MiniThemeToggle() {
@@ -50,8 +51,17 @@ export default function Login() {
   };
 
   return (
-    <section className="bg-fourth min-h-screen flex items-center justify-center px-6 py-8 dark:bg-first">
-      <div className="flex flex-col w-full items-center">
+    <section
+      className="min-h-screen relative flex items-center justify-center px-6 py-8"
+      style={{
+        backgroundImage: `url(${heroGif})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+      }}
+    >
+      <div className="absolute inset-0 bg-first/70" aria-hidden="true" />
+      <div className="flex flex-col w-full items-center relative z-10">
 
         
         <a className="flex items-center mb-6 text-2xl font-semibold text-first dark:text-fourth">
