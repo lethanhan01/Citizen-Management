@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Search, Plus, Pencil, Trash2, Lock, Unlock, X, Save, Loader } from "lucide-react";
 
 type Role = "admin" | "viewer" | "staff";
@@ -59,6 +60,7 @@ const MOCK_ACCOUNTS: Account[] = [
 ];
 
 export default function AccountList() {
+  const navigate = useNavigate();
   const [accounts, setAccounts] = useState<Account[]>(MOCK_ACCOUNTS);
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<"name" | "role" | "status">("name");
@@ -169,11 +171,10 @@ export default function AccountList() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-2">
       <div className="flex items-center justify-between gap-4">
-        <h2 className="text-2xl font-bold text-first dark:text-darkmodetext">Danh sách tài khoản</h2>
         <button
-          onClick={() => openModal()}
+          onClick={() => navigate("/settings/add-account")}
           className="flex items-center gap-2 px-4 py-2 bg-third text-first rounded-lg hover:bg-third/90 transition"
         >
           <Plus className="w-4 h-4" />

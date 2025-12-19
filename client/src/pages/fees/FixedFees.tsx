@@ -133,7 +133,7 @@ export default function FixedFees() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-foreground">Khoản thu phí cố định</h2>
+      <h2 className="text-2xl font-bold text-foreground">Danh sách khoản thu phí cố định</h2>
 
       {/* Accordion Item */}
       <div className="bg-card text-card-foreground border border-border rounded-xl shadow-sm overflow-hidden">

@@ -102,18 +102,24 @@ export default function ChangeOwner() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-first dark:text-darkmodetext">Thay đổi chủ hộ</h2>
-
       {/* Search */}
-      <div className="bg-card text-card-foreground border border-border rounded-xl p-4 shadow-sm">
-        <div className="flex items-center gap-2">
-          <Search className="w-4 h-4 text-second" />
+      <div className="space-y-4 mb-6">
+        <div className="relative">
           <input
+            type="text"
+            placeholder="Tìm theo mã hộ, tên chủ hộ..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Tìm theo mã hộ, tên chủ hộ"
-            className="w-full px-3 py-2 rounded-lg border border-input bg-card text-card-foreground focus:outline-none focus:ring-1 focus:ring-selectring"
+            className="
+              w-full pl-10 pr-4 py-2.5 rounded-lg
+              bg-white dark:bg-transparent dark:border
+              border border-second/40 dark:border-second/30
+              text-first dark:text-darkmodetext
+              placeholder:text-second dark:placeholder:text-darkmodetext/40
+              focus:outline-none focus:ring-1 focus:ring-selectring transition
+            "
           />
+          <Search className="w-5 h-5 absolute left-3 top-2.5 text-second dark:text-darkmodetext/60" />
         </div>
       </div>
 

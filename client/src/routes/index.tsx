@@ -68,10 +68,10 @@ const router = createBrowserRouter([
             { path: '/services/update-person', element: <UpdatePerson /> },
             
             // Services - Household
-            { path: '/services/split-household', element: <SplitHousehold /> },
-            { path: '/services/merge-household', element: <MergeHousehold /> },
-            { path: '/services/change-owner', element: <ChangeOwner /> },
-            { path: '/services/household-history', element: <HouseholdHistory /> },
+            { path: '/services/household/split', element: <SplitHousehold /> },
+            { path: '/services/household/merge', element: <MergeHousehold /> },
+            { path: '/services/household/change-owner', element: <ChangeOwner /> },
+            { path: '/services/household/history', element: <HouseholdHistory /> },
             
             // Fees
             { path: '/fees/fixed', element: <FixedFees /> },

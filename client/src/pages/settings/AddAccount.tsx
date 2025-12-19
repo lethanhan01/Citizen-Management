@@ -44,7 +44,6 @@ export default function AddAccount() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-foreground">Thêm tài khoản mới</h2>
       </div>
 
       <div className="bg-card text-card-foreground border border-border rounded-xl p-6 shadow-sm space-y-6">
@@ -90,7 +89,7 @@ export default function AddAccount() {
           <button
             onClick={handleSubmit}
             disabled={isLoading || !form.fullName.trim() || !form.username.trim()}
-            className="w-full md:w-fit px-5 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 flex items-center justify-center gap-2"
+            className="w-full md:w-fit px-5 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 flex items-center justify-center gap-2"
           >
             {isLoading ? <Loader className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}Tạo tài khoản
           </button>
