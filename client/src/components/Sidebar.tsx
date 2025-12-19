@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   Users,
   FileText,
+  Home,
   HandCoins,
   Settings,
   ChevronDown,
@@ -48,10 +49,16 @@ const menuItems: MenuItem[] = [
       { label: "Thêm mới đến", href: "/services/add-new-arrival" },
       { label: "Thêm mới sinh", href: "/services/add-newborn" },
       { label: "Thay đổi nhân khẩu", href: "/services/update-person" },
-      { label: "Tách hộ", href: "/services/split-household" },
-      { label: "Nhập hộ", href: "/services/merge-household" },
-      { label: "Thay đổi chủ hộ", href: "/services/change-owner" },
-      { label: "Lịch sử hộ", href: "/services/household-history" },
+    ],
+  },
+  {
+    icon: <Home className="w-5 h-5" />,
+    label: "Dịch vụ hộ khẩu",
+    submenu: [
+      { label: "Tách hộ", href: "/services/household/split" },
+      { label: "Nhập hộ", href: "/services/household/merge" },
+      { label: "Thay đổi chủ hộ", href: "/services/household/change-owner" },
+      { label: "Lịch sử hộ", href: "/services/household/history" },
     ],
   },
   {
@@ -89,12 +96,12 @@ export default function Sidebar() {
     <aside
       className={`
         sticky top-0 h-screen max-h-screen transition-all duration-300
-        bg-white dark:bg-white/5 dark:backdrop-blur-md shadow-md overflow-y-auto flex-shrink-0 z-50
+        bg-(--sidebar-bg-light) dark:bg-white/5 dark:backdrop-blur-md shadow-md flex flex-col flex-shrink-0 z-50
         ${collapsed ? "w-16" : "w-60"}
       `}
     >
-      {/* Sidebar header */}
-      <div className="h-16 flex items-center justify-between px-4">
+      {/* Sidebar header - NOT scrollable */}
+      <div className="h-16 flex items-center justify-between px-4 bg-inherit flex-shrink-0">
         {!collapsed && (
           <span className="text-lg font-semibold text-first dark:text-darkmodetext">
             Administrator
@@ -109,8 +116,8 @@ export default function Sidebar() {
         </button>
       </div>
 
-      {/* MENU */}
-      <nav className="mt-4 space-y-1 px-2">
+      {/* MENU - scrollable only */}
+      <nav className="sidebar-scroll mt-4 space-y-1 px-2 overflow-y-auto flex-1">
         {menuItems.map((item) => (
           <SidebarItem
             key={item.label}

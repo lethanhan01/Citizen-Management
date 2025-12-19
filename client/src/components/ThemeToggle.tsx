@@ -10,18 +10,18 @@ const ThemeToggle = () => {
     <button
       type="button"
       onClick={toggleTheme}
-      className="inline-flex items-center gap-2 rounded-full border border-border/60 px-4 py-2 text-sm font-medium text-foreground shadow-sm transition hover:bg-muted focus-visible:outline-none"
+      className="inline-flex items-center gap-2 rounded-4xl px-4 py-2 text-sm font-semibold bg-first text-white dark:bg-third dark:text-first ring-2 ring-white/20 hover:ring-4 hover:ring-white active:scale-95 transition"
       aria-label="Chuyển chế độ sáng/tối"
     >
       {theme === 'light' ? (
         <>
           <Moon className={iconClasses} />
-          <span>Chế độ tối</span>
+          <span>Dark</span>
         </>
       ) : (
         <>
           <Sun className={iconClasses} />
-          <span>Chế độ sáng</span>
+          <span>Light</span>
         </>
       )}
     </button>

@@ -31,10 +31,10 @@ export default function TopBar({
       "/services/add-new-arrival": "Thêm nhân khẩu - Mới đến",
       "/services/add-newborn": "Thêm nhân khẩu - Mới sinh",
       "/services/update-person": "Thay đổi nhân khẩu",
-      "/services/split-household": "Tách hộ khẩu",
-      "/services/merge-household": "Nhập hộ khẩu",
-      "/services/change-owner": "Thay đổi chủ hộ",
-      "/services/household-history": "Lịch sử hộ khẩu",
+      "/services/household/split": "Tách hộ khẩu",
+      "/services/household/merge": "Nhập hộ khẩu",
+      "/services/household/change-owner": "Thay đổi chủ hộ",
+      "/services/household/history": "Lịch sử hộ khẩu",
       "/fees/fixed": "Khoản thu cố định",
       "/fees/donations": "Chiến dịch quyên góp",
       "/settings/accounts": "Danh sách tài khoản",
@@ -66,9 +66,9 @@ export default function TopBar({
   }, []);
 
   return (
-    <header className="h-16 px-8 bg-white dark:bg-white/3 dark:backdrop-blur-md shadow-sm flex items-center justify-between relative z-40">
+    <header className="h-16 px-8 bg-(--sidebar-bg-light) dark:bg-white/3 dark:backdrop-blur-md shadow-sm flex items-center justify-between relative z-40">
 
-      <h1 className="text-xl leading-tight font-bold text-first dark:text-darkmodetext !text-base !leading-tight">
+      <h1 className="font-bold text-first dark:text-darkmodetext text-base! leading-tight!">
         {getPageTitle()}
       </h1>
 
@@ -94,14 +94,14 @@ export default function TopBar({
         {/* NOTIFICATION */}
         <button className="relative p-2 rounded-lg hover:bg-second/20 dark:hover:bg-second/30 transition">
           <Bell className="w-5 h-5 text-first dark:text-darkmodetext" />
-          <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+          <span className="absolute top-1 right-1 w-2 h-2 bg-darkblue rounded-full dark:bg-white"></span>
         </button>
 
         {/* USER AVATAR WITH DROPDOWN */}
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setShowDropdown(!showDropdown)}
-            className="luxury-button relative w-10 h-10 rounded-full bg-gradient-to-br from-third to-third/80 text-first font-bold flex items-center justify-center cursor-pointer"
+            className="luxury-button relative w-10 h-10 rounded-full text-darkblue dark:text-white font-bold flex items-center justify-center cursor-pointer transition"
           >
             <div className="hover-bg" />
             <span className="button-text">{userInitial}</span>
