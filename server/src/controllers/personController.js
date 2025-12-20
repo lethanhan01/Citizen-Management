@@ -153,3 +153,58 @@ export const getPersonEvents = async (req, res) => {
         });
     }
 };
+export const handlePersonEvent = async (req, res) => {
+    try {
+        const { nhanKhauId } = req.params;
+        const { loaiBienDong, ngayBienDong, ghiChu, diaChi } = req.body;
+
+        if (!loaiBienDong) {
+            return res.status(400).json({
+                success: false,
+                message: "Loại biến động là bắt buộc",
+            });
+        }
+        const validEventTypes = ["CHUYEN_DI", "QUA_DOI"];
+        if (!validEventTypes.includes(loaiBienDong)) {
+            return res.status(400).json({
+                success: false,
+                message: "Loại biến động không hợp lệ",
+            });
+        }
+        const result = await personService.handlePersonEvent(
+            nhanKhauId,
+            loaiBienDong,
+            ngayBienDong || new Date(),
+            ghiChu,
+            diaChi
+        );
+        return res.status(200).json({
+            success: true,
+            message: `Xử lý biến động ${
+                loaiBienDong === "CHUYEN_DI" ? "chuyển đi" : "qua đời"
+            } thành công`,
+            data: result,
+        });
+    } catch (error) {
+        console.error("Error in handlePersonEvent:", error);
+        if (error.message.includes("Không tìm thấy")) {
+            return res.status(404).json({
+                success: false,
+                message: error.message,
+            });
+        }
+
+        if (error.message.includes("không có hộ khẩu")) {
+            return res.status(400).json({
+                success: false,
+                message: error.message,
+            });
+        }
+
+        res.status(500).json({
+            success: false,
+            message: "Lỗi khi xử lý biến động nhân khẩu",
+            error: error.message,
+        });
+    }
+};

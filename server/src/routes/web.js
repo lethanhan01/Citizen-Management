@@ -15,6 +15,7 @@ import {
     getNhanKhauById,
     updateNhanKhau,
     getPersonEvents,
+    handlePersonEvent,
 } from "../controllers/personController.js";
 import pool from "../config/db.js";
 
@@ -37,6 +38,7 @@ let initWebRoutes = (app) => {
     router.put("/api/v1/nhan-khau/:id", updateNhanKhau);
     router.post("/api/v1/ho-khau/tach-khau", splitHousehold);
     router.get("/api/v1/nhan-khau/:id/lich-su", getPersonEvents);
+    router.put("/api/v1/nhan-khau/:nhanKhauId/bien-dong", handlePersonEvent);
     return app.use("/", router);
 };
 
