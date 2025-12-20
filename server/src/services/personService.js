@@ -334,9 +334,169 @@ let getPersonEvents = async (personId) => {
     });
 };
 
+let handlePersonEvent = async (
+    personId,
+    eventType,
+    eventDate,
+    note,
+    destination
+) => {
+    const transaction = await db.sequelize.transaction();
+    try {
+        const person = await Person.findByPk(personId, { transaction });
+        if (!person) {
+            throw new Error(`Không tìm thấy nhân khẩu với ID: ${personId}`);
+        }
+        const activeMembership = await HouseholdMembership.findOne({
+            where: {
+                person_id: personId,
+                end_date: null,
+            },
+            include: [
+                {
+                    model: Household,
+                    as: "household",
+                    attributes: ["household_id", "household_no", "address"],
+                },
+            ],
+            transaction,
+        });
+        if (!activeMembership) {
+            throw new Error(`Nhân khẩu ID ${personId} không có hộ khẩu active`);
+        }
+        const household = activeMembership.household;
+
+        const newStatus = eventType === "CHUYEN_DI" ? "moved_out" : "deceased";
+
+        await person.update({ residency_status: newStatus }, { transaction });
+
+        await activeMembership.update({ end_date: eventDate }, { transaction });
+        if (activeMembership.is_head) {
+            const remainingMembers = await HouseholdMembership.count({
+                where: {
+                    household_id: household.household_id,
+                    person_id: { [Op.ne]: personId },
+                    end_date: null,
+                },
+                transaction,
+            });
+            if (remainingMembers > 0) {
+                await Household.update(
+                    { head_person_id: null },
+                    {
+                        where: { household_id: household.household_id },
+                        transaction,
+                    }
+                );
+            }
+        }
+        const eventTypeMapping = {
+            CHUYEN_DI: "move_out",
+            QUA_DOI: "death",
+        };
+        const eventNoteMapping = {
+            CHUYEN_DI: `${person.full_name} chuyển đi${
+                destination ? ` đến ${destination}` : ""
+            }`,
+            QUA_DOI: `${person.full_name} qua đời`,
+        };
+        await HouseholdHistory.create(
+            {
+                household_id: household.household_id,
+                event_type: eventTypeMapping[eventType],
+                old_value: JSON.stringify({
+                    person_id: personId,
+                    full_name: person.full_name,
+                    reason: eventType.toLowerCase(),
+                }),
+                changed_by_user_id: null,
+                note: note || eventNoteMapping[eventType],
+            },
+            { transaction }
+        );
+
+        const personEventTypeMapping = {
+            CHUYEN_DI: "move_out",
+            QUA_DOI: "death",
+        };
+        await PersonEvent.create(
+            {
+                person_id: personId,
+                event_type: personEventTypeMapping[eventType],
+                event_date: eventDate,
+                place_or_destination: destination || null,
+                old_household_id: household.household_id,
+                new_household_id: null,
+                created_by: null,
+                note: note || eventNoteMapping[eventType],
+            },
+            { transaction }
+        );
+        await transaction.commit();
+
+        const updatedPerson = await Person.findByPk(personId, {
+            attributes: [
+                "person_id",
+                "full_name",
+                "gender",
+                "dob",
+                "residency_status",
+            ],
+        });
+
+        const updatedHousehold = await Household.findByPk(
+            household.household_id,
+            {
+                include: [
+                    {
+                        model: Person,
+                        as: "headPerson",
+                        attributes: ["person_id", "full_name"],
+                    },
+                    {
+                        model: HouseholdMembership,
+                        as: "members",
+                        where: { end_date: null },
+                        required: false,
+                        include: [
+                            {
+                                model: Person,
+                                as: "person",
+                                attributes: [
+                                    "person_id",
+                                    "full_name",
+                                    "gender",
+                                    "dob",
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            }
+        );
+        return {
+            person: updatedPerson,
+            household: updatedHousehold,
+            eventInfo: {
+                event_type: eventType,
+                event_date: eventDate,
+                old_household: {
+                    household_id: household.household_id,
+                    household_no: household.household_no,
+                },
+                note: note || eventNoteMapping[eventType],
+            },
+        };
+    } catch (error) {
+        await transaction.rollback();
+        throw error;
+    }
+};
+
 export default {
     getAllNhanKhau,
     getNhanKhauById,
     updateNhanKhau,
     getPersonEvents,
+    handlePersonEvent,
 };
