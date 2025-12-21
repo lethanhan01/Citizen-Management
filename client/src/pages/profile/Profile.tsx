@@ -39,12 +39,12 @@ export default function Profile() {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    navigate("/login", { replace: true });
+    setShowLogoutConfirm(true);
   };
 
   const confirmLogout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
     navigate("/login", { replace: true });
   };
 
