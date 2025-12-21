@@ -50,7 +50,8 @@ export default function TopBar({
   };
 
   const handleLogout = () => {
-    navigate("/login");
+    localStorage.removeItem("token");
+    navigate("/login", { replace: true });
   };
 
   // Close dropdown when clicking outside

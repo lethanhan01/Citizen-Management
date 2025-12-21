@@ -1,5 +1,6 @@
 import { createBrowserRouter } from "react-router-dom";
 import { lazy } from 'react'
+import RequireAuth from "@/components/RequireAuth";
 
 // Layouts
 import AppLayout from "@/layouts/AppLayout.tsx";
@@ -46,42 +47,47 @@ const AddAccount = lazy(() => import("../pages/settings/AddAccount.tsx"));
 //Router
 const router = createBrowserRouter([
     {
-        //Route Ứng dụng (với Sidebar + TopBar)
-        element: <AppLayout />,
+        element: <RequireAuth />,
         children: [
-            { path: '/dashboard', element: <Dashboard /> },
-            { path: '/profile', element: <Profile /> },
-            
-            // Citizens routes
-            { path: '/citizens', element: <CitizenList /> },
-            { path: '/citizens/:id', element: <CitizenDetail /> },
-            { path: '/households', element: <HouseholdList /> },
-            { path: '/households/:id', element: <HouseholdDetail /> },
-            
-            // Services - Residential
-            { path: '/services/temp-residence', element: <TempResidence /> },
-            { path: '/services/temp-absence', element: <TempAbsence /> },
-            
-            // Services - People
-            { path: '/services/add-new-arrival', element: <AddNewArrival /> },
-            { path: '/services/add-newborn', element: <AddNewborn /> },
-            { path: '/services/update-person', element: <UpdatePerson /> },
-            
-            // Services - Household
-            { path: '/services/household/split', element: <SplitHousehold /> },
-            { path: '/services/household/merge', element: <MergeHousehold /> },
-            { path: '/services/household/change-owner', element: <ChangeOwner /> },
-            { path: '/services/household/history', element: <HouseholdHistory /> },
-            
-            // Fees
-            { path: '/fees/fixed', element: <FixedFees /> },
-            { path: '/fees/donations', element: <DonationCampaigns /> },
-            
-            // Settings
-            { path: '/settings/accounts', element: <AccountList /> },
-            { path: '/settings/add-account', element: <AddAccount /> },
+          {
+            element: <AppLayout />,
+            children: [
+              { path: '/dashboard', element: <Dashboard /> },
+              { path: '/profile', element: <Profile /> },
+      
+              // Citizens
+              { path: '/citizens', element: <CitizenList /> },
+              { path: '/citizens/:id', element: <CitizenDetail /> },
+              { path: '/households', element: <HouseholdList /> },
+              { path: '/households/:id', element: <HouseholdDetail /> },
+      
+              // Services - Residential
+              { path: '/services/temp-residence', element: <TempResidence /> },
+              { path: '/services/temp-absence', element: <TempAbsence /> },
+      
+              // Services - People
+              { path: '/services/add-new-arrival', element: <AddNewArrival /> },
+              { path: '/services/add-newborn', element: <AddNewborn /> },
+              { path: '/services/update-person', element: <UpdatePerson /> },
+      
+              // Services - Household
+              { path: '/services/household/split', element: <SplitHousehold /> },
+              { path: '/services/household/merge', element: <MergeHousehold /> },
+              { path: '/services/household/change-owner', element: <ChangeOwner /> },
+              { path: '/services/household/history', element: <HouseholdHistory /> },
+      
+              // Fees
+              { path: '/fees/fixed', element: <FixedFees /> },
+              { path: '/fees/donations', element: <DonationCampaigns /> },
+      
+              // Settings
+              { path: '/settings/accounts', element: <AccountList /> },
+              { path: '/settings/add-account', element: <AddAccount /> },
+            ],
+          },
         ],
-    },
+      },
+      
     {
         //Route Công khai (không có Sidebar + TopBar)
         element: <PublicLayout />,

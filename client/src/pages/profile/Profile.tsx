@@ -39,12 +39,13 @@ export default function Profile() {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogout = () => {
-    setShowLogoutConfirm(true);
+    localStorage.removeItem("token");
+    navigate("/login", { replace: true });
   };
 
   const confirmLogout = () => {
-    // Clear auth token, localStorage, etc.
-    navigate("/login");
+    localStorage.removeItem("token");
+    navigate("/login", { replace: true });
   };
 
   const handleChangePassword = () => {

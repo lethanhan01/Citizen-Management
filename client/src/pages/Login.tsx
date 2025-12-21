@@ -8,12 +8,20 @@ import icon2 from "@/assets/icon2.svg";
 import icon4 from "@/assets/icon4.svg";
 import roundShapeLight from "@/assets/round-shape-light.svg";
 import roundShapeBlue from "@/assets/round-shape.svg";
+import { useEffect } from "react";
 
 export default function Login() {
   const navigate = useNavigate();
 
   const [form, setForm] = useState({ username: "", password: "" });
   const [error, setError] = useState("");
+  
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,6 +31,7 @@ export default function Login() {
       setError("Tên đăng nhập hoặc mật khẩu sai!");
       return;
     }
+    localStorage.setItem("token", "fake-token");
 
     navigate("/dashboard");
   };
