@@ -21,6 +21,9 @@ import {
 import authController from "../controllers/authController.js";
 // --- USER CONTROLLER ---
 import userController from "../controllers/userController.js";
+// --- SEARCH CONTROLLER ---
+import searchController from "../controllers/searchController.js";
+
 // --- CHECK TOKEN ---
 import verifyToken from "../middleware/authMiddleware.js";
 // --- CHECK ROLE ---
@@ -158,6 +161,16 @@ let initWebRoutes = (app) => {
     checkRole(["admin"]),
     handlePersonEvent
   );
+
+  // --- Tìm kiếm linh hoạt ---
+  // GET: Admin hay Accountant đều dùng được
+  router.get(
+    "/api/v1/search",
+    verifyToken,
+    checkRole(["admin", "accountant"]),
+    searchController.handleSearch
+  );
+
   return app.use("/", router);
 };
 
