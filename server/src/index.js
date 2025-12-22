@@ -2,6 +2,7 @@ import express from "express";
 import pool from "./config/db.js";
 import sequelize from "./config/sequelize.js";
 import cors from "cors";
+import db from "./models/index.js";
 import initWebRoutes from "./routes/web.js";
 
 const app = express();
@@ -11,19 +12,27 @@ app.use(cors());
 app.use(express.json());
 
 app.get("/", (req, res) => {
-    res.send("Hello from Node.js backend!");
+  res.send("Hello from Node.js backend!");
 });
 app.get("/campaigns", async (req, res) => {
-    try {
-        const result = await pool.query("SELECT * FROM finance.campaign"); 
-        res.json(result.rows);
-    } catch (err) {
-        console.error(err);
-        res.status(500).send("Lỗi truy vấn database");
-    }
+  try {
+    const result = await pool.query("SELECT * FROM finance.campaign");
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Lỗi truy vấn database");
+  }
 });
 initWebRoutes(app);
 
+// db.sequelize.sync().then(() => {
+//     console.log("✅ Đã kiểm tra Database (Tự động tạo bảng mới nếu chưa có)");
+    
+//     app.listen(PORT, () => {
+//         console.log(`Server is running on port ${PORT}`);
+//     });
+// });
+
 app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+  console.log(`Server is running on port ${PORT}`);
 });
