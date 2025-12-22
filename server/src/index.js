@@ -1,20 +1,27 @@
 import express from "express";
-import pool from "./config/db.js";
-import sequelize from "./config/sequelize.js";
 import cors from "cors";
+import getPool from "./config/db.js";
+import sequelize from "./config/sequelize.js";
 import db from "./models/index.js";
 import initWebRoutes from "./routes/web.js";
 
 const app = express();
-const PORT = 5000;
-
+const pool = getPool();
 app.use(cors());
 app.use(express.json());
 
 app.get("/", (req, res) => {
   res.send("Hello from Node.js backend!");
 });
+
 app.get("/campaigns", async (req, res) => {
+    try {
+        const result = await pool.query("SELECT * FROM finance.campaign");
+        res.json(result.rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Lỗi truy vấn database");
+    }
   try {
     const result = await pool.query("SELECT * FROM finance.campaign");
     res.json(result.rows);
@@ -23,16 +30,5 @@ app.get("/campaigns", async (req, res) => {
     res.status(500).send("Lỗi truy vấn database");
   }
 });
+
 initWebRoutes(app);
-
-// db.sequelize.sync().then(() => {
-//     console.log("✅ Đã kiểm tra Database (Tự động tạo bảng mới nếu chưa có)");
-    
-//     app.listen(PORT, () => {
-//         console.log(`Server is running on port ${PORT}`);
-//     });
-// });
-
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
