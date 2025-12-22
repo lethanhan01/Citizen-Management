@@ -21,9 +21,6 @@ function getPool() {
             idleTimeoutMillis: 30000,
             connectionTimeoutMillis: 2000,
         });
-
-        console.log("🟢 PostgreSQL pool created");
-    }
     return pool;
 }
 

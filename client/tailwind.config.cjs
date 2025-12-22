@@ -10,7 +10,12 @@ export default {
         third: '#495da7',
         fourth: '#f7f7f7',
         fifth: '#e6e6e6',
+        sixth: '#d3d3d3',
         seventh: '#ff0404',
+        eighth: '#f3f3f3',
+        blueblue: '#7eb1db',
+        lightblue: '#dbeff4',
+        darkblue: '#244c76',
         background: 'var(--color-background)',
         foreground: 'var(--color-foreground)',
         card: {

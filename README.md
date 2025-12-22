@@ -28,29 +28,173 @@
 ---
 
 ## 📁 Cấu trúc thư mục
-
 ```
-
-Citizen-Management/
-│
-├── client/               # Frontend React
-│   ├── src/
-│   ├── vite.config.ts
+├── .github
+│   ├── ISSUE_TEMPLATE
+│   │   ├── bug_report.md
+│   │   ├── feature_request.md
+│   │   └── technical_task.md
+│   └── workflows
+│       └── ci.yml
+├── client
+│   ├── .husky
+│   │   └── pre-commit
+│   ├── src
+│   │   ├── assets
+│   │   │   ├── BIGSHOULDERSDISPLAY
+│   │   │   │   ├── BigShouldersDisplay-Black.ttf
+│   │   │   │   ├── BigShouldersDisplay-Bold.ttf
+│   │   │   │   ├── BigShouldersDisplay-ExtraBold.ttf
+│   │   │   │   ├── BigShouldersDisplay-ExtraLight.ttf
+│   │   │   │   ├── BigShouldersDisplay-Light.ttf
+│   │   │   │   ├── BigShouldersDisplay-Medium.ttf
+│   │   │   │   ├── BigShouldersDisplay-Regular.ttf
+│   │   │   │   ├── BigShouldersDisplay-SemiBold.ttf
+│   │   │   │   └── BigShouldersDisplay-Thin.ttf
+│   │   │   ├── icon.svg
+│   │   │   ├── icon2.svg
+│   │   │   ├── icon3.svg
+│   │   │   ├── icon4.svg
+│   │   │   ├── icon5.svg
+│   │   │   ├── icon6.svg
+│   │   │   ├── icon7.svg
+│   │   │   ├── icon8.svg
+│   │   │   ├── lakhe.gif
+│   │   │   ├── lakhe2.gif
+│   │   │   ├── lakhe3.gif
+│   │   │   ├── lakhe4.gif
+│   │   │   ├── lakhe5.gif
+│   │   │   ├── lakhe6.gif
+│   │   │   ├── lakhe7.gif
+│   │   │   ├── react.svg
+│   │   │   ├── round-shape-light.svg
+│   │   │   ├── round-shape.svg
+│   │   │   └── vite.svg
+│   │   ├── components
+│   │   │   ├── CitizenDetailPanel.tsx
+│   │   │   ├── ElectricBorder.tsx
+│   │   │   ├── ErrorFallback.tsx
+│   │   │   ├── HouseholdDetailPanel.tsx
+│   │   │   ├── RequireAuth.tsx
+│   │   │   ├── Sidebar.tsx
+│   │   │   ├── SpotlightCard.tsx
+│   │   │   ├── ThemeToggle.tsx
+│   │   │   ├── ThemeToggleButton.tsx
+│   │   │   └── TopBar.tsx
+│   │   ├── context
+│   │   │   └── ThemeProvider.tsx
+│   │   ├── layouts
+│   │   │   ├── AppLayout.tsx
+│   │   │   └── PublicLayout.tsx
+│   │   ├── lib
+│   │   │   ├── axios.ts
+│   │   │   └── utils.ts
+│   │   ├── pages
+│   │   │   ├── citizens
+│   │   │   │   ├── CitizenDetail.tsx
+│   │   │   │   ├── CitizenList.tsx
+│   │   │   │   ├── HouseholdDetail.tsx
+│   │   │   │   └── HouseholdList.tsx
+│   │   │   ├── fees
+│   │   │   │   ├── DonationCampaigns.tsx
+│   │   │   │   └── FixedFees.tsx
+│   │   │   ├── profile
+│   │   │   │   └── Profile.tsx
+│   │   │   ├── services
+│   │   │   │   ├── household
+│   │   │   │   │   ├── ChangeOwner.tsx
+│   │   │   │   │   ├── HouseholdHistory.tsx
+│   │   │   │   │   ├── MergeHousehold.tsx
+│   │   │   │   │   └── SplitHousehold.tsx
+│   │   │   │   ├── people
+│   │   │   │   │   ├── AddNewArrival.tsx
+│   │   │   │   │   ├── AddNewborn.tsx
+│   │   │   │   │   └── UpdatePerson.tsx
+│   │   │   │   └── residential
+│   │   │   │       ├── TempAbsence.tsx
+│   │   │   │       └── TempResidence.tsx
+│   │   │   ├── settings
+│   │   │   │   ├── AccountList.tsx
+│   │   │   │   └── AddAccount.tsx
+│   │   │   ├── Dashboard.tsx
+│   │   │   ├── Home.tsx
+│   │   │   ├── Login.tsx
+│   │   │   └── NotFound.tsx
+│   │   ├── resources
+│   │   ├── routes
+│   │   │   └── index.tsx
+│   │   ├── services
+│   │   ├── styles
+│   │   │   └── globals.css
+│   │   ├── types
+│   │   │   ├── citizen.ts
+│   │   │   └── household.ts
+│   │   ├── utils
+│   │   ├── App.css
+│   │   ├── App.tsx
+│   │   ├── index.css
+│   │   └── main.tsx
+│   ├── .gitignore
+│   ├── .prettierignore
+│   ├── .prettierrc.json
+│   ├── README.md
+│   ├── components.json
+│   ├── eslint.config.js
+│   ├── index.html
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── postcss.config.cjs
+│   ├── served_index_css.txt
+│   ├── tailwind.config.cjs
+│   ├── tsconfig.app.json
+│   ├── tsconfig.json
+│   ├── tsconfig.node.json
+│   └── vite.config.ts
+├── docs
+│   ├── Design
+│   │   └── architect.md
+│   ├── Implementation
+│   │   └── setup_guide.md
+│   ├── Overview
+│   │   └── introduction.md
+│   └── Requirement
+│       ├── business_requirements.md
+│       └── user_stories.md
+├── server
+│   ├── src
+│   │   ├── config
+│   │   │   ├── config.json
+│   │   │   ├── db.js
+│   │   │   ├── sequelize.js
+│   │   │   └── supabase.js
+│   │   ├── controllers
+│   │   │   ├── householdController.js
+│   │   │   └── personController.js
+│   │   ├── enum
+│   │   ├── middlewares
+│   │   ├── models
+│   │   │   ├── householdHistory.js
+│   │   │   ├── householdMembership.js
+│   │   │   ├── households.js
+│   │   │   ├── index.js
+│   │   │   ├── personEvent.js
+│   │   │   └── persons.js
+│   │   ├── resources
+│   │   ├── routes
+│   │   │   └── web.js
+│   │   ├── services
+│   │   │   ├── householdHistoryService.js
+│   │   │   ├── householdService.js
+│   │   │   ├── personEventService.js
+│   │   │   └── personService.js
+│   │   ├── utils
+│   │   └── index.js
+│   ├── package-lock.json
 │   └── package.json
-│
-├── server/               # Backend Node.js + Express
-│   ├── index.js
-│   ├── routes/
-│   ├── models/
-│   ├── controllers/
-│   └── package.json
-│
-├── package.json          # File gốc (chạy đồng thời client + server)
-├── .env.example          # File mẫu biến môi trường
 ├── .gitignore
+├── LICENSE
 └── README.md
-
-````
+```
 
 ---
 

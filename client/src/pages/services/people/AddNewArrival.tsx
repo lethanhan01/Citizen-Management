@@ -146,9 +146,7 @@ export default function AddNewArrival() {
     <div className="space-y-6">
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-first dark:text-darkmodetext">
-            Thêm nhân khẩu - Mới đến
-          </h2>
+          
           <span className="text-sm font-medium text-first dark:text-darkmodetext">
             Hoàn thành: {progressPercentage}%
           </span>

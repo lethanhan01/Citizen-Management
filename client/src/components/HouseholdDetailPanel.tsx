@@ -116,7 +116,7 @@ export default function HouseholdDetailPanel({
           <div className="pt-4 space-y-3 border-t border-border">
             <div className="grid grid-cols-2 gap-3">
               <button
-                onClick={() => navigate("/services/split-household")}
+                onClick={() => navigate("/services/household/split")}
                 className="
                   px-4 py-2 rounded-lg text-sm font-medium
                   transition hover:opacity-90
@@ -126,7 +126,7 @@ export default function HouseholdDetailPanel({
                 Tách hộ
               </button>
               <button
-                onClick={() => navigate("/services/merge-household")}
+                onClick={() => navigate("/services/household/merge")}
                 className="
                   px-4 py-2 rounded-lg text-sm font-medium
                   transition hover:opacity-90
@@ -139,7 +139,7 @@ export default function HouseholdDetailPanel({
 
             {/* History Link */}
             <button
-              onClick={() => navigate("/services/household-history")}
+              onClick={() => navigate("/services/household/history")}
               className="
                 w-full text-sm text-primary hover:text-primary/80
                 border-b-2 border-primary pb-1

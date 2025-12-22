@@ -160,7 +160,7 @@ export default function DonationCampaigns() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-first dark:text-darkmodetext">Chiến dịch quyên góp</h2>
+        <h2 className="text-2xl font-bold text-first dark:text-darkmodetext">Danh sách chiến dịch quyên góp</h2>
         <button
           onClick={handleAddNewCampaign}
           className="flex items-center gap-2 px-4 py-2 rounded-lg bg-third text-first hover:bg-third/90 transition"

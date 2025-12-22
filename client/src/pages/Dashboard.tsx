@@ -1,15 +1,18 @@
 "use client";
 
 import { useState } from "react";
+import icon5 from "@/assets/icon5.svg";
+import icon6 from "@/assets/icon6.svg";
+import icon7 from "@/assets/icon7.svg";
+import icon1 from "@/assets/icon.svg";
+import icon2 from "@/assets/icon2.svg";
+import icon3 from "@/assets/icon3.svg";
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<"citizens" | "fees">("citizens");
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-foreground">
-        Thống kê tổng quan
-      </h2>
 
       {/* TABS */}
       <div className="flex gap-4 border-b border-border">
@@ -48,19 +51,19 @@ export default function Dashboard() {
             title="Tổng số công dân"
             value="1,234"
             subtitle="Đang sinh sống"
-            color="bg-blue-500"
+            icon={icon5}
           />
           <StatCard
             title="Tổng số hộ khẩu"
             value="456"
             subtitle="Đang hoạt động"
-            color="bg-green-500"
+            icon={icon6}
           />
           <StatCard
             title="Tạm trú/vắng"
             value="89"
             subtitle="Trong tháng"
-            color="bg-purple-500"
+            icon={icon7}
           />
         </div>
       )}
@@ -71,19 +74,19 @@ export default function Dashboard() {
             title="Tổng thu trong tháng"
             value="45.6M"
             subtitle="VNĐ"
-            color="bg-green-500"
+            icon={icon1}
           />
           <StatCard
             title="Đã thu"
             value="38.2M"
             subtitle="83.8%"
-            color="bg-blue-500"
+            icon={icon2}
           />
           <StatCard
             title="Chưa thu"
             value="7.4M"
             subtitle="16.2%"
-            color="bg-red-500"
+            icon={icon3}
           />
         </div>
       )}
@@ -95,19 +98,19 @@ function StatCard({
   title,
   value,
   subtitle,
-  color,
+  icon,
 }: {
   title: string;
   value: string;
   subtitle: string;
-  color: string;
+  icon?: string;
 }) {
   return (
     <div className="bg-card text-card-foreground border border-border rounded-xl p-6 shadow-sm">
       <div className="flex items-center gap-4">
-        <div className={`w-12 h-12 rounded-lg ${color} flex items-center justify-center text-white font-bold text-xl`}>
-          {value.charAt(0)}
-        </div>
+        {icon && (
+          <img src={icon} alt={title} className="w-12 h-12 flex-shrink-0" />
+        )}
         <div>
           <p className="text-sm text-muted-foreground">{title}</p>
           <p className="text-2xl font-bold text-foreground">{value}</p>

@@ -9,7 +9,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-fourth dark:bg-first px-6">
-      
+
       {/* Nút đổi theme */}
       <div className="absolute top-6 right-6">
         <ThemeToggle />
