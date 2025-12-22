@@ -17,14 +17,6 @@ import {
     getPersonEvents,
     handlePersonEvent,
 } from "../controllers/personController.js";
-// --- AUTH CONTROLLER --- 
-import authController from "../controllers/authController.js";
-// --- CHECK TOKEN ---
-import verifyToken from "../middleware/authMiddleware.js";
-// --- CHECK ROLE ---
-import checkRole from "../middleware/roleMiddleware.js";
-
-import pool from "../config/db.js";
 
 const router = express.Router();
 let initWebRoutes = (app) => {
