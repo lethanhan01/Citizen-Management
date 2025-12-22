@@ -17,7 +17,6 @@ import {
     getPersonEvents,
     handlePersonEvent,
 } from "../controllers/personController.js";
-import pool from "../config/db.js";
 
 const router = express.Router();
 let initWebRoutes = (app) => {

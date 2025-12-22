@@ -20,6 +20,7 @@
         "pg": "^8.16.3",
         "pg-hstore": "^2.3.4",
         "sequelize": "^6.37.7",
-        "sequelize-cli": "^6.6.3"
+        "sequelize-cli": "^6.6.3",
+        "serverless-http": "^4.0.0"
     }
 }
