@@ -1,0 +1,15 @@
+service: node-serverless-api
+
+provider:
+    name: aws
+    runtime: nodejs18.x
+    region: ap-southeast-1
+
+functions:
+    api:
+        handler: src/handler.handler
+        events:
+            - httpApi: "*"
+
+plugins:
+    - serverless-offline
