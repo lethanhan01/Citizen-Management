@@ -17,10 +17,26 @@ import {
     getPersonEvents,
     handlePersonEvent,
 } from "../controllers/personController.js";
+// --- AUTH CONTROLLER --- 
+import authController from "../controllers/authController.js";
+// --- CHECK TOKEN ---
+import verifyToken from "../middleware/authMiddleware.js";
+// --- CHECK ROLE ---
+import checkRole from "../middleware/roleMiddleware.js";
+
 import pool from "../config/db.js";
 
 const router = express.Router();
 let initWebRoutes = (app) => {
+
+    // ---- AUTH ROUTE ----
+    router.post("/api/v1/auth/register", verifyToken, checkRole(['admin']), authController.handleRegister);
+    router.post("/api/v1/auth/login", authController.handleLogin);
+    router.get("/api/v1/auth/me", verifyToken, authController.getMe);
+    // ---- Update & Logout ---
+    router.put("/api/v1/auth/updateProfile", verifyToken, authController.handleUpdateProfile);
+    router.post("/api/v1/auth/logout", verifyToken, authController.handleLogout);
+
     router.post("/api/v1/ho-khau", createHousehold);
     router.get("/api/v1/ho-khau/:id", getHouseholdById);
     router.post("/api/v1/ho-khau/:hoKhauId/nhan-khau", addPersonToHousehold);
