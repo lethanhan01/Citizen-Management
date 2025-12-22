@@ -2,12 +2,12 @@ service: node-serverless-api
 
 provider:
     name: aws
-    runtime: nodejs18.x
+    runtime: nodejs14.x
     region: ap-southeast-1
 
 functions:
     api:
-        handler: src/handler.handler
+        handler: src/handler.cjs.api
         events:
             - httpApi: "*"
 
