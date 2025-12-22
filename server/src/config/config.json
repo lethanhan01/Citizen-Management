@@ -1,24 +1,33 @@
 {
-    "development": {
-        "username": "postgres",
-        "password": "12092005",
-        "database": "postgres",
-        "host": "127.0.0.1",
-        "port": 54321,
-        "dialect": "postgres"
-    },
-    "test": {
-        "username": "postgres",
-        "password": null,
-        "database": "database_test",
-        "host": "127.0.0.1",
-        "dialect": "postgres"
-    },
-    "production": {
-        "username": "postgres",
-        "password": null,
-        "database": "database_production",
-        "host": "127.0.0.1",
-        "dialect": "postgres"
+  "development": {
+    "username": "postgres.vnymbyvqcbpndvelwixe", 
+    "password": "PrjKTPMPasswordDB5432",
+    "database": "postgres",
+    "host": "aws-0-ap-northeast-2.pooler.supabase.com",
+    "port": 5432,
+    "dialect": "postgres",
+    "dialectOptions": {
+      "ssl": {
+        "require": true,
+        "rejectUnauthorized": false
+      }
     }
+  },
+  "test": {
+    "username": "postgres.vnymbyvqcbpndvelwixe",
+    "password": "PrjKTPMPasswordDB5432",
+    "database": "database_test",
+    "host": "127.0.0.1",
+    "dialect": "postgres"
+  },
+  "production": {
+    "use_env_variable": "DATABASE_URL",
+    "dialect": "postgres",
+    "dialectOptions": {
+      "ssl": {
+        "require": true,
+        "rejectUnauthorized": false
+      }
+    }
+  }
 }

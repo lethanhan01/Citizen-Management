@@ -4,6 +4,7 @@ import fs from "fs";
 import path from "path";
 import Sequelize from "sequelize";
 import process from "process";
+import "dotenv/config";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -12,8 +13,26 @@ const basename = path.basename(__filename);
 const env = process.env.NODE_ENV || "development";
 
 // Import config.json
-import configFile from "../config/config.json" assert { type: "json" };
+import configFile from "../config/config.json" with { type: "json" };
 const config = configFile[env];
+
+if (process.env.DB_USER) {
+    console.log("🔄 Đang dùng cấu hình từ .env cho Sequelize Models...");
+    config.username = process.env.DB_USER;
+    config.password = process.env.DB_PASSWORD;
+    config.database = process.env.DB_NAME;
+    config.host = process.env.DB_HOST;
+    config.port = process.env.DB_PORT;
+    config.dialect = "postgres";
+    
+    // Bắt buộc bật SSL cho Supabase
+    config.dialectOptions = {
+        ssl: {
+            require: true,
+            rejectUnauthorized: false
+        }
+    };
+}
 
 const db = {};
 
