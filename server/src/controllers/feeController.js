@@ -55,8 +55,25 @@ const handleDeleteFee = async (req, res) => {
   }
 };
 
+const handleGetPayments = async (req, res) => {
+  try {
+    const result = await feeService.getPaymentList(req.query);
+    return res.status(200).json({
+      success: true,
+      message: "Lấy danh sách đóng góp thành công",
+      data: result
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
 export default {
   handleCreateFee,
   handleGetAllFees,
-  handleDeleteFee
+  handleDeleteFee,
+  handleGetPayments
 };
