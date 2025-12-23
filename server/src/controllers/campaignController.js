@@ -84,27 +84,37 @@ const handleContribute = async (req, res) => {
     if (!campaign_id || !household_id || !amount) {
       return res.status(400).json({
         success: false,
-        message: "Thiếu thông tin bắt buộc (campaign_id, household_id, amount)",
+        message:
+          "Thiếu thông tin bắt buộc. Vui lòng nhập đủ: Chiến dịch, Hộ khẩu và Số tiền! (campaign_id, household_id, amount)",
+      });
+    }
+
+    if (amount <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Số tiền đóng góp phải lớn hơn 0!",
       });
     }
 
     const result = await campaignService.recordContribution(req.body);
 
-    // Custom message tùy theo hành động
-    const message =
-      result.action === "created"
-        ? "Đã ghi nhận đóng góp mới thành công!"
-        : "Đã cập nhật (cộng dồn) số tiền đóng góp thành công!";
+    // Tạo thông báo chi tiết
+    let msg = "";
+    if (result.action === "created") {
+      msg = `Ghi nhận thành công! Hộ ${result.data.household_no} đã đóng ${result.data.amount} cho chiến dịch: ${result.data.campaign_name}.`;
+    } else {
+      msg = `Cập nhật thành công! Hộ ${result.data.household_no} đã đóng thêm ${result.data.contributeAmount}. Tổng cộng: ${result.data.amount}.`;
+    }
 
     return res.status(200).json({
-        success: true,
-        message: message,
-        data: result.data
+      success: true,
+      message: msg,
+      data: result,
     });
   } catch (error) {
     return res.status(500).json({
-        success: false,
-        message: "Lỗi hệ thống: " + error.message
+      success: false,
+      message: "Lỗi hệ thống: " + error.message,
     });
   }
 };
@@ -115,5 +125,5 @@ export default {
   handleShow,
   handleUpdate,
   handleDelete,
-  handleContribute
+  handleContribute,
 };

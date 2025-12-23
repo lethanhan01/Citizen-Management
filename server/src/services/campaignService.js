@@ -1,4 +1,5 @@
 import db from "../models/index.js";
+import { Op } from "sequelize";
 
 const Campaign = db.Campaign;
 const CampaignPayment = db.CampaignPayment;
@@ -78,6 +79,42 @@ const recordContribution = async (data) => {
     note,
   } = data;
 
+  // --- BƯỚC 1: VALIDATION (KIỂM TRA HỢP LỆ) ---
+
+  // 1.1 Kiểm tra chiến dịch có tồn tại không?
+  const campaign = await Campaign.findByPk(campaign_id);
+  if (!campaign) {
+    throw new Error("Chiến dịch vận động không tồn tại!");
+  }
+
+  // 1.2 Kiểm tra thời gian chiến dịch
+  const donateDate = new Date(contribution_date);
+  const startDate = new Date(campaign.start_date);
+
+  // Nếu chiến dịch có ngày kết thúc, kiểm tra xem đã hết hạn chưa
+  if (campaign.end_date) {
+    const endDate = new Date(campaign.end_date);
+    if (donateDate > endDate) {
+      throw new Error(
+        `Chiến dịch đã kết thúc vào ngày ${campaign.end_date}. Không thể tiếp nhận đóng góp mới.`
+      );
+    }
+  }
+
+  if (donateDate < startDate) {
+    throw new Error(
+      `Chiến dịch chưa bắt đầu (Ngày bắt đầu: ${campaign.start_date}).`
+    );
+  }
+
+  // 1.3 Kiểm tra hộ khẩu có tồn tại không?
+  const household = await Household.findByPk(household_id);
+  if (!household) {
+    throw new Error("Hộ khẩu không tồn tại trong hệ thống!");
+  }
+
+  // --- BƯỚC 2: XỬ LÝ GHI NHẬN ---
+
   // 1. Kiểm tra xem hộ này đã có bản ghi trong chiến dịch này chưa
   let contribution = await CampaignPayment.findOne({
     where: {
@@ -89,6 +126,8 @@ const recordContribution = async (data) => {
   if (contribution) {
     // --- TRƯỜNG HỢP A: ĐÃ TỒN TẠI -> CỘNG DỒN ---
 
+    const contributeAmount = amount;
+
     // Tính tổng tiền mới
     const newAmount = parseFloat(contribution.amount) + parseFloat(amount);
 
@@ -96,28 +135,37 @@ const recordContribution = async (data) => {
     await contribution.update({
       amount: newAmount,
       contribution_date: contribution_date,
-      status: "paid", // Mặc định đóng tiền là 'paid' (trừ khi bạn muốn quản lý pending)
+      status: "paid", // Mặc định đóng tiền là 'paid'
       note: note ? `${contribution.note || ""} | ${note}` : contribution.note, // Ghi nối thêm note nếu có
     });
 
     return {
-        action: "updated",
-        data: contribution
+      action: "updated",
+      data: {
+        campaign_name: campaign.name,
+        household_no: household.household_no,
+        contributeAmount,
+        ...contribution.get({ plain: true }),
+      },
     };
   } else {
     // --- TRƯỜNG HỢP B: CHƯA CÓ -> TẠO MỚI ---
     const newContribution = await CampaignPayment.create({
-        campaign_id,
-        household_id,
-        amount,
-        contribution_date,
-        status: "paid",
-        note
+      campaign_id,
+      household_id,
+      amount,
+      contribution_date,
+      status: "paid",
+      note,
     });
 
     return {
-        action: "created",
-        data: newContribution
+      action: "created",
+      data: {
+        campaign_name: campaign.name,
+        household_no: household.household_no,
+        ...newContribution.get({ plain: true }),
+      },
     };
   }
 };
@@ -128,5 +176,5 @@ export default {
   getCampaignDetail,
   updateCampaign,
   deleteCampaign,
-  recordContribution
+  recordContribution,
 };
