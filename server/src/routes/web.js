@@ -31,6 +31,8 @@ import userController from "../controllers/userController.js";
 import searchController from "../controllers/searchController.js";
 // --- FEE CONTROLLER ---
 import feeController from "../controllers/feeController.js";
+// --- CAMPAIGN CONTROLLER ---
+import campaignController from "../controllers/campaignController.js";
 
 // --- CHECK TOKEN ---
 import verifyToken from "../middleware/authMiddleware.js";
@@ -223,6 +225,50 @@ let initWebRoutes = (app) => {
   router.put("/api/v1/tam-tru-vang/:id", updateTempResidence);
 
   router.delete("/api/v1/tam-tru-vang/:id", deleteTempResidence);
+
+  //CRUD CHIẾN DỊCH TỰ NGUYỆN
+  // Tạo mới
+  router.post(
+    "/api/v1/chien-dich",
+    verifyToken,
+    checkRole(["admin", "accountant"]),
+    campaignController.handleCreate
+  );
+  // Xem danh sách
+  router.get(
+    "/api/v1/chien-dich",
+    verifyToken,
+    checkRole(["admin", "accountant"]),
+    campaignController.handleIndex
+  );
+  // Xem chi tiết
+  router.get(
+    "/api/v1/chien-dich/:id",
+    verifyToken,
+    checkRole(["admin", "accountant"]),
+    campaignController.handleShow
+  );
+  // Cập nhật
+  router.put(
+    "/api/v1/chien-dich/:id",
+    verifyToken,
+    checkRole(["admin", "accountant"]),
+    campaignController.handleUpdate
+  );
+  // Xóa
+  router.delete(
+    "/api/v1/chien-dich/:id",
+    verifyToken,
+    checkRole(["admin", "accountant"]),
+    campaignController.handleDelete
+  );
+  // GHI NHẬN ĐÓNG GÓP TỰ NGUYỆN
+  router.post(
+    "/api/v1/chien-dich/dong-gop",
+    verifyToken,
+    checkRole(["admin", "accountant"]),
+    campaignController.handleContribute
+  );
 
   return app.use("/", router);
 };

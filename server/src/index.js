@@ -9,6 +9,7 @@ const app = express();
 const pool = getPool();
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 app.get("/", (req, res) => {
   res.send("Hello from Node.js backend!");
