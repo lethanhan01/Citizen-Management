@@ -33,6 +33,8 @@ import searchController from "../controllers/searchController.js";
 import feeController from "../controllers/feeController.js";
 // --- CAMPAIGN CONTROLLER ---
 import campaignController from "../controllers/campaignController.js";
+// --- STATISTIC CONTROLLER ---
+import statisticController from "../controllers/statisticController.js";
 
 // --- CHECK TOKEN ---
 import verifyToken from "../middleware/authMiddleware.js";
@@ -269,6 +271,10 @@ let initWebRoutes = (app) => {
     checkRole(["admin", "accountant"]),
     campaignController.handleContribute
   );
+
+  //GET: Thống kê Dashboard
+  router.get("/api/v1/so-lieu/tong-quan", verifyToken, checkRole(['admin']), statisticController.getDashboard);
+
 
   return app.use("/", router);
 };
