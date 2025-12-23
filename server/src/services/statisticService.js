@@ -188,6 +188,66 @@ const getFeeCollectionReport = async (rateId) => {
   };
 };
 
+const getFullFeeCollectionReport = async (rateId) => {
+  // 1. Kiểm tra khoản thu có tồn tại không
+  const feeRate = await FeeRate.findByPk(rateId);
+  if (!feeRate) {
+    throw new Error("Khoản thu không tồn tại!");
+  }
+
+  // 2. Thực hiện các phép tính toán tổng hợp (Aggregation)
+  // Dùng Promise.all để chạy song song
+  const [
+    totalExpected, // Tổng tiền CẦN thu
+    totalCollected, // Tổng tiền ĐÃ thu (bao gồm cả nộp một phần)
+    countPaid, // Số hộ đã hoàn thành
+    countPartial, // Số hộ đang nộp dở dang
+    countPending, // Số hộ chưa nộp đồng nào
+  ] = await Promise.all([
+    Payment.sum("total_amount", { where: { rate_id: rateId } }),
+    Payment.sum("paid_amount", { where: { rate_id: rateId } }),
+    Payment.count({ where: { rate_id: rateId, payment_status: "paid" } }),
+    Payment.count({ where: { rate_id: rateId, payment_status: "partial" } }),
+    Payment.count({ where: { rate_id: rateId, payment_status: "pending" } }),
+  ]);
+
+  // 3. Lấy danh sách TOÀN BỘ
+  const allHouseholds = await Payment.findAll({
+    where: { rate_id: rateId },
+    include: [
+      {
+        model: Household,
+        as: "household",
+        attributes: ["household_no", "address"],
+      },
+    ],
+    order: [
+      ["payment_status", "ASC"],
+      ["household_id", "ASC"],
+    ],
+  });
+
+  // Format dữ liệu
+  const formattedList = allHouseholds.map((p) => ({
+    household_no: p.household.household_no,
+    address: p.household.address,
+    must_pay: parseInt(p.total_amount),
+    paid: parseInt(p.paid_amount),
+    debt: parseInt(p.total_amount) - parseInt(p.paid_amount),
+    status: p.payment_status,
+    date: p.date,
+  }));
+
+  return {
+    tenKhoanThu: feeRate.item_type,
+    tongSoTienCanThu: totalExpected || 0,
+    tongSoTienDaThu: totalCollected || 0,
+    tienDoHoanThanh: countPaid,
+    soHoChuaNop: countPending + countPartial,
+    danhSachChiTiet: formattedList,
+  };
+};
+
 const getDonationReport = async (campaignId) => {
   // 1. Kiểm tra đợt vận động có tồn tại không
   const campaign = await Campaign.findByPk(campaignId);
@@ -237,5 +297,6 @@ const getDonationReport = async (campaignId) => {
 export default {
   getDashboardStats,
   getFeeCollectionReport,
-  getDonationReport
+  getDonationReport,
+  getFullFeeCollectionReport
 };

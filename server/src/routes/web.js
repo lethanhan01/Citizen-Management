@@ -35,6 +35,8 @@ import feeController from "../controllers/feeController.js";
 import campaignController from "../controllers/campaignController.js";
 // --- STATISTIC CONTROLLER ---
 import statisticController from "../controllers/statisticController.js";
+// --- EXPORT CONTROLLER ---
+import exportController from "../controllers/exportController.js";
 
 // --- CHECK TOKEN ---
 import verifyToken from "../middleware/authMiddleware.js";
@@ -294,6 +296,39 @@ let initWebRoutes = (app) => {
     verifyToken,
     checkRole(["admin", "accountant"]),
     statisticController.getDonationReport
+  );
+
+  // XUẤT BÁO CÁO EXCEL
+  // 1. Xuất báo cáo thu phí (Danh sách hộ đang nợ hoặc chưa đóng)
+  router.get(
+    "/api/v1/export/thu-phi/ton-dong/:id",
+    verifyToken,
+    checkRole(["admin", "accountant"]),
+    exportController.exportFeeReport
+  );
+
+  // 2. Xuất báo cáo đóng góp tự nguyện
+  router.get(
+    "/api/v1/export/dong-gop/:id",
+    verifyToken,
+    checkRole(["admin", "accountant"]),
+    exportController.exportDonationReport
+  );
+
+  // 3. Xuất danh sách tổng hợp (để báo cáo, lưu trữ)
+  router.get(
+    "/api/v1/export/thu-phi/tong-hop/:id",
+    verifyToken,
+    checkRole(["admin", "accountant"]),
+    exportController.exportFullFeeReport
+  );
+
+  // 4. Xuất phiếu thu hàng loạt (để in ra giấy đi thu tiền)
+  router.get(
+    "/api/v1/export/thu-phi/phieu-thu/:id",
+    verifyToken,
+    checkRole(["admin", "accountant"]),
+    exportController.exportReceipts
   );
 
   return app.use("/", router);
