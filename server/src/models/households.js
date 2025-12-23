@@ -53,6 +53,13 @@ export default (sequelize, DataTypes) => {
                 onDelete: "SET NULL",
                 onUpdate: "CASCADE",
             });
+            Household.hasMany(models.TempResidence, {
+                foreignKey: "household_id",
+                sourceKey: "household_id",
+                as: "tempResidences",
+                onDelete: "CASCADE",
+                onUpdate: "CASCADE",
+            });
         }
     }
 
