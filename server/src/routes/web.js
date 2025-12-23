@@ -165,10 +165,32 @@ let initWebRoutes = (app) => {
   );
 
   // QUẢN LÝ KHOẢN THU (Admin/Accountant)
-  router.post("/api/v1/khoan-thu", verifyToken, checkRole(['admin', 'accountant']), feeController.handleCreateFee);
-  router.get("/api/v1/khoan-thu", verifyToken, checkRole(['admin', 'accountant']), feeController.handleGetAllFees);
+  router.post(
+    "/api/v1/khoan-thu",
+    verifyToken,
+    checkRole(["admin", "accountant"]),
+    feeController.handleCreateFee
+  );
+  router.get(
+    "/api/v1/khoan-thu/danh-sach",
+    verifyToken,
+    checkRole(["admin", "accountant"]),
+    feeController.handleGetAllFees
+  );
   // Xóa khoản thu (Dùng để xóa rác khi test API)
-  router.delete("/api/v1/khoan-thu/:id", verifyToken, checkRole(['admin', 'accountant']), feeController.handleDeleteFee);
+  router.delete(
+    "/api/v1/khoan-thu/:id",
+    verifyToken,
+    checkRole(["admin", "accountant"]),
+    feeController.handleDeleteFee
+  );
+  // API Tìm kiếm/Lọc danh sách đóng tiền
+  router.get(
+    "/api/v1/khoan-thu/tim-kiem",
+    verifyToken,
+    checkRole(["admin", "accountant"]),
+    feeController.handleGetPayments
+  );
 
   // --- Tìm kiếm linh hoạt ---
   // GET: Admin hay Accountant đều dùng được

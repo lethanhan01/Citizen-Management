@@ -1,4 +1,5 @@
 import db from "../models/index.js";
+import { Op } from "sequelize";
 
 const FeeRate = db.FeeRate;
 const Payment = db.Payment;
@@ -134,8 +135,92 @@ const deleteFeeWave = async (rateId) => {
   }
 };
 
+const getPaymentList = async (queryParams) => {
+  const { rate_id, status, keyword, page = 1, limit = 10 } = queryParams;
+
+  const offset = (page - 1) * limit;
+
+  // A. Xây dựng điều kiện lọc cho bảng Payment
+  let paymentWhere = {};
+
+  if (rate_id) {
+    paymentWhere.rate_id = rate_id;
+  }
+
+  if (status) {
+    paymentWhere.payment_status = status;
+  }
+
+  // B. Xây dựng điều kiện lọc cho bảng Household (Tìm theo số hộ khẩu)
+  let householdWhere = {};
+
+  if (keyword) {
+    // Tìm keyword trong household_no HOẶC payer_name (ở bảng Payment)
+    // Vì payer_name nằm ở bảng Payment, household_no nằm ở bảng Household
+    // nên ta xử lý logic OR này hơi khéo léo một chút:
+    // Nếu keyword nhìn giống số hộ khẩu (HK...) thì tìm ở Household
+    // Nếu không thì tìm tên người nộp ở Payment.
+    if (keyword.toUpperCase().startsWith("HK")) {
+      householdWhere.household_no = { [Op.iLike]: `%${keyword}` };
+    } else {
+      paymentWhere.payer_name = { [Op.iLike]: `%${keyword}` };
+    }
+  }
+
+  // C. Query 1: Thực hiện truy vấn
+  const { count, rows } = await Payment.findAndCountAll({
+    where: paymentWhere,
+    include: [
+      {
+        model: Household,
+        as: "household",
+        attributes: ["household_no", "address", "head_person_id"],
+        where: Object.keys(householdWhere).length > 0 ? householdWhere : null,
+        required: Object.keys(householdWhere).length > 0,
+      },
+      {
+        model: FeeRate,
+        as: "feeRate",
+        attributes: ["item_type", "amount"],
+      },
+    ],
+    order: [
+      ["payment_status", "ASC"],
+      ["household_id", "ASC"],
+    ],
+    limit: parseInt(limit),
+    offset: parseInt(offset),
+  });
+
+  // D. Query 2: Tính tổng tiền toàn bộ
+  // Hàm này sẽ bỏ qua limit/offset, tính tổng trên toàn bộ dữ liệu tìm thấy
+  const totalRevenue = await Payment.sum("total_amount", {
+    where: paymentWhere, // Vẫn giữ điều kiện lọc (ví dụ: chỉ tính tổng những người 'paid')
+    include: [
+      // Nếu điều kiện lọc nằm ở bảng Household (như tìm theo keyword HK...),
+      // ta bắt buộc phải include Household vào đây thì mới lọc đúng được.
+      {
+        model: Household,
+        as: "household",
+        where: Object.keys(householdWhere).length > 0 ? householdWhere : null,
+        required: Object.keys(householdWhere).length > 0,
+        attributes: []
+      },
+    ],
+  });
+
+  return {
+    totalRecords: count,
+    totalRevenue: totalRevenue || 0,
+    totalPages: Math.ceil(count / limit),
+    currentPage: parseInt(page),
+    data: rows,
+  };
+};
+
 export default {
   createFeeWave,
   getAllFeeWaves,
-  deleteFeeWave
+  deleteFeeWave,
+  getPaymentList,
 };
