@@ -73,7 +73,7 @@ const getMe = async (req, res) => {
     return res.status(200).json({
         success: true,
         message: "Lấy thông tin người dùng thành công",
-        user: req.user
+        data: req.user
     });
 };
 
