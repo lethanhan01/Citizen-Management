@@ -54,6 +54,7 @@ export default function TopBar({
   const handleLogout = () => {
     // Sử dụng store để đảm bảo reset state + redirect thống nhất
     logout();
+    navigate('/login', { replace: true });
   };
 
   // Close dropdown when clicking outside
