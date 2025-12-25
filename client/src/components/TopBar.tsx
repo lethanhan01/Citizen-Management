@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Bell, Search, User, LogOut } from "lucide-react";
+import { useAuthStore } from "@/stores/auth.store";
 
 interface TopBarProps {
   onSearch?: (query: string) => void;
@@ -17,6 +18,7 @@ export default function TopBar({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const location = useLocation();
+  const { logout } = useAuthStore();
 
 
   // Get page title from route
@@ -50,8 +52,8 @@ export default function TopBar({
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    navigate("/login", { replace: true });
+    // Sử dụng store để đảm bảo reset state + redirect thống nhất
+    logout();
   };
 
   // Close dropdown when clicking outside

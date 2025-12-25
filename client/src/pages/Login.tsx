@@ -10,30 +10,27 @@ import roundShapeLight from "@/assets/round-shape-light.svg";
 import roundShapeBlue from "@/assets/round-shape.svg";
 import { useEffect } from "react";
 
+import { useAuthStore } from "@/stores/auth.store";
+
 export default function Login() {
   const navigate = useNavigate();
+  const { token, loading, error, login } = useAuthStore();
 
   const [form, setForm] = useState({ username: "", password: "" });
-  const [error, setError] = useState("");
-  
+
   useEffect(() => {
-    const token = localStorage.getItem("token");
     if (token) {
       navigate("/dashboard", { replace: true });
     }
-  }, []);
+  }, [token, navigate]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
-
-    if (form.username !== "admin" || form.password !== "inprogress") {
-      setError("Tên đăng nhập hoặc mật khẩu sai!");
-      return;
+    await login(form.username, form.password);
+    const { token: newToken } = useAuthStore.getState();
+    if (newToken) {
+      navigate("/dashboard", { replace: true });
     }
-    localStorage.setItem("token", "fake-token");
-
-    navigate("/dashboard");
   };
 
   return (
@@ -113,7 +110,7 @@ export default function Login() {
               type="submit"
               className="btn-theme w-full font-semibold rounded-lg text-[clamp(0.8rem,2vw,0.95rem)] px-[clamp(1rem,3vw,1.5rem)] py-[clamp(0.6rem,2vw,0.75rem)] transition"
             >
-              Đăng nhập
+              {loading ? "Đang đăng nhập..." : "Đăng nhập"}
             </button>
 
             <p className="text-[clamp(0.7rem,1.5vw,0.85rem)] text-muted-foreground dark:text-darkblue text-center pt-2">

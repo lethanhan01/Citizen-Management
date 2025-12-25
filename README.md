@@ -40,39 +40,14 @@
 │   ├── .husky
 │   │   └── pre-commit
 │   ├── src
+│   │   ├── api
+│   │   │   ├── auth.api.ts
+│   │   │   ├── axios.ts
+│   │   │   ├── citizen.api.ts
+│   │   │   └── index.ts
 │   │   ├── assets
-│   │   │   ├── BIGSHOULDERSDISPLAY
-│   │   │   │   ├── BigShouldersDisplay-Black.ttf
-│   │   │   │   ├── BigShouldersDisplay-Bold.ttf
-│   │   │   │   ├── BigShouldersDisplay-ExtraBold.ttf
-│   │   │   │   ├── BigShouldersDisplay-ExtraLight.ttf
-│   │   │   │   ├── BigShouldersDisplay-Light.ttf
-│   │   │   │   ├── BigShouldersDisplay-Medium.ttf
-│   │   │   │   ├── BigShouldersDisplay-Regular.ttf
-│   │   │   │   ├── BigShouldersDisplay-SemiBold.ttf
-│   │   │   │   └── BigShouldersDisplay-Thin.ttf
-│   │   │   ├── icon.svg
-│   │   │   ├── icon2.svg
-│   │   │   ├── icon3.svg
-│   │   │   ├── icon4.svg
-│   │   │   ├── icon5.svg
-│   │   │   ├── icon6.svg
-│   │   │   ├── icon7.svg
-│   │   │   ├── icon8.svg
-│   │   │   ├── lakhe.gif
-│   │   │   ├── lakhe2.gif
-│   │   │   ├── lakhe3.gif
-│   │   │   ├── lakhe4.gif
-│   │   │   ├── lakhe5.gif
-│   │   │   ├── lakhe6.gif
-│   │   │   ├── lakhe7.gif
-│   │   │   ├── react.svg
-│   │   │   ├── round-shape-light.svg
-│   │   │   ├── round-shape.svg
-│   │   │   └── vite.svg
 │   │   ├── components
 │   │   │   ├── CitizenDetailPanel.tsx
-│   │   │   ├── ElectricBorder.tsx
 │   │   │   ├── ErrorFallback.tsx
 │   │   │   ├── HouseholdDetailPanel.tsx
 │   │   │   ├── RequireAuth.tsx
@@ -120,16 +95,13 @@
 │   │   │   ├── Home.tsx
 │   │   │   ├── Login.tsx
 │   │   │   └── NotFound.tsx
-│   │   ├── resources
 │   │   ├── routes
 │   │   │   └── index.tsx
-│   │   ├── services
 │   │   ├── styles
 │   │   │   └── globals.css
 │   │   ├── types
 │   │   │   ├── citizen.ts
 │   │   │   └── household.ts
-│   │   ├── utils
 │   │   ├── App.css
 │   │   ├── App.tsx
 │   │   ├── index.css
@@ -163,31 +135,55 @@
 ├── server
 │   ├── src
 │   │   ├── config
-│   │   │   ├── config.json
+│   │   │   ├── config.js
 │   │   │   ├── db.js
 │   │   │   ├── sequelize.js
 │   │   │   └── supabase.js
 │   │   ├── controllers
+│   │   │   ├── authController.js
+│   │   │   ├── campaignController.js
+│   │   │   ├── exportController.js
+│   │   │   ├── feeController.js
 │   │   │   ├── householdController.js
-│   │   │   └── personController.js
-│   │   ├── enum
-│   │   ├── middlewares
+│   │   │   ├── personController.js
+│   │   │   ├── searchController.js
+│   │   │   ├── statisticController.js
+│   │   │   ├── tempResidenceController.js
+│   │   │   └── userController.js
+│   │   ├── middleware
+│   │   │   ├── authMiddleware.js
+│   │   │   ├── errorHandler.js
+│   │   │   └── roleMiddleware.js
 │   │   ├── models
+│   │   │   ├── campaign.js
+│   │   │   ├── campaignPayment.js
+│   │   │   ├── feeRate.js
 │   │   │   ├── householdHistory.js
 │   │   │   ├── householdMembership.js
 │   │   │   ├── households.js
 │   │   │   ├── index.js
+│   │   │   ├── payment.js
 │   │   │   ├── personEvent.js
-│   │   │   └── persons.js
-│   │   ├── resources
+│   │   │   ├── persons.js
+│   │   │   ├── tempResidence.js
+│   │   │   └── user.js
 │   │   ├── routes
 │   │   │   └── web.js
 │   │   ├── services
+│   │   │   ├── authService.js
+│   │   │   ├── campaignService.js
+│   │   │   ├── exportService.js
+│   │   │   ├── feeService.js
 │   │   │   ├── householdHistoryService.js
 │   │   │   ├── householdService.js
 │   │   │   ├── personEventService.js
-│   │   │   └── personService.js
+│   │   │   ├── personService.js
+│   │   │   ├── searchService.js
+│   │   │   ├── statisticService.js
+│   │   │   ├── tempResidenceService.js
+│   │   │   └── userService.js
 │   │   ├── utils
+│   │   │   └── generateToken.js
 │   │   └── index.js
 │   ├── package-lock.json
 │   └── package.json
