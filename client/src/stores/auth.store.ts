@@ -36,9 +36,6 @@ export const useAuthStore = create<AuthState>()(
           localStorage.removeItem('token');
         } finally {
           set({ user: null, token: null });
-          if (typeof window !== 'undefined') {
-            window.location.href = '/login';
-          }
         }
       },
       async fetchMe() {
