@@ -1,307 +1,185 @@
 "use client";
 
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { User, Lock, LogOut, Eye, EyeOff, Loader } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
+import { User, Loader, Search } from "lucide-react";
+// @ts-ignore - api.js is a JavaScript file
+import { apiFetch } from "@/stores/api";
 
-interface UserProfile {
-  username: string;
-  fullName: string;
-  role: string;
-  email: string;
-  cccd: string;
-  phone: string;
-  avatar?: string;
+interface CitizenData {
+  person_id: string;
+  full_name: string;
+  alias?: string;
+  gender: string;
+  dob?: string;
+  birthplace?: string;
+  ethnicity?: string;
+  hometown?: string;
+  occupation?: string;
+  workplace?: string;
+  citizen_id_num?: string;
+  citizen_id_issued_date?: string;
+  citizen_id_issued_place?: string;
+  residency_status?: string;
+  residence_registered_date?: string;
+  previous_address?: string;
+  age?: number;
+  households?: Array<{
+    household_id: string;
+    household_no?: string;
+    address?: string;
+  }>;
 }
 
-const MOCK_USER: UserProfile = {
-  username: "admin",
-  fullName: "Nguyễn Văn Admin",
-  role: "Quản trị viên",
-  email: "admin@example.com",
-  cccd: "012345678901",
-  phone: "0901234567",
-  avatar: undefined,
-};
-
 export default function Profile() {
-  const navigate = useNavigate();
-  const [user] = useState<UserProfile>(MOCK_USER);
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const [oldPassword, setOldPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [showOldPassword, setShowOldPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [passwordError, setPasswordError] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [citizenId, setCitizenId] = useState(searchParams.get("id") || "123");
+  const [citizen, setCitizen] = useState<CitizenData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string>("");
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    navigate("/login", { replace: true });
-  };
-
-  const confirmLogout = () => {
-    localStorage.removeItem("token");
-    navigate("/login", { replace: true });
-  };
-
-  const handleChangePassword = () => {
-    setOldPassword("");
-    setNewPassword("");
-    setConfirmPassword("");
-    setPasswordError("");
-    setShowPasswordModal(true);
-  };
-
-  const handleSavePassword = async () => {
-    setPasswordError("");
-
-    if (!oldPassword || !newPassword || !confirmPassword) {
-      setPasswordError("Vui lòng điền đầy đủ các trường");
-      return;
-    }
-
-    if (newPassword !== confirmPassword) {
-      setPasswordError("Mật khẩu mới không khớp");
-      return;
-    }
-
-    if (newPassword.length < 6) {
-      setPasswordError("Mật khẩu mới phải có ít nhất 6 ký tự");
-      return;
-    }
-
+  const fetchCitizen = async (id: string) => {
     setIsLoading(true);
+    setError("");
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      // Call API to change password
-      setShowPasswordModal(false);
-    } catch (err) {
-      setPasswordError("Có lỗi xảy ra. Vui lòng thử lại.");
+      const response = await apiFetch(`/nhan-khau/${id}`);
+      if (response.success && response.data) {
+        setCitizen(response.data);
+      } else {
+        setError("Không tìm thấy công dân với ID này");
+        setCitizen(null);
+      }
+    } catch (err: any) {
+      setError(err.message || "Có lỗi xảy ra khi tải thông tin công dân");
+      setCitizen(null);
     } finally {
       setIsLoading(false);
     }
   };
 
+  useEffect(() => {
+    if (citizenId) {
+      fetchCitizen(citizenId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [citizenId]);
+
+  const handleSearch = () => {
+    if (citizenId) {
+      setSearchParams({ id: citizenId });
+      fetchCitizen(citizenId);
+    }
+  };
+
+
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-first dark:text-darkmodetext">Thông tin tài khoản</h2>
+      <h2 className="text-2xl font-bold text-first dark:text-darkmodetext">Thông tin công dân</h2>
 
-      {/* Account Info Card */}
-      <div className="bg-card text-card-foreground border border-border rounded-xl p-6 shadow-sm">
-        <div className="flex items-start gap-6 mb-6">
-          {/* Avatar */}
-          <div className="flex-shrink-0">
-            <div className="w-24 h-24 rounded-full bg-third/20 flex items-center justify-center">
-              {user.avatar ? (
-                <img src={user.avatar} alt={user.fullName} className="w-24 h-24 rounded-full object-cover" />
-              ) : (
-                <User className="w-12 h-12 text-third" />
-              )}
-            </div>
-          </div>
-
-          {/* Info Grid */}
-          <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
-            <InfoField label="Họ và tên" value={user.fullName} />
-            <InfoField label="Vai trò" value={user.role} />
-            <InfoField label="Tên đăng nhập" value={user.username} />
-            <InfoField label="Mật khẩu" value="••••••••" />
-            <InfoField label="Email khôi phục" value={user.email} />
-            <InfoField label="CCCD" value={user.cccd} />
-            <InfoField label="Số điện thoại" value={user.phone} />
-          </div>
-        </div>
-
-        {/* Actions */}
-        <div className="flex flex-wrap gap-3 pt-4 border-t border-second/20 dark:border-second/30">
+      {/* Search Input */}
+      <div className="bg-card text-card-foreground border border-border rounded-xl p-4 shadow-sm">
+        <div className="flex gap-3">
+          <input
+            type="text"
+            value={citizenId}
+            onChange={(e) => setCitizenId(e.target.value)}
+            placeholder="Nhập ID công dân (ví dụ: 123)"
+            className="flex-1 px-4 py-2 rounded-lg border border-input bg-card text-card-foreground focus:outline-none focus:ring-1 focus:ring-selectring"
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                handleSearch();
+              }
+            }}
+          />
           <button
-            onClick={handleChangePassword}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-second/40 dark:border-second/30 text-first dark:text-darkmodetext hover:bg-second/10 dark:hover:bg-second/30 transition"
+            onClick={handleSearch}
+            disabled={isLoading || !citizenId}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-third text-first hover:bg-third/90 disabled:opacity-50 transition"
           >
-            <Lock className="w-4 h-4" />
-            Đổi mật khẩu
-          </button>
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 transition"
-          >
-            <LogOut className="w-4 h-4" />
-            Đăng xuất
+            {isLoading ? (
+              <Loader className="w-4 h-4 animate-spin" />
+            ) : (
+              <Search className="w-4 h-4" />
+            )}
+            Tìm kiếm
           </button>
         </div>
       </div>
 
-      {/* Change Password Modal */}
-      {showPasswordModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-          onClick={() => setShowPasswordModal(false)}
-        >
-          <div
-            className="bg-card text-card-foreground rounded-xl shadow-2xl p-6 w-full max-w-md"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-first dark:text-darkmodetext">Đổi mật khẩu</h3>
-              <button
-                onClick={() => setShowPasswordModal(false)}
-                className="p-2 hover:bg-second/10 dark:hover:bg-second/30 rounded-lg"
-              >
-                <Lock className="w-5 h-5 text-first dark:text-darkmodetext" />
-              </button>
+      {/* Loading State */}
+      {isLoading && (
+        <div className="bg-card text-card-foreground border border-border rounded-xl p-6 shadow-sm flex items-center justify-center">
+          <Loader className="w-6 h-6 animate-spin text-third" />
+          <span className="ml-2 text-first dark:text-darkmodetext">Đang tải thông tin...</span>
+        </div>
+      )}
+
+      {/* Error State */}
+      {error && !isLoading && (
+        <div className="bg-card text-card-foreground border border-red-500 rounded-xl p-6 shadow-sm">
+          <p className="text-red-500">{error}</p>
+        </div>
+      )}
+
+      {/* Citizen Info Card */}
+      {citizen && !isLoading && (
+        <div className="bg-card text-card-foreground border border-border rounded-xl p-6 shadow-sm">
+          <div className="flex items-start gap-6 mb-6">
+            {/* Avatar */}
+            <div className="flex-shrink-0">
+              <div className="w-24 h-24 rounded-full bg-third/20 flex items-center justify-center">
+                <User className="w-12 h-12 text-third" />
+              </div>
             </div>
 
-            <div className="space-y-4">
-              {/* Old Password */}
-              <div>
-                <label className="block text-sm font-medium text-first dark:text-darkmodetext mb-2">
-                  Mật khẩu cũ <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <input
-                    type={showOldPassword ? "text" : "password"}
-                    value={oldPassword}
-                    onChange={(e) => setOldPassword(e.target.value)}
-                    placeholder="Nhập mật khẩu cũ"
-                    className="w-full px-3 py-2 pr-10 rounded-lg border border-input bg-card text-card-foreground focus:outline-none focus:ring-1 focus:ring-selectring"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowOldPassword(!showOldPassword)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-second/10 dark:hover:bg-second/30 rounded"
-                  >
-                    {showOldPassword ? (
-                      <EyeOff className="w-4 h-4 text-second" />
-                    ) : (
-                      <Eye className="w-4 h-4 text-second" />
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              {/* New Password */}
-              <div>
-                <label className="block text-sm font-medium text-first dark:text-darkmodetext mb-2">
-                  Mật khẩu mới <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <input
-                    type={showNewPassword ? "text" : "password"}
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="Nhập mật khẩu mới"
-                    className="w-full px-3 py-2 pr-10 rounded-lg border border-input bg-card text-card-foreground focus:outline-none focus:ring-1 focus:ring-selectring"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowNewPassword(!showNewPassword)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-second/10 dark:hover:bg-second/30 rounded"
-                  >
-                    {showNewPassword ? (
-                      <EyeOff className="w-4 h-4 text-second" />
-                    ) : (
-                      <Eye className="w-4 h-4 text-second" />
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              {/* Confirm Password */}
-              <div>
-                <label className="block text-sm font-medium text-first dark:text-darkmodetext mb-2">
-                  Nhập lại mật khẩu mới <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <input
-                    type={showConfirmPassword ? "text" : "password"}
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Nhập lại mật khẩu mới"
-                    className="w-full px-3 py-2 pr-10 rounded-lg border border-input bg-card text-card-foreground focus:outline-none focus:ring-1 focus:ring-selectring"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-second/10 dark:hover:bg-second/30 rounded"
-                  >
-                    {showConfirmPassword ? (
-                      <EyeOff className="w-4 h-4 text-second" />
-                    ) : (
-                      <Eye className="w-4 h-4 text-second" />
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              {passwordError && <p className="text-sm text-red-500">{passwordError}</p>}
-
-              <div className="flex gap-3 pt-2">
-                <button
-                  onClick={() => setShowPasswordModal(false)}
-                  disabled={isLoading}
-                  className="flex-1 px-4 py-2 rounded-lg border border-second/40 dark:border-second/30 text-first dark:text-darkmodetext hover:bg-second/10 dark:hover:bg-second/30 disabled:opacity-50"
-                >
-                  Hủy bỏ
-                </button>
-                <button
-                  onClick={handleSavePassword}
-                  disabled={isLoading}
-                  className="flex-1 px-4 py-2 rounded-lg bg-third text-first hover:bg-third/90 disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader className="w-4 h-4 animate-spin" />
-                      Đang lưu...
-                    </>
-                  ) : (
-                    "Lưu"
-                  )}
-                </button>
-              </div>
+            {/* Info Grid */}
+            <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <InfoField label="ID" value={citizen.person_id} />
+              <InfoField label="Họ và tên" value={citizen.full_name} />
+              {citizen.alias && <InfoField label="Tên gọi khác" value={citizen.alias} />}
+              <InfoField label="Giới tính" value={citizen.gender || "N/A"} />
+              <InfoField label="Ngày sinh" value={citizen.dob ? new Date(citizen.dob).toLocaleDateString("vi-VN") : "N/A"} />
+              {citizen.age && <InfoField label="Tuổi" value={citizen.age.toString()} />}
+              <InfoField label="CCCD/CMND" value={citizen.citizen_id_num || "N/A"} />
+              <InfoField label="Dân tộc" value={citizen.ethnicity || "N/A"} />
+              <InfoField label="Nơi sinh" value={citizen.birthplace || "N/A"} />
+              <InfoField label="Nguyên quán" value={citizen.hometown || "N/A"} />
+              <InfoField label="Nghề nghiệp" value={citizen.occupation || "N/A"} />
+              <InfoField label="Nơi làm việc" value={citizen.workplace || "N/A"} />
+              <InfoField label="Tình trạng cư trú" value={citizen.residency_status || "N/A"} />
+              {citizen.citizen_id_issued_date && (
+                <InfoField
+                  label="Ngày cấp CCCD"
+                  value={new Date(citizen.citizen_id_issued_date).toLocaleDateString("vi-VN")}
+                />
+              )}
+              <InfoField label="Nơi cấp CCCD" value={citizen.citizen_id_issued_place || "N/A"} />
+              {citizen.residence_registered_date && (
+                <InfoField
+                  label="Ngày đăng ký thường trú"
+                  value={new Date(citizen.residence_registered_date).toLocaleDateString("vi-VN")}
+                />
+              )}
+              {citizen.previous_address && (
+                <InfoField label="Địa chỉ cũ" value={citizen.previous_address} />
+              )}
+              {citizen.households && citizen.households.length > 0 && (
+                <InfoField
+                  label="Hộ khẩu"
+                  value={citizen.households.map((h) => h.household_no || h.household_id).join(", ")}
+                />
+              )}
+              {citizen.households && citizen.households.length > 0 && (
+                <InfoField
+                  label="Địa chỉ"
+                  value={citizen.households[0].address || "N/A"}
+                />
+              )}
             </div>
           </div>
         </div>
       )}
 
-      {/* Logout Confirmation Modal */}
-      {showLogoutConfirm && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-          onClick={() => setShowLogoutConfirm(false)}
-        >
-          <div
-            className="bg-card text-card-foreground rounded-xl shadow-2xl p-6 w-full max-w-sm"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="text-center space-y-4">
-              <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 mx-auto flex items-center justify-center">
-                <LogOut className="w-6 h-6 text-red-600 dark:text-red-400" />
-              </div>
-              <h3 className="text-lg font-semibold text-first dark:text-darkmodetext">Xác nhận đăng xuất</h3>
-              <p className="text-sm text-second dark:text-darkmodetext/70">Bạn có chắc chắn muốn đăng xuất?</p>
-
-              <div className="flex gap-3 pt-2">
-                <button
-                  onClick={() => setShowLogoutConfirm(false)}
-                  className="flex-1 px-4 py-2 rounded-lg border border-second/40 dark:border-second/30 text-first dark:text-darkmodetext hover:bg-second/10 dark:hover:bg-second/30"
-                >
-                  Không
-                </button>
-                <button
-                  onClick={confirmLogout}
-                  className="flex-1 px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600"
-                >
-                  Có
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

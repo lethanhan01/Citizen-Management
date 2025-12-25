@@ -1,17 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { Loader } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
+// @ts-ignore - useAuthStore.js is a JavaScript file
+import { useAuthStore } from "@/stores/useAuthStore";
 import icon from "@/assets/icon.svg";
 import icon2 from "@/assets/icon2.svg";
 import icon4 from "@/assets/icon4.svg";
 import roundShapeLight from "@/assets/round-shape-light.svg";
 import roundShapeBlue from "@/assets/round-shape.svg";
-import { useEffect } from "react";
 
 export default function Login() {
   const navigate = useNavigate();
+  const { login, loading, error: authError } = useAuthStore();
 
   const [form, setForm] = useState({ username: "", password: "" });
   const [error, setError] = useState("");
@@ -21,19 +24,26 @@ export default function Login() {
     if (token) {
       navigate("/dashboard", { replace: true });
     }
-  }, []);
+  }, [navigate]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
-    if (form.username !== "admin" || form.password !== "inprogress") {
-      setError("Tên đăng nhập hoặc mật khẩu sai!");
+    if (!form.username || !form.password) {
+      setError("Vui lòng nhập đầy đủ thông tin!");
       return;
     }
-    localStorage.setItem("token", "fake-token");
 
-    navigate("/dashboard");
+    try {
+      const response = await login(form.username, form.password);
+      // Login thành công, token đã được lưu trong store và localStorage
+      if (response) {
+        navigate("/dashboard", { replace: true });
+      }
+    } catch (err: any) {
+      setError(err.message || "Đăng nhập thất bại. Vui lòng thử lại.");
+    }
   };
 
   return (
@@ -102,18 +112,26 @@ export default function Login() {
               />
             </div>
 
-            {error && (
+            {(error || authError) && (
               <p className="text-red-500 text-[clamp(0.75rem,1.5vw,0.9rem)] font-medium text-center">
-                {error}
+                {error || authError}
               </p>
             )}
 
             {/* BUTTON SUBMIT */}
             <button
               type="submit"
-              className="btn-theme w-full font-semibold rounded-lg text-[clamp(0.8rem,2vw,0.95rem)] px-[clamp(1rem,3vw,1.5rem)] py-[clamp(0.6rem,2vw,0.75rem)] transition"
+              disabled={loading}
+              className="btn-theme w-full font-semibold rounded-lg text-[clamp(0.8rem,2vw,0.95rem)] px-[clamp(1rem,3vw,1.5rem)] py-[clamp(0.6rem,2vw,0.75rem)] transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              Đăng nhập
+              {loading ? (
+                <>
+                  <Loader className="w-4 h-4 animate-spin" />
+                  Đang đăng nhập...
+                </>
+              ) : (
+                "Đăng nhập"
+              )}
             </button>
 
             <p className="text-[clamp(0.7rem,1.5vw,0.85rem)] text-muted-foreground dark:text-darkblue text-center pt-2">

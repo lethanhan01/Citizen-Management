@@ -1,124 +1,47 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { Search, Eye, ChevronLeft, ChevronRight, Loader } from "lucide-react";
 import CitizenDetailPanel from "@/components/CitizenDetailPanel";
 import type { Citizen } from "@/types/citizen";
-
-// Mock data - thay bằng API sau
-const mockCitizens: Citizen[] = [
-  {
-    id: "1",
-    cccd: "092012345678",
-    fullName: "Nguyễn Văn A",
-    dateOfBirth: "1990-05-15",
-    gender: "Nam",
-    householdCode: "HH001",
-    address: "Số 123 Đường Lý Thường Kiệt, Phường 1",
-    status: "Thường trú",
-    nationality: "Kinh",
-    occupation: "Kỹ sư phần mềm",
-    workplace: "Công ty ABC Tech",
-    cmndCccdIssueDate: "2020-01-10",
-    cmndCccdIssuePlace: "Công an Hà Nội",
-    permanentResidenceDate: "2018-03-20",
-    isDeceased: false,
-    isHead: true,
-  },
-  {
-    id: "2",
-    cccd: "092012345679",
-    fullName: "Nguyễn Thị B",
-    dateOfBirth: "1992-08-22",
-    gender: "Nữ",
-    householdCode: "HH001",
-    address: "Số 123 Đường Lý Thường Kiệt, Phường 1",
-    status: "Thường trú",
-    nationality: "Kinh",
-    occupation: "Giáo viên",
-    workplace: "Trường tiểu học Xuân Phương",
-    cmndCccdIssueDate: "2021-06-15",
-    cmndCccdIssuePlace: "Công an Hà Nội",
-    permanentResidenceDate: "2018-03-20",
-    isDeceased: false,
-    relationshipToHead: "Vợ",
-  },
-  {
-    id: "3",
-    cccd: "092012345680",
-    fullName: "Nguyễn Văn C",
-    dateOfBirth: "2015-12-10",
-    gender: "Nam",
-    householdCode: "HH002",
-    address: "Số 456 Đường Trần Hưng Đạo, Phường 2",
-    status: "Tạm trú",
-    nationality: "Kinh",
-    occupation: "Học sinh",
-    workplace: "Trường THCS Phan Bội Châu",
-    cmndCccdIssueDate: "2022-01-20",
-    cmndCccdIssuePlace: "Công an Hà Nội",
-    permanentResidenceDate: "2023-06-01",
-    isDeceased: false,
-    relationshipToHead: "Con",
-  },
-  {
-    id: "4",
-    cccd: "092012345681",
-    fullName: "Trần Văn D",
-    dateOfBirth: "1965-03-05",
-    gender: "Nam",
-    householdCode: "HH003",
-    address: "Số 789 Đường Hàng Bông, Phường 3",
-    status: "Thường trú",
-    nationality: "Kinh",
-    occupation: "Nghỉ hưu",
-    workplace: "N/A",
-    cmndCccdIssueDate: "2015-08-12",
-    cmndCccdIssuePlace: "Công an Hà Nội",
-    permanentResidenceDate: "1988-10-15",
-    isDeceased: false,
-    isHead: true,
-  },
-  {
-    id: "5",
-    cccd: "092012345682",
-    fullName: "Lê Thị E",
-    dateOfBirth: "1970-07-20",
-    gender: "Nữ",
-    householdCode: "HH003",
-    address: "Số 789 Đường Hàng Bông, Phường 3",
-    status: "Đã chuyển đi",
-    nationality: "Kinh",
-    occupation: "Nội trợ",
-    workplace: "N/A",
-    cmndCccdIssueDate: "2016-11-05",
-    cmndCccdIssuePlace: "Công an Hà Nội",
-    permanentResidenceDate: "1988-10-15",
-    isDeceased: false,
-    relationshipToHead: "Vợ",
-  },
-  {
-    id: "6",
-    cccd: "092012345683",
-    fullName: "Phạm Văn F",
-    dateOfBirth: "1985-11-02",
-    gender: "Nam",
-    householdCode: "HH004",
-    address: "Số 15 Đường Hồ Tùng Mậu, Phường 4",
-    status: "Tạm vắng",
-    nationality: "Kinh",
-    occupation: "Kỹ sư xây dựng",
-    workplace: "Công ty XD Hoàng Gia",
-    cmndCccdIssueDate: "2019-04-18",
-    cmndCccdIssuePlace: "Công an Hà Nội",
-    permanentResidenceDate: "2010-09-12",
-    isDeceased: false,
-    relationshipToHead: "Chủ hộ",
-    isHead: true,
-  },
-];
+// @ts-ignore - api.js is a JavaScript file
+import { apiFetch } from "@/stores/api";
 
 const ITEMS_PER_PAGE = 10;
+
+// Map API response to Citizen type
+const mapApiDataToCitizen = (apiData: any): Citizen => {
+  const household = apiData.households?.[0];
+  const membership = apiData.householdMemberships?.[0];
+  
+  // Map residency_status to status
+  const statusMap: Record<string, Citizen["status"]> = {
+    "THUONG_TRU": "Thường trú",
+    "TAM_TRU": "Tạm trú",
+    "TAM_VANG": "Tạm vắng",
+    "CHUYEN_DI": "Đã chuyển đi",
+  };
+
+  return {
+    id: apiData.person_id?.toString() || "",
+    cccd: apiData.citizen_id_num || "",
+    fullName: apiData.full_name || "",
+    dateOfBirth: apiData.dob ? new Date(apiData.dob).toISOString().split("T")[0] : "",
+    gender: apiData.gender === "M" || apiData.gender === "Nam" ? "Nam" : "Nữ",
+    householdCode: household?.household_no || household?.household_id?.toString() || "",
+    address: household?.address || "",
+    status: statusMap[apiData.residency_status] || "Thường trú",
+    nationality: apiData.ethnicity || "",
+    occupation: apiData.occupation || "",
+    workplace: apiData.workplace || "",
+    cmndCccdIssueDate: apiData.citizen_id_issued_date ? new Date(apiData.citizen_id_issued_date).toISOString().split("T")[0] : undefined,
+    cmndCccdIssuePlace: apiData.citizen_id_issued_place || "",
+    permanentResidenceDate: apiData.residence_registered_date ? new Date(apiData.residence_registered_date).toISOString().split("T")[0] : undefined,
+    isDeceased: false,
+    relationshipToHead: membership?.relation_to_head || undefined,
+    isHead: apiData.households?.[0]?.householdMemberships?.is_head || false,
+  };
+};
 
 export default function CitizenList() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -127,50 +50,93 @@ export default function CitizenList() {
   const [filterGender, setFilterGender] = useState<"all" | "Nam" | "Nữ">("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedCitizen, setSelectedCitizen] = useState<Citizen | null>(null);
-  const [isLoading] = useState(false);
+  const [citizens, setCitizens] = useState<Citizen[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string>("");
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
 
-  // Filter & Sort
-  const filteredCitizens = useMemo(() => {
-    let result = mockCitizens.filter((citizen) => {
-      const matchSearch =
-        citizen.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        citizen.cccd.includes(searchQuery);
+  // Debounce search query
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
+  
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+      setCurrentPage(1); // Reset to first page when search changes
+    }, 500);
 
-      const matchStatus = filterStatus === "all" || citizen.status === filterStatus;
-      const matchGender = filterGender === "all" || citizen.gender === filterGender;
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
-      return matchSearch && matchStatus && matchGender;
-    });
+  // Fetch data from API
+  useEffect(() => {
+    const fetchCitizens = async () => {
+      setIsLoading(true);
+      setError("");
+      
+      try {
+        // Map gender to API format
+        const genderMap: Record<string, string | undefined> = {
+          "all": undefined,
+          "Nam": "M",
+          "Nữ": "F",
+        };
 
-    // Sort
-    if (sortBy === "name") {
-      result.sort((a, b) => a.fullName.localeCompare(b.fullName));
-    } else if (sortBy === "age") {
-      result.sort((a, b) => {
-        const ageA = new Date().getFullYear() - new Date(a.dateOfBirth).getFullYear();
-        const ageB = new Date().getFullYear() - new Date(b.dateOfBirth).getFullYear();
-        return ageB - ageA;
-      });
-    } else if (sortBy === "status") {
-      const order: Record<Citizen["status"], number> = {
-        "Thường trú": 1,
-        "Tạm trú": 2,
-        "Tạm vắng": 3,
-        "Đã chuyển đi": 4,
-      };
-      result.sort((a, b) => order[a.status] - order[b.status] || a.fullName.localeCompare(b.fullName));
-    }
+        // Map sortBy to API sortBy
+        const sortByMap: Record<string, string> = {
+          "name": "full_name",
+          "age": "dob",
+          "status": "residency_status",
+        };
 
-    return result;
-  }, [searchQuery, sortBy, filterStatus, filterGender]);
+        const params = new URLSearchParams({
+          page: currentPage.toString(),
+          limit: ITEMS_PER_PAGE.toString(),
+          sortBy: sortByMap[sortBy] || "created_at",
+          sortOrder: sortBy === "age" ? "DESC" : "ASC",
+        });
 
-  // Pagination
-  const totalPages = Math.ceil(filteredCitizens.length / ITEMS_PER_PAGE);
-  const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
-  const paginatedCitizens = filteredCitizens.slice(
-    startIdx,
-    startIdx + ITEMS_PER_PAGE
-  );
+        if (debouncedSearchQuery.trim()) {
+          params.append("search", debouncedSearchQuery.trim());
+        }
+
+        if (filterGender !== "all") {
+          params.append("gender", genderMap[filterGender] || "");
+        }
+
+        const response = await apiFetch(`/nhan-khau?${params.toString()}`);
+        
+        if (response.success && response.data) {
+          let mappedCitizens = response.data.map(mapApiDataToCitizen);
+          
+          // Filter by status on client-side (API doesn't support status filter yet)
+          if (filterStatus !== "all") {
+            mappedCitizens = mappedCitizens.filter((c: Citizen) => c.status === filterStatus);
+          }
+          
+          setCitizens(mappedCitizens);
+          // Recalculate pagination for filtered results
+          const filteredTotal = filterStatus !== "all" 
+            ? Math.ceil(mappedCitizens.length / ITEMS_PER_PAGE)
+            : (response.pagination?.totalPages || 1);
+          setTotalPages(filteredTotal);
+          setTotalItems(filterStatus !== "all" 
+            ? mappedCitizens.length 
+            : (response.pagination?.totalItems || 0));
+        } else {
+          setError("Không thể tải danh sách công dân");
+          setCitizens([]);
+        }
+      } catch (err: any) {
+        setError(err.message || "Có lỗi xảy ra khi tải danh sách công dân");
+        setCitizens([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCitizens();
+  }, [debouncedSearchQuery, sortBy, filterStatus, filterGender, currentPage]);
 
   const handleViewCitizen = (citizen: Citizen) => {
     setSelectedCitizen(citizen);
@@ -196,11 +162,10 @@ export default function CitizenList() {
           <div className="relative">
             <input
               type="text"
-              placeholder="Tìm kiếm theo tên, CCCD..."
+              placeholder="Tìm kiếm theo ID, tên, CCCD..."
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
-                setCurrentPage(1);
               }}
               className="
                 w-full pl-10 pr-4 py-2.5 rounded-lg
@@ -280,7 +245,13 @@ export default function CitizenList() {
             <div className="flex-1 flex items-center justify-center">
               <Loader className="w-8 h-8 text-third animate-spin" />
             </div>
-          ) : paginatedCitizens.length === 0 ? (
+          ) : error ? (
+            <div className="flex-1 flex items-center justify-center">
+              <div className="text-center">
+                <p className="text-red-500 text-lg">{error}</p>
+              </div>
+            </div>
+          ) : citizens.length === 0 ? (
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center">
                 <p className="text-second dark:text-darkmodetext/70 text-lg">
@@ -297,6 +268,9 @@ export default function CitizenList() {
                     <tr className="border-b border-second/40 dark:border-second/30 bg-second/5 dark:bg-second/10">
                       <th className="px-4 py-3 text-left text-first dark:text-darkmodetext font-semibold">
                         STT
+                      </th>
+                      <th className="px-4 py-3 text-left text-first dark:text-darkmodetext font-semibold">
+                        ID
                       </th>
                       <th className="px-4 py-3 text-left text-first dark:text-darkmodetext font-semibold">
                         CCCD
@@ -325,13 +299,16 @@ export default function CitizenList() {
                     </tr>
                   </thead>
                   <tbody>
-                    {paginatedCitizens.map((citizen, idx) => (
+                    {citizens.map((citizen, idx) => (
                       <tr
                         key={citizen.id}
                         className="border-b border-second/20 dark:border-second/20 hover:bg-second/5 dark:hover:bg-second/10 transition"
                       >
                         <td className="px-4 py-3 text-first dark:text-darkmodetext">
-                          {startIdx + idx + 1}
+                          {(currentPage - 1) * ITEMS_PER_PAGE + idx + 1}
+                        </td>
+                        <td className="px-4 py-3 text-first dark:text-darkmodetext">
+                          {citizen.id}
                         </td>
                         <td className="px-4 py-3 text-first dark:text-darkmodetext">
                           {citizen.cccd}
@@ -395,7 +372,7 @@ export default function CitizenList() {
               {/* Pagination */}
               <div className="border-t border-second/40 dark:border-second/30 px-4 py-3 flex items-center justify-between bg-second/5 dark:bg-second/10">
                 <p className="text-sm text-second dark:text-darkmodetext/70">
-                  Hiển thị {startIdx + 1}-{Math.min(startIdx + ITEMS_PER_PAGE, filteredCitizens.length)} của {filteredCitizens.length}
+                  Hiển thị {(currentPage - 1) * ITEMS_PER_PAGE + 1}-{Math.min(currentPage * ITEMS_PER_PAGE, totalItems)} của {totalItems}
                 </p>
                 <div className="flex gap-2">
                   <button
