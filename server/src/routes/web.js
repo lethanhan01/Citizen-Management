@@ -57,28 +57,54 @@ let initWebRoutes = (app) => {
   router.get("/api/v1/auth/me", verifyToken, authController.getMe);
 
   // ---- USER ROUTE ---- (Admin)
-  // GET: Admin lấy danh sách tất cả các Users
+  // GET: Danh sách Users (RESTful)
+  router.get(
+    "/api/v1/users",
+    verifyToken,
+    checkRole(["admin"]),
+    userController.handleGetAllUsers
+  );
+  // POST: Tạo User (RESTful)
+  router.post(
+    "/api/v1/users",
+    verifyToken,
+    checkRole(["admin"]),
+    userController.handleCreateUser
+  );
+  // PUT: Cập nhật User (RESTful)
+  router.put(
+    "/api/v1/users/:id",
+    verifyToken,
+    checkRole(["admin"]),
+    userController.handleUpdateUser
+  );
+  // DELETE: Xóa User (RESTful)
+  router.delete(
+    "/api/v1/users/:id",
+    verifyToken,
+    checkRole(["admin"]),
+    userController.handleDeleteUser
+  );
+
+  // Backward-compat (tạm thời): giữ các endpoint cũ để không vỡ FE cũ
   router.get(
     "/api/v1/get-all-users",
     verifyToken,
     checkRole(["admin"]),
     userController.handleGetAllUsers
   );
-  // POST: Admin tạo User mới cho cấp dưới
   router.post(
     "/api/v1/create-user",
     verifyToken,
     checkRole(["admin"]),
     userController.handleCreateUser
   );
-  // PUT: Admin sửa User (Reset pass, đổi quyền...)
   router.put(
     "/api/v1/update-user/:id",
     verifyToken,
     checkRole(["admin"]),
     userController.handleUpdateUser
   );
-  // DELETE: Admin xóa user
   router.delete(
     "/api/v1/delete-user/:id",
     verifyToken,

@@ -1,0 +1,10 @@
+export { default as apiClient } from '../lib/axios';
+export * as AuthAPI from './auth.api';
+export * as PersonAPI from './person.api';
+export * as HouseholdAPI from './household.api';
+export * as FeeAPI from './fee.api';
+export * as CampaignAPI from './campaign.api';
+export * as TempResidenceAPI from './tempResidence.api';
+export * as SearchAPI from './search.api';
+export * as StatisticAPI from './statistic.api';
+export * as ExportAPI from './export.api';
