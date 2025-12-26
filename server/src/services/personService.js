@@ -4,8 +4,8 @@ import personEventService from "./personEventService.js";
 
 const Person = db.Person;
 const Household = db.Household;
-const HouseholdMembership = db.HouseholdMembership; 
-const HouseholdHistory = db.HouseholdHistory; 
+const HouseholdMembership = db.HouseholdMembership;
+const HouseholdHistory = db.HouseholdHistory;
 const PersonEvent = db.PersonEvent;
 
 const getAllNhanKhau = async ({
@@ -13,6 +13,7 @@ const getAllNhanKhau = async ({
     limit = 20,
     search,
     gender,
+    residency_status,
     minAge,
     maxAge,
     sortBy = "created_at",
@@ -32,6 +33,9 @@ const getAllNhanKhau = async ({
 
     if (gender) {
         whereConditions.gender = gender;
+    }
+    if (residency_status) {
+        whereConditions.residency_status = residency_status;
     }
 
     if (minAge !== undefined || maxAge !== undefined) {
@@ -69,6 +73,7 @@ const getAllNhanKhau = async ({
             "full_name",
             "alias",
             "gender",
+            "residency_status",
             "dob",
             "birthplace",
             "ethnicity",

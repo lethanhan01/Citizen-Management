@@ -76,17 +76,17 @@ export default function CitizenDetailPanel({
                 px-3 py-1 rounded-full text-sm font-medium
               `}
               style={(() => {
-                if (citizen.status === "Thường trú") {
+                if (citizen.status === "permanent") {
                   return theme === "dark"
                     ? { backgroundColor: "rgba(20,83,45,0.30)", color: "#4ade80" }
                     : { backgroundColor: "#DCFCE7", color: "#166534" };
                 }
-                if (citizen.status === "Tạm trú") {
+                if (citizen.status === "temporary_resident") {
                   return theme === "dark"
                     ? { backgroundColor: "rgba(113,63,18,0.30)", color: "#facc15" }
                     : { backgroundColor: "#FEF9C3", color: "#a16207" };
                 }
-                if (citizen.status === "Tạm vắng") {
+                if (citizen.status === "temporary_absent") {
                   return theme === "dark"
                     ? { backgroundColor: "rgba(30,64,175,0.35)", color: "#93c5fd" }
                     : { backgroundColor: "#DBEAFE", color: "#1d4ed8" };
