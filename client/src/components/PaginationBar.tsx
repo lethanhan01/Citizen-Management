@@ -17,7 +17,6 @@ export default function PaginationBar({
   totalPages,
   totalItems,
   startIdx,
-  pageSize,
   currentCount,
   onPageChange,
 }: Props) {
