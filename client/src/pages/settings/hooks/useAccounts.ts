@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { Account } from "@/types/account";
 import { accountApi } from "@/api/account.api";
-import type { CreateUserPayload, UpdateUserPayload } from "@/api/account.api"; // ✅ thêm
+import type { CreateUserPayload } from "@/api/account.api"; // ✅ thêm
 
 export function useAccounts() {
   const [accounts, setAccounts] = useState<Account[]>([]);
