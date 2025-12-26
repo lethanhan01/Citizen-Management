@@ -1,22 +1,95 @@
 "use client";
 
 import { useParams } from "react-router-dom";
+import { useEffect, useMemo } from "react";
+import { Loader } from "lucide-react";
+import { usePersonStore } from "@/stores/person.store";
+import type { Citizen } from "@/types/citizen";
+
+function toCitizen(p: any): Citizen {
+  const households = p?.households;
+  const firstHousehold = Array.isArray(households) ? households[0] : households || null;
+  const householdMembership =
+    firstHousehold?.HouseholdMembership || firstHousehold?.households?.HouseholdMembership;
+
+  return {
+    id: String(p?.person_id ?? p?.id ?? ""),
+    cccd: String(p?.citizen_id_num ?? ""),
+    fullName: String(p?.full_name ?? ""),
+    dateOfBirth: String(p?.dob ?? ""),
+    gender: (p?.gender ?? "") as any,
+    householdCode: String(firstHousehold?.household_no ?? ""),
+    address: String(firstHousehold?.address ?? p?.previous_address ?? ""),
+    status: (p?.residency_status ?? "Thường trú") as any,
+    nationality: undefined,
+    occupation: p?.occupation ?? undefined,
+    workplace: p?.workplace ?? undefined,
+    cmndCccdIssueDate: p?.citizen_id_issued_date ?? undefined,
+    cmndCccdIssuePlace: p?.citizen_id_issued_place ?? undefined,
+    permanentResidenceDate: p?.residence_registered_date ?? undefined,
+    isHead: Boolean(householdMembership?.is_head ?? false),
+    relationshipToHead: householdMembership?.relation_to_head ?? undefined,
+    isDeceased: false,
+  };
+}
 
 export default function CitizenDetail() {
   const { id } = useParams();
+  const { current, loading, error, fetchPersonById } = usePersonStore();
+
+  useEffect(() => {
+    if (id) fetchPersonById(String(id));
+  }, [id, fetchPersonById]);
+
+  const citizen = useMemo(() => {
+    return current ? toCitizen(current) : null;
+  }, [current]);
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-foreground">
-        Chi tiết công dân #{id}
-      </h2>
+      <h2 className="text-2xl font-bold text-foreground">Chi tiết công dân #{id}</h2>
 
       <div className="bg-card text-card-foreground border border-border rounded-xl p-6 shadow-sm">
-        <p className="text-muted-foreground">
-          Thông tin chi tiết công dân
-        </p>
-        {/* Detail form sẽ được thêm sau */}
+        {loading ? (
+          <div className="flex items-center gap-2">
+            <Loader className="w-5 h-5 animate-spin" />
+            <span>Đang tải thông tin...</span>
+          </div>
+        ) : error ? (
+          <div className="rounded-lg border border-red-300/40 bg-red-50/30 px-4 py-2 text-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300">
+            {error}
+          </div>
+        ) : !citizen ? (
+          <p className="text-muted-foreground">Không tìm thấy công dân</p>
+        ) : (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Field label="Họ tên" value={citizen.fullName} />
+              <Field label="CCCD" value={citizen.cccd} />
+              <Field label="Ngày sinh" value={citizen.dateOfBirth ? new Date(citizen.dateOfBirth).toLocaleDateString("vi-VN") : "-"} />
+              <Field label="Giới tính" value={citizen.gender ?? "-"} />
+              <Field label="Mã hộ" value={citizen.householdCode ?? "-"} />
+              <Field label="Trạng thái" value={citizen.status} />
+            </div>
+            <Field label="Địa chỉ" value={citizen.address ?? "-"} fullWidth />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Field label="Nghề nghiệp" value={citizen.occupation ?? "-"} />
+              <Field label="Nơi làm việc" value={citizen.workplace ?? "-"} />
+              <Field label="Ngày cấp CCCD" value={citizen.cmndCccdIssueDate ?? "-"} />
+              <Field label="Nơi cấp CCCD" value={citizen.cmndCccdIssuePlace ?? "-"} />
+            </div>
+          </div>
+        )}
       </div>
+    </div>
+  );
+}
+
+function Field({ label, value, fullWidth }: { label: string; value: string | number; fullWidth?: boolean }) {
+  return (
+    <div className={fullWidth ? "col-span-1 md:col-span-2" : undefined}>
+      <p className="text-xs text-muted-foreground mb-1">{label}</p>
+      <p className="font-medium text-foreground">{String(value)}</p>
     </div>
   );
 }
