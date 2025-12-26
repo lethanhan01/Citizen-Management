@@ -14,11 +14,30 @@ function toHousehold(h: any): Household {
   const head = Array.isArray(h?.members)
     ? h.members.find((m: any) => m?.HouseholdMembership?.is_head || m?.is_head)
     : h?.head || null;
+  const headNameValue =
+    head?.full_name ??
+    h?.headPerson?.full_name ??
+    h?.head_full_name ??
+    h?.head_name ??
+    h?.owner_full_name ??
+    h?.chu_ho_name ??
+    h?.household_head_name ??
+    h?.headName ??
+    "";
+  const headIdValue =
+    head?.person_id ??
+    head?.id ??
+    h?.headPerson?.person_id ??
+    h?.head_id ??
+    h?.owner_id ??
+    h?.chu_ho_id ??
+    h?.household_head_id ??
+    "";
   return {
     id: String(h?.household_id ?? h?.id ?? ""),
     code: String(h?.household_no ?? h?.code ?? ""),
-    headName: String(head?.full_name ?? h?.headName ?? ""),
-    headId: String(head?.person_id ?? head?.id ?? ""),
+    headName: String(headNameValue),
+    headId: String(headIdValue),
     address: String(h?.address ?? ""),
     registrationDate: String(h?.registration_date ?? h?.created_at ?? ""),
     memberCount: Number(
@@ -206,7 +225,7 @@ export default function HouseholdList() {
                           {household.code}
                         </td>
                         <td className="px-4 py-3 text-first dark:text-darkmodetext">
-                          {household.headName}
+                          {household.headName || "—"}
                         </td>
                         <td className="px-4 py-3 text-first dark:text-darkmodetext max-w-xs truncate">
                           {household.address}
