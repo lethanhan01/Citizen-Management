@@ -16,11 +16,41 @@ let getAllHouseholds = async ({ page = 1, limit = 20 }) => {
     return await db.Household.findAll({
         offset,
         limit,
+        attributes: {
+            include: [
+                [
+                    db.Sequelize.literal(`(
+                        SELECT COUNT(*) FROM core.household_membership hm
+                        WHERE hm.household_id = "Household"."household_id" AND hm.end_date IS NULL
+                    )`),
+                    "members_count",
+                ],
+            ],
+        },
+        include: [
+            {
+                model: db.Person,
+                as: "headPerson",
+                attributes: ["person_id", "full_name"],
+            },
+        ],
+        order: [["household_id", "ASC"]],
     });
 };
 let getHouseholdById = async (id) => {
     return await db.Household.findOne({
         where: { household_id: id },
+        attributes: {
+            include: [
+                [
+                    db.Sequelize.literal(`(
+                        SELECT COUNT(*) FROM core.household_membership hm
+                        WHERE hm.household_id = "Household"."household_id" AND hm.end_date IS NULL
+                    )`),
+                    "members_count",
+                ],
+            ],
+        },
         include: [
             {
                 model: db.Person,
