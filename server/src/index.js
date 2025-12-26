@@ -30,7 +30,7 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.options("*", cors(corsOptions));
+app.options(/.*/, cors(corsOptions));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -52,13 +52,6 @@ app.get("/campaigns", async (req, res) => {
         console.error(err);
         res.status(500).send("Lỗi truy vấn database");
     }
-  try {
-    const result = await pool.query("SELECT * FROM finance.campaign");
-    res.json(result.rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Lỗi truy vấn database");
-  }
 });
 
 initWebRoutes(app);
