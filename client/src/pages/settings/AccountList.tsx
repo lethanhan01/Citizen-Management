@@ -1,74 +1,60 @@
 "use client";
 
-import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, Plus, Pencil, Trash2, Lock, Unlock, X, Save, Loader } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { accountApi } from "@/api/account.api";
+import type { Account, Role, Status } from "@/types/account";
+import { ROLE_LABEL } from "@/types/account";
 
-type Role = "admin" | "viewer" | "staff";
-type Status = "Hoạt động" | "Khóa";
 
-interface Account {
-  id: string;
-  fullName: string;
-  username: string;
-  role: Role;
-  status: Status;
-  createdAt: string;
-  email?: string;
-  phone?: string;
-  cccd?: string;
-  password?: string;
-}
-
-const ROLE_LABEL: Record<Role, string> = {
-  admin: "Quản trị viên",
-  viewer: "Xem",
-  staff: "Nhân viên",
-};
-
-const MOCK_ACCOUNTS: Account[] = [
-  {
-    id: "1",
-    fullName: "Nguyễn Văn A",
-    username: "admin",
-    role: "admin",
-    status: "Hoạt động",
-    createdAt: "2025-01-10",
-    email: "admin@example.com",
-    phone: "0901234567",
-    cccd: "012345678901",
-  },
-  {
-    id: "2",
-    fullName: "Trần Thị B",
-    username: "viewer1",
-    role: "viewer",
-    status: "Hoạt động",
-    createdAt: "2025-02-05",
-    email: "viewer@example.com",
-    phone: "0912345678",
-  },
-  {
-    id: "3",
-    fullName: "Phạm Văn C",
-    username: "staff01",
-    role: "staff",
-    status: "Khóa",
-    createdAt: "2025-03-12",
-    phone: "0934567890",
-  },
-];
 
 export default function AccountList() {
   const navigate = useNavigate();
-  const [accounts, setAccounts] = useState<Account[]>(MOCK_ACCOUNTS);
+
+  const [accounts, setAccounts] = useState<Account[]>([]);
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<"name" | "role" | "status">("name");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
   const [formData, setFormData] = useState<Account | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+
+  // loading cho fetch list
+  const [isFetching, setIsFetching] = useState(true);
+  // loading cho save modal
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    const fetchAccounts = async () => {
+      try {
+        const res = await accountApi.getAll();
+        const list = (res.data?.data ?? []).map((u: any) => ({
+          id: String(u.user_id ?? u.id),
+          username: u.username ?? "",
+          fullName: u.full_name ?? "",
+          role: u.role ?? "accountant",
+          status: "Hoạt động",          // backend chưa có status thì tạm fix cứng
+          createdAt: u.createdAt ? String(u.createdAt).slice(0, 10) : "",
+          email: "",
+          phone: "",
+          cccd: "",
+        })) as Account[];
+
+        setAccounts(list);
+
+      } catch (e) {
+        console.error("GET /accounts failed:", e);
+        setAccounts([]);
+      } finally {
+        setIsFetching(false);
+      }
+    };
+
+    fetchAccounts();
+  }, []);
+
+
 
   const filteredAccounts = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -112,7 +98,7 @@ export default function AccountList() {
     } else {
       setEditingAccount(null);
       setFormData({
-        id: crypto.randomUUID(),
+        id: "",
         fullName: "",
         username: "",
         role: "viewer",
@@ -136,23 +122,66 @@ export default function AccountList() {
   const handleSave = async () => {
     if (!formData) return;
     if (!formData.fullName.trim() || !formData.username.trim()) return;
-    setIsLoading(true);
+
+    setIsSaving(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 800));
       if (editingAccount) {
-        setAccounts((prev) => prev.map((a) => (a.id === editingAccount.id ? { ...formData } : a)));
+        const res = await accountApi.update(editingAccount.id, {
+          full_name: formData.fullName,
+          role: formData.role,
+          ...(formData.password?.trim() ? { password: formData.password } : {}),
+        });
+
+        const u = res.data?.data;
+        const mapped: Account = {
+          id: String(u.user_id ?? u.id),
+          username: u.username ?? formData.username,
+          fullName: u.full_name ?? formData.fullName,
+          role: (u.role ?? formData.role) as any,
+          status: "Hoạt động",
+          createdAt: u.createdAt ? String(u.createdAt).slice(0, 10) : formData.createdAt,
+          email: formData.email ?? "",
+          phone: formData.phone ?? "",
+          cccd: formData.cccd ?? "",
+        };
+
+        setAccounts((prev) => prev.map((a) => (a.id === editingAccount.id ? mapped : a)));
+
       } else {
-        setAccounts((prev) => [...prev, formData]);
+        const res = await accountApi.create({
+          username: formData.username,
+          password: formData.password || "123456",
+          full_name: formData.fullName,
+          role: formData.role,
+        });
+
+        const u = res.data?.data;
+        const mapped: Account = {
+          id: String(u.user_id ?? u.id),
+          username: u.username ?? "",
+          fullName: u.full_name ?? "",
+          role: (u.role ?? "accountant") as any,
+          status: "Hoạt động",
+          createdAt: u.createdAt ? String(u.createdAt).slice(0, 10) : "",
+          email: "",
+          phone: "",
+          cccd: "",
+        };
+
+        setAccounts((prev) => [mapped, ...prev]);
+
       }
       closeModal();
     } catch (err) {
       console.error(err);
     } finally {
-      setIsLoading(false);
+      setIsSaving(false);
     }
   };
 
-  const handleDelete = (id: string) => {
+
+  const handleDelete = async (id: string) => {
+    await accountApi.remove(id);
     setAccounts((prev) => prev.filter((a) => a.id !== id));
     setSelectedIds((prev) => prev.filter((x) => x !== id));
   };
@@ -238,6 +267,12 @@ export default function AccountList() {
         )}
 
         {/* Table */}
+        {isFetching && (
+          <div className="flex items-center gap-2 text-sm text-second">
+            <Loader className="w-4 h-4 animate-spin" />
+            Đang tải dữ liệu...
+          </div>
+        )}
         <div className="overflow-x-auto border border-second/30 dark:border-second/30 rounded-lg">
           <table className="min-w-full text-sm">
             <thead className="bg-second/10 dark:bg-second/20">
@@ -404,17 +439,17 @@ export default function AccountList() {
             <div className="flex gap-3 mt-6">
               <button
                 onClick={closeModal}
-                disabled={isLoading}
+                disabled={isSaving}
                 className="flex-1 px-4 py-2 rounded-lg border border-second/40 dark:border-second/30 text-first dark:text-darkmodetext hover:bg-second/10 dark:hover:bg-second/30 disabled:opacity-50"
               >
                 Hủy bỏ
               </button>
               <button
                 onClick={handleSave}
-                disabled={isLoading || !formData.fullName.trim() || !formData.username.trim()}
+                disabled={isSaving || !formData.fullName.trim() || !formData.username.trim()}
                 className="flex-1 px-4 py-2 rounded-lg bg-third text-first hover:bg-third/90 disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                {isLoading ? (
+                {isSaving ? (
                   <>
                     <Loader className="w-4 h-4 animate-spin" />
                     Đang lưu...

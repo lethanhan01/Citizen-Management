@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Eye, Loader } from "lucide-react";
 import CitizenDetailPanel from "@/components/CitizenDetailPanel";
 import type { Citizen } from "@/types/citizen";
@@ -72,10 +72,12 @@ export default function CitizenList() {
 
 
   // chuẩn hoá data từ BE -> Citizen[]
-  const citizens: Citizen[] = useMemo(() => {
-    const arr = Array.isArray(data) ? data : [];
-    return arr.map(mapPersonToCitizen);
-  }, [data]);
+  // const citizens: Citizen[] = useMemo(() => {
+  //   const arr = Array.isArray(data) ? data : [];
+  //   return arr.map(mapPersonToCitizen);
+  // }, [data]);
+  const citizens = Array.isArray(data) ? data.map(mapPersonToCitizen) : [];
+
   const paginatedCitizens = citizens; // ✅ server đã filter/sort/paginate
 
   const handleViewCitizen = (citizen: Citizen) => setSelectedCitizen(citizen);
