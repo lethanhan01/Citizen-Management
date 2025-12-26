@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { Account } from "@/types/account";
 import { accountApi } from "@/api/account.api";
+import type { CreateUserPayload, UpdateUserPayload } from "@/api/account.api"; // ✅ thêm
 
 export function useAccounts() {
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -25,7 +26,8 @@ export function useAccounts() {
     fetchAccounts();
   }, [fetchAccounts]);
 
-  const createAccount = async (payload: Partial<Account>) => {
+
+  const createAccount = async (payload: CreateUserPayload) => {
     const res = await accountApi.create(payload);
     setAccounts((prev) => [res.data, ...prev]);
     return res.data;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Eye, Loader } from "lucide-react";
 import CitizenDetailPanel from "@/components/CitizenDetailPanel";
 import type { Citizen } from "@/types/citizen";
