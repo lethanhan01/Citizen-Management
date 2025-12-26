@@ -72,10 +72,12 @@ export default function CitizenList() {
 
 
   // chuẩn hoá data từ BE -> Citizen[]
-  const citizens: Citizen[] = useMemo(() => {
-    const arr = Array.isArray(data) ? data : [];
-    return arr.map(mapPersonToCitizen);
-  }, [data]);
+  // const citizens: Citizen[] = useMemo(() => {
+  //   const arr = Array.isArray(data) ? data : [];
+  //   return arr.map(mapPersonToCitizen);
+  // }, [data]);
+  const citizens = Array.isArray(data) ? data.map(mapPersonToCitizen) : [];
+
   const paginatedCitizens = citizens; // ✅ server đã filter/sort/paginate
 
   const handleViewCitizen = (citizen: Citizen) => setSelectedCitizen(citizen);

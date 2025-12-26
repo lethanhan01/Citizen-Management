@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import { Save, Loader } from "lucide-react";
+import { accountApi } from "@/api/account.api";
+import type { Role, Status } from "@/types/account";
+
 
 interface FormState {
   fullName: string;
@@ -10,8 +13,8 @@ interface FormState {
   email: string;
   phone: string;
   cccd: string;
-  role: "admin" | "staff" | "viewer";
-  status: "Hoạt động" | "Khóa";
+  role: Role;
+  status: Status;
 }
 
 export default function AddAccount() {
@@ -34,12 +37,27 @@ export default function AddAccount() {
 
   const handleSubmit = async () => {
     if (!form.fullName.trim() || !form.username.trim()) return;
+
     setIsLoading(true);
     setSuccess(null);
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    setIsLoading(false);
-    setSuccess("Đã tạo tài khoản nháp (mock). Tích hợp API để lưu thực tế.");
-  };
+    try {
+      await accountApi.create({
+        username: form.username,
+        password: form.password,
+        full_name: form.fullName,
+        role: form.role,
+      });
+      setSuccess("Tạo tài khoản thành công");
+    } catch (e) {
+      console.error(e);
+      setSuccess(null);
+      // nếu bạn có toast thì dùng toast.error(...)
+      alert("Tạo tài khoản thất bại. Kiểm tra API/console.");
+    } finally {
+      setIsLoading(false);
+    }
+};
+
 
   return (
     <div className="space-y-6">
