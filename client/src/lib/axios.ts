@@ -1,4 +1,5 @@
 import axios, { AxiosError } from 'axios';
+import { useAuthStore } from '@/stores/auth.store';
 
 // Base URL lấy từ biến môi trường build-time
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -42,11 +43,11 @@ apiClient.interceptors.response.use(
     const { status, data } = error.response;
 
     if (status === 401) {
-      localStorage.removeItem('token');
-      // Điều hướng về trang đăng nhập
-      if (typeof window !== 'undefined') {
-        window.location.href = '/login';
-      }
+      // Tự động đăng xuất theo flow SPA
+      try {
+        const { logout } = useAuthStore.getState();
+        logout();
+      } catch {}
     }
 
     const message = (data as any)?.message || error.message || 'Request failed';

@@ -1,235 +1,42 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Search, Eye, ChevronLeft, ChevronRight, Loader } from "lucide-react";
 import HouseholdDetailPanel from "@/components/HouseholdDetailPanel";
 import type { Household } from "@/types/household";
+import { useHouseholdStore } from "@/stores/household.store";
 
-// Mock data
-const mockHouseholds: Household[] = [
-  {
-    id: "1",
-    code: "HH001",
-    headName: "Nguyễn Văn A",
-    headId: "1",
-    address: "Số 123 Đường Lý Thường Kiệt, Phường 1",
-    registrationDate: "2018-03-20",
-    memberCount: 4,
-    members: [
-      {
-        id: "1",
-        fullName: "Nguyễn Văn A",
-        cccd: "092012345678",
-        relationship: "Chủ hộ",
-        isHead: true,
-      },
-      {
-        id: "2",
-        fullName: "Nguyễn Thị B",
-        cccd: "092012345679",
-        relationship: "Vợ",
-        isHead: false,
-      },
-      {
-        id: "3",
-        fullName: "Nguyễn Văn C",
-        cccd: "092012345680",
-        relationship: "Con",
-        isHead: false,
-      },
-      {
-        id: "4",
-        fullName: "Nguyễn Thị D",
-        cccd: "092012345681",
-        relationship: "Con",
-        isHead: false,
-      },
-    ],
-  },
-  {
-    id: "2",
-    code: "HH002",
-    headName: "Trần Văn E",
-    headId: "4",
-    address: "Số 456 Đường Trần Hưng Đạo, Phường 2",
-    registrationDate: "2019-06-15",
-    memberCount: 2,
-    members: [
-      {
-        id: "4",
-        fullName: "Trần Văn E",
-        cccd: "092012345682",
-        relationship: "Chủ hộ",
-        isHead: true,
-      },
-      {
-        id: "5",
-        fullName: "Trần Thị F",
-        cccd: "092012345683",
-        relationship: "Vợ",
-        isHead: false,
-      },
-    ],
-  },
-  {
-    id: "3",
-    code: "HH003",
-    headName: "Lê Văn G",
-    headId: "6",
-    address: "Số 789 Đường Hàng Bông, Phường 3",
-    registrationDate: "1988-10-15",
-    memberCount: 5,
-    members: [
-      {
-        id: "6",
-        fullName: "Lê Văn G",
-        cccd: "092012345684",
-        relationship: "Chủ hộ",
-        isHead: true,
-      },
-      {
-        id: "7",
-        fullName: "Lê Thị H",
-        cccd: "092012345685",
-        relationship: "Vợ",
-        isHead: false,
-      },
-      {
-        id: "8",
-        fullName: "Lê Văn I",
-        cccd: "092012345686",
-        relationship: "Con",
-        isHead: false,
-      },
-      {
-        id: "9",
-        fullName: "Lê Thị J",
-        cccd: "092012345687",
-        relationship: "Con",
-        isHead: false,
-      },
-      {
-        id: "10",
-        fullName: "Lê Văn K",
-        cccd: "092012345688",
-        relationship: "Con",
-        isHead: false,
-      },
-    ],
-  },
-  {
-    id: "4",
-    code: "HH004",
-    headName: "Phạm Văn L",
-    headId: "11",
-    address: "Số 321 Đường Cầu Giấy, Phường 4",
-    registrationDate: "2020-01-10",
-    memberCount: 3,
-    members: [
-      {
-        id: "11",
-        fullName: "Phạm Văn L",
-        cccd: "092012345689",
-        relationship: "Chủ hộ",
-        isHead: true,
-      },
-      {
-        id: "12",
-        fullName: "Phạm Thị M",
-        cccd: "092012345690",
-        relationship: "Vợ",
-        isHead: false,
-      },
-      {
-        id: "13",
-        fullName: "Phạm Văn N",
-        cccd: "092012345691",
-        relationship: "Con",
-        isHead: false,
-      },
-    ],
-  },
-  {
-    id: "5",
-    code: "HH005",
-    headName: "Đỗ Thị O",
-    headId: "14",
-    address: "Số 654 Đường Bà Triệu, Phường 5",
-    registrationDate: "2017-05-22",
-    memberCount: 6,
-    members: [
-      {
-        id: "14",
-        fullName: "Đỗ Thị O",
-        cccd: "092012345692",
-        relationship: "Chủ hộ",
-        isHead: true,
-      },
-      {
-        id: "15",
-        fullName: "Đỗ Văn P",
-        cccd: "092012345693",
-        relationship: "Chồng",
-        isHead: false,
-      },
-      {
-        id: "16",
-        fullName: "Đỗ Văn Q",
-        cccd: "092012345694",
-        relationship: "Con",
-        isHead: false,
-      },
-      {
-        id: "17",
-        fullName: "Đỗ Thị R",
-        cccd: "092012345695",
-        relationship: "Con",
-        isHead: false,
-      },
-      {
-        id: "18",
-        fullName: "Đỗ Văn S",
-        cccd: "092012345696",
-        relationship: "Con",
-        isHead: false,
-      },
-      {
-        id: "19",
-        fullName: "Đỗ Thị T",
-        cccd: "092012345697",
-        relationship: "Con",
-        isHead: false,
-      },
-    ],
-  },
-  {
-    id: "6",
-    code: "HH006",
-    headName: "Hoàng Văn U",
-    headId: "20",
-    address: "Số 987 Đường Thái Thịnh, Phường 6",
-    registrationDate: "2021-08-30",
-    memberCount: 2,
-    members: [
-      {
-        id: "20",
-        fullName: "Hoàng Văn U",
-        cccd: "092012345698",
-        relationship: "Chủ hộ",
-        isHead: true,
-      },
-      {
-        id: "21",
-        fullName: "Hoàng Thị V",
-        cccd: "092012345699",
-        relationship: "Vợ",
-        isHead: false,
-      },
-    ],
-  },
-];
+// Dữ liệu sẽ lấy từ store; bỏ mock
 
 const ITEMS_PER_PAGE = 10;
+
+function toHousehold(h: any): Household {
+  const head = Array.isArray(h?.members)
+    ? h.members.find((m: any) => m?.HouseholdMembership?.is_head || m?.is_head)
+    : h?.head || null;
+  return {
+    id: String(h?.household_id ?? h?.id ?? ""),
+    code: String(h?.household_no ?? h?.code ?? ""),
+    headName: String(head?.full_name ?? h?.headName ?? ""),
+    headId: String(head?.person_id ?? head?.id ?? ""),
+    address: String(h?.address ?? ""),
+    registrationDate: String(h?.registration_date ?? h?.created_at ?? ""),
+    memberCount: Number(
+      h?.members_count ?? h?.memberCount ?? (Array.isArray(h?.members) ? h.members.length : 0)
+    ),
+    members:
+      Array.isArray(h?.members)
+        ? h.members.map((m: any) => ({
+            id: String(m?.person_id ?? m?.id ?? ""),
+            fullName: String(m?.full_name ?? ""),
+            cccd: String(m?.citizen_id_num ?? ""),
+            relationship: m?.HouseholdMembership?.relation_to_head ?? m?.relationship ?? "",
+            isHead: Boolean(m?.HouseholdMembership?.is_head ?? m?.isHead ?? false),
+          }))
+        : [],
+    lastUpdated: h?.updated_at ?? undefined,
+  };
+}
 
 export default function HouseholdList() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -238,11 +45,20 @@ export default function HouseholdList() {
   const [selectedHousehold, setSelectedHousehold] = useState<Household | null>(
     null
   );
-  const isLoading = false;
+  const { data, loading, error, fetchHouseholds } = useHouseholdStore();
+
+  useEffect(() => {
+    fetchHouseholds({ page: 1, limit: 100 });
+  }, [fetchHouseholds]);
+
+  const sourceHouseholds: Household[] = useMemo(() => {
+    const arr = Array.isArray(data) ? data : [];
+    return arr.map(toHousehold);
+  }, [data]);
 
   // Filter & Sort
   const filteredHouseholds = useMemo(() => {
-    let result = mockHouseholds.filter((household) => {
+    let result = sourceHouseholds.filter((household) => {
       const matchSearch =
         household.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
         household.headName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -259,7 +75,7 @@ export default function HouseholdList() {
     }
 
     return result;
-  }, [searchQuery, sortBy]);
+  }, [searchQuery, sortBy, sourceHouseholds]);
 
   // Pagination
   const totalPages = Math.ceil(filteredHouseholds.length / ITEMS_PER_PAGE);
@@ -333,9 +149,16 @@ export default function HouseholdList() {
 
         {/* Table Container */}
         <div className="flex-1 bg-card text-card-foreground border border-border rounded-xl shadow-sm overflow-hidden flex flex-col">
-          {isLoading ? (
+          {loading ? (
             <div className="flex-1 flex items-center justify-center">
               <Loader className="w-8 h-8 text-third animate-spin" />
+            </div>
+          ) : error ? (
+            <div className="flex-1 flex items-center justify-center">
+              <div className="text-center">
+                <p className="text-danger font-semibold">Đã xảy ra lỗi</p>
+                <p className="text-second dark:text-darkmodetext/70 mt-1">{error}</p>
+              </div>
             </div>
           ) : paginatedHouseholds.length === 0 ? (
             <div className="flex-1 flex items-center justify-center">

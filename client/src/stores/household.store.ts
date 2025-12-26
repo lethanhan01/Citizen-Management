@@ -6,13 +6,15 @@ interface HouseholdState {
   loading: boolean;
   error: string | null;
   fetchHouseholds: (params?: Record<string, any>) => Promise<void>;
-  fetchHouseholdById: (id: string) => Promise<any | null>;
+  current: any | null;
+  fetchHouseholdById: (id: string) => Promise<void>;
 }
 
 export const useHouseholdStore = create<HouseholdState>((set) => ({
   data: [],
   loading: false,
   error: null,
+  current: null,
   async fetchHouseholds(params) {
     set({ loading: true, error: null });
     try {
@@ -23,11 +25,12 @@ export const useHouseholdStore = create<HouseholdState>((set) => ({
     }
   },
   async fetchHouseholdById(id) {
+    set({ loading: true, error: null });
     try {
       const data = await HouseholdAPI.getHouseholdById(id);
-      return data ?? null;
+      set({ current: data ?? null, loading: false });
     } catch (err: any) {
-      return null;
+      set({ error: err?.message || 'Không lấy được thông tin hộ khẩu', loading: false, current: null });
     }
   },
 }));
