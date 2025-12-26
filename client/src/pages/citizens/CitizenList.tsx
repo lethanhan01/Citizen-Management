@@ -22,12 +22,12 @@ function toCitizen(p: any): Citizen {
     cccd: String(p?.citizen_id_num ?? ""),
     fullName: String(p?.full_name ?? ""),
     dateOfBirth: String(p?.dob ?? ""), // ISO date
-    gender: (p?.gender ?? "") as any,
+    gender: (p?.gender ?? "unknown") as any,
+    status: (p?.residency_status ?? "permanent") as any,
+
 
     householdCode: String(firstHousehold?.household_no ?? ""),
     address: String(firstHousehold?.address ?? p?.previous_address ?? ""),
-
-    status: (p?.residency_status ?? "Thường trú") as any,
 
     nationality: undefined,
     occupation: p?.occupation ?? undefined,
@@ -47,24 +47,86 @@ function toCitizen(p: any): Citizen {
 
 
 export default function CitizenList() {
+
+  const genderLabel = (g: any) =>
+  g === "male" ? "Nam" : g === "female" ? "Nữ" : g === "other" ? "Khác" : "-";
+
+  const statusLabel = (s: any) =>
+    s === "permanent"
+      ? "Thường trú"
+      : s === "temporary_resident"
+      ? "Tạm trú"
+      : s === "temporary_absent"
+      ? "Tạm vắng"
+      : s === "moved_out"
+      ? "Đã chuyển đi"
+      : s === "deceased"
+      ? "Đã mất"
+      : "-";
+
   const [searchQuery, setSearchQuery] = useState("");
+
+  // ✅ quản lý page ở FE để mỗi lần đổi filter/sort/search thì reset về 1
+  const [page, setPage] = useState(1);
+
+  // ✅ Hướng A: FE gửi CODE lên BE
   const [sortBy, setSortBy] = useState<"name" | "age" | "status">("name");
+
   const [filterStatus, setFilterStatus] = useState<
-    "all" | "Thường trú" | "Tạm trú" | "Tạm vắng" | "Đã chuyển đi"
+    "all" | "permanent" | "temporary_resident" | "temporary_absent" | "moved_out" | "deceased"
   >("all");
-  const [filterGender, setFilterGender] = useState<"all" | "Nam" | "Nữ">("all");
+
+  const [filterGender, setFilterGender] = useState<
+    "all" | "male" | "female" | "other" | "unknown"
+  >("all");
+
   const [selectedCitizen, setSelectedCitizen] = useState<Citizen | null>(null);
+
 
   // ===== SERVER-SIDE PAGINATION (theo BE) =====
   const LIMIT = 200;
 
+  // ✅ Build params theo API list: page, limit, search, gender, status, sortBy, sortOrder
+  const buildListParams = () => {
+    const params: any = {
+      page,
+      limit: LIMIT,
+    };
+
+    const q = searchQuery.trim();
+    if (q) params.search = q;
+
+    if (filterGender !== "all") params.gender = filterGender;
+    if (filterStatus !== "all") params.status = filterStatus;
+
+    // FE đang có 3 lựa chọn sortBy: name | age | status
+    // Map sang BE:
+    // - name: sortBy=full_name (ASC)
+    // - age: sortBy=dob (ASC) => dob nhỏ hơn = lớn tuổi hơn (giống logic ageB-ageA trước đó)
+    // - status: sortBy=residency_status (ASC) (BE nên custom order theo nghiệp vụ)
+    if (sortBy === "name") {
+      params.sortBy = "full_name";
+      params.sortOrder = "ASC";
+    } else if (sortBy === "age") {
+      params.sortBy = "dob";
+      params.sortOrder = "ASC";
+    } else if (sortBy === "status") {
+      params.sortBy = "residency_status";
+      params.sortOrder = "ASC";
+    }
+
+    return params;
+  };
+
+
   // ✅ lấy data thật từ store (CHỈ 1 LẦN)
   const { data, loading, error, pagination, fetchPersons } = usePersonStore();
 
-  // ✅ gọi API khi vào trang
   useEffect(() => {
-    fetchPersons({ page: 1, limit: LIMIT });
-  }, [fetchPersons]);
+    fetchPersons(buildListParams());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, searchQuery, sortBy, filterGender, filterStatus, fetchPersons]);
+
 
   // Pagination theo BE
   const currentPage = pagination?.currentPage ?? 1;
@@ -75,10 +137,10 @@ export default function CitizenList() {
   // startIdx để tính STT
   const startIdx = (currentPage - 1) * itemsPerPage;
 
-  // Hàm đổi trang: gọi BE
-  const goToPage = (page: number) => {
-    fetchPersons({ page, limit: itemsPerPage });
+  const goToPage = (nextPage: number) => {
+    setPage(nextPage);
   };
+
 
   // chuẩn hoá data từ BE -> Citizen[]
   const citizens: Citizen[] = useMemo(() => {
@@ -87,43 +149,43 @@ export default function CitizenList() {
   }, [data]);
 
   // Filter & Sort
-  const filteredCitizens = useMemo(() => {
-    let result = citizens.filter((citizen) => {
-      const q = searchQuery.trim().toLowerCase();
-      const matchSearch =
-        q.length === 0 ||
-        citizen.fullName.toLowerCase().includes(q) ||
-        String(citizen.cccd).includes(q);
+  // const filteredCitizens = useMemo(() => {
+  //   let result = citizens.filter((citizen) => {
+  //     const q = searchQuery.trim().toLowerCase();
+  //     const matchSearch =
+  //       q.length === 0 ||
+  //       citizen.fullName.toLowerCase().includes(q) ||
+  //       String(citizen.cccd).includes(q);
 
-      const matchStatus = filterStatus === "all" || citizen.status === filterStatus;
-      const matchGender = filterGender === "all" || citizen.gender === filterGender;
+  //     const matchStatus = filterStatus === "all" || citizen.status === filterStatus;
+  //     const matchGender = filterGender === "all" || citizen.gender === filterGender;
 
-      return matchSearch && matchStatus && matchGender;
-    });
+  //     return matchSearch && matchStatus && matchGender;
+  //   });
 
-    // Sort
-    if (sortBy === "name") {
-      result.sort((a, b) => a.fullName.localeCompare(b.fullName));
-    } else if (sortBy === "age") {
-      result.sort((a, b) => {
-        const ageA = new Date().getFullYear() - new Date(a.dateOfBirth).getFullYear();
-        const ageB = new Date().getFullYear() - new Date(b.dateOfBirth).getFullYear();
-        return ageB - ageA;
-      });
-    } else if (sortBy === "status") {
-      const order: Record<Citizen["status"], number> = {
-        "Thường trú": 1,
-        "Tạm trú": 2,
-        "Tạm vắng": 3,
-        "Đã chuyển đi": 4,
-      };
-      result.sort((a, b) => order[a.status] - order[b.status] || a.fullName.localeCompare(b.fullName));
-    }
+  //   // Sort
+  //   if (sortBy === "name") {
+  //     result.sort((a, b) => a.fullName.localeCompare(b.fullName));
+  //   } else if (sortBy === "age") {
+  //     result.sort((a, b) => {
+  //       const ageA = new Date().getFullYear() - new Date(a.dateOfBirth).getFullYear();
+  //       const ageB = new Date().getFullYear() - new Date(b.dateOfBirth).getFullYear();
+  //       return ageB - ageA;
+  //     });
+  //   } else if (sortBy === "status") {
+  //     const order: Record<Citizen["status"], number> = {
+  //       "Thường trú": 1,
+  //       "Tạm trú": 2,
+  //       "Tạm vắng": 3,
+  //       "Đã chuyển đi": 4,
+  //     };
+  //     result.sort((a, b) => order[a.status] - order[b.status] || a.fullName.localeCompare(b.fullName));
+  //   }
 
-    return result;
-  }, [citizens, searchQuery, sortBy, filterStatus, filterGender]);
+  //   return result;
+  // }, [citizens, searchQuery, sortBy, filterStatus, filterGender]);
+  const paginatedCitizens = citizens; // ✅ server đã filter/sort/paginate
 
-  const paginatedCitizens = filteredCitizens; 
   const handleViewCitizen = (citizen: Citizen) => setSelectedCitizen(citizen);
   const handleCloseCitizen = () => setSelectedCitizen(null);
 
@@ -147,6 +209,7 @@ export default function CitizenList() {
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
+                setPage(1);
               }}
               className="
                 w-full pl-10 pr-4 py-2.5 rounded-lg
@@ -164,7 +227,11 @@ export default function CitizenList() {
           <div className="flex flex-wrap gap-3">
             <select
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as "name" | "age" | "status")}
+              onChange={(e) => {
+                setSortBy(e.target.value as "name" | "age" | "status");
+                setPage(1);
+              }}
+
               className="
                 px-4 py-2 rounded-lg text-sm font-medium
                 bg-white dark:bg-transparent dark:border
@@ -181,7 +248,8 @@ export default function CitizenList() {
             <select
               value={filterGender}
               onChange={(e) => {
-                setFilterGender(e.target.value as "all" | "Nam" | "Nữ");
+                setFilterGender(e.target.value as "all" | "male" | "female" | "other");
+                setPage(1);
               }}
               className="
                 px-4 py-2 rounded-lg text-sm font-medium
@@ -192,16 +260,19 @@ export default function CitizenList() {
               "
             >
               <option value="all">Tất cả giới tính</option>
-              <option value="Nam">Nam</option>
-              <option value="Nữ">Nữ</option>
+              <option value="male">Nam</option>
+              <option value="female">Nữ</option>
+              <option value="other">Khác</option>
+              <option value="unknown">Không rõ</option>
+
             </select>
+
 
             <select
               value={filterStatus}
               onChange={(e) => {
-                setFilterStatus(
-                  e.target.value as "all" | "Thường trú" | "Tạm trú" | "Tạm vắng" | "Đã chuyển đi"
-                );
+                setFilterStatus( e.target.value as | "all" | "permanent" | "temporary_resident" | "temporary_absent" | "moved_out" | "deceased" );
+                setPage(1);
               }}
               className="
                 px-4 py-2 rounded-lg text-sm font-medium
@@ -212,11 +283,14 @@ export default function CitizenList() {
               "
             >
               <option value="all">Tất cả trạng thái</option>
-              <option value="Thường trú">Thường trú</option>
-              <option value="Tạm trú">Tạm trú</option>
-              <option value="Tạm vắng">Tạm vắng</option>
-              <option value="Đã chuyển đi">Đã chuyển đi</option>
+              <option value="permanent">Thường trú</option>
+              <option value="temporary_resident">Tạm trú</option>
+              <option value="temporary_absent">Tạm vắng</option>
+              <option value="moved_out">Đã chuyển đi</option>
+              <option value="deceased">Đã mất</option>
+
             </select>
+
           </div>
 
           {/* ✅ Error message từ store */}
@@ -269,7 +343,7 @@ export default function CitizenList() {
                         <td className="px-4 py-3 text-first dark:text-darkmodetext">
                           {citizen.dateOfBirth ? new Date(citizen.dateOfBirth).toLocaleDateString("vi-VN") : "-"}
                         </td>
-                        <td className="px-4 py-3 text-first dark:text-darkmodetext">{citizen.gender ?? "-"}</td>
+                        <td className="px-4 py-3 text-first dark:text-darkmodetext">{genderLabel(citizen.gender)}</td>
                         <td className="px-4 py-3 text-first dark:text-darkmodetext">{citizen.householdCode ?? "-"}</td>
                         <td className="px-4 py-3 text-first dark:text-darkmodetext max-w-xs truncate">
                           {citizen.address ?? "-"}
@@ -279,25 +353,26 @@ export default function CitizenList() {
                             className={`
                               px-2 py-1 rounded-full text-xs font-medium
                               ${
-                                citizen.status === "Thường trú"
-                                  ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                                  : citizen.status === "Tạm trú"
+                                citizen.status === "permanent"
+                                    ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                                  : citizen.status === "temporary_resident"
                                   ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
-                                  : citizen.status === "Tạm vắng"
+                                  : citizen.status === "temporary_absent"
                                   ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
                                   : "bg-gray-200 text-gray-700 dark:bg-gray-800/60 dark:text-gray-300"
                               }
                             `}
                           >
-                            {citizen.status === "Thường trú"
+                            {citizen.status === "permanent"
                               ? "🟢"
-                              : citizen.status === "Tạm trú"
+                              : citizen.status === "temporary_resident"
                               ? "🟡"
-                              : citizen.status === "Tạm vắng"
+                              : citizen.status === "temporary_absent"
                               ? "🔵"
-                              : "⚪"}{" "}
-                            {citizen.status}
+                              : "⚪"}
+
                           </span>
+
                         </td>
                         <td className="px-4 py-3 text-center">
                           <div className="flex items-center justify-center gap-2">
