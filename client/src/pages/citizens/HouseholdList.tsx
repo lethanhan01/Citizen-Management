@@ -5,15 +5,16 @@ import { Search, Eye, ChevronLeft, ChevronRight, Loader } from "lucide-react";
 import HouseholdDetailPanel from "@/components/HouseholdDetailPanel";
 import type { Household } from "@/types/household";
 import { useHouseholdStore } from "@/stores/household.store";
+import * as HouseholdAPI from "@/api/household.api";
 
 // Dữ liệu sẽ lấy từ store; bỏ mock
 
 const ITEMS_PER_PAGE = 10;
 
 function toHousehold(h: any): Household {
-  const head = Array.isArray(h?.members)
-    ? h.members.find((m: any) => m?.HouseholdMembership?.is_head || m?.is_head)
-    : h?.head || null;
+  const head = Array.isArray(h?.residents)
+    ? h.residents.find((m: any) => m?.HouseholdMembership?.is_head || m?.is_head)
+    : h?.headPerson || h?.head || null;
   const headNameValue =
     head?.full_name ??
     h?.headPerson?.full_name ??
@@ -41,11 +42,11 @@ function toHousehold(h: any): Household {
     address: String(h?.address ?? ""),
     registrationDate: String(h?.registration_date ?? h?.created_at ?? ""),
     memberCount: Number(
-      h?.members_count ?? h?.memberCount ?? (Array.isArray(h?.members) ? h.members.length : 0)
+      h?.members_count ?? h?.memberCount ?? (Array.isArray(h?.residents) ? h.residents.length : 0)
     ),
     members:
-      Array.isArray(h?.members)
-        ? h.members.map((m: any) => ({
+      Array.isArray(h?.residents)
+        ? h.residents.map((m: any) => ({
             id: String(m?.person_id ?? m?.id ?? ""),
             fullName: String(m?.full_name ?? ""),
             cccd: String(m?.citizen_id_num ?? ""),
@@ -104,8 +105,17 @@ export default function HouseholdList() {
     startIdx + ITEMS_PER_PAGE
   );
 
-  const handleViewHousehold = (household: Household) => {
+  const handleViewHousehold = async (household: Household) => {
+    // Mở panel ngay với dữ liệu cơ bản
     setSelectedHousehold(household);
+    try {
+      const detail = await HouseholdAPI.getHouseholdById(String(household.id));
+      if (detail) {
+        setSelectedHousehold(toHousehold(detail));
+      }
+    } catch (e) {
+      // Giữ dữ liệu cơ bản nếu gọi chi tiết lỗi
+    }
   };
 
   const handleCloseHousehold = () => {
