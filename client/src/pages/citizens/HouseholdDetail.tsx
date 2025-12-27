@@ -7,22 +7,22 @@ import { useHouseholdStore } from "@/stores/household.store";
 import type { Household } from "@/types/household";
 
 function toHousehold(h: any): Household {
-  const head = Array.isArray(h?.members)
-    ? h.members.find((m: any) => m?.HouseholdMembership?.is_head || m?.is_head)
-    : h?.head || null;
+  const head = Array.isArray(h?.residents)
+    ? h.residents.find((m: any) => m?.HouseholdMembership?.is_head || m?.is_head)
+    : h?.headPerson || h?.head || null;
   return {
     id: String(h?.household_id ?? h?.id ?? ""),
     code: String(h?.household_no ?? h?.code ?? ""),
-    headName: String(head?.full_name ?? h?.headName ?? ""),
-    headId: String(head?.person_id ?? head?.id ?? ""),
+    headName: String(head?.full_name ?? h?.headPerson?.full_name ?? h?.headName ?? ""),
+    headId: String(head?.person_id ?? head?.id ?? h?.headPerson?.person_id ?? ""),
     address: String(h?.address ?? ""),
     registrationDate: String(h?.registration_date ?? h?.created_at ?? ""),
     memberCount: Number(
-      h?.members_count ?? h?.memberCount ?? (Array.isArray(h?.members) ? h.members.length : 0)
+      h?.members_count ?? h?.memberCount ?? (Array.isArray(h?.residents) ? h.residents.length : 0)
     ),
     members:
-      Array.isArray(h?.members)
-        ? h.members.map((m: any) => ({
+      Array.isArray(h?.residents)
+        ? h.residents.map((m: any) => ({
             id: String(m?.person_id ?? m?.id ?? ""),
             fullName: String(m?.full_name ?? ""),
             cccd: String(m?.citizen_id_num ?? ""),
@@ -43,6 +43,29 @@ export default function HouseholdDetail() {
   }, [id, fetchHouseholdById]);
 
   const household = useMemo(() => (current ? toHousehold(current) : null), [current]);
+
+  type ResidentDetail = {
+    id: string;
+    fullName: string;
+    cccd?: string;
+    gender?: string;
+    dob?: string;
+    relationship: string;
+    isHead: boolean;
+  };
+
+  const residentDetails: ResidentDetail[] = useMemo(() => {
+    const arr = Array.isArray((current as any)?.residents) ? (current as any).residents : [];
+    return arr.map((m: any) => ({
+      id: String(m?.person_id ?? m?.id ?? ""),
+      fullName: String(m?.full_name ?? ""),
+      cccd: m?.citizen_id_num ?? undefined,
+      gender: m?.gender ?? undefined,
+      dob: m?.dob ?? undefined,
+      relationship: m?.HouseholdMembership?.relation_to_head ?? "",
+      isHead: Boolean(m?.HouseholdMembership?.is_head ?? false),
+    }));
+  }, [current]);
 
   return (
     <div className="space-y-6">
@@ -89,7 +112,7 @@ export default function HouseholdDetail() {
 
             <div className="border-t border-second/30 pt-4">
               <h3 className="text-lg font-semibold mb-2">Thành viên</h3>
-              {household.members.length === 0 ? (
+              {residentDetails.length === 0 ? (
                 <p className="text-muted-foreground">Chưa có thông tin thành viên</p>
               ) : (
                 <div className="overflow-x-auto">
@@ -97,19 +120,22 @@ export default function HouseholdDetail() {
                     <thead>
                       <tr className="border-b border-second/40 dark:border-second/30 bg-second/5 dark:bg-second/10">
                         <th className="px-4 py-3 text-left">Họ tên</th>
+                        <th className="px-4 py-3 text-left">Giới tính</th>
+                        <th className="px-4 py-3 text-left">Ngày sinh</th>
                         <th className="px-4 py-3 text-left">CCCD</th>
                         <th className="px-4 py-3 text-left">Quan hệ với chủ hộ</th>
+                        <th className="px-4 py-3 text-left">Vai trò</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {household.members.map((m) => (
+                      {residentDetails.map((m) => (
                         <tr key={m.id} className="border-b border-second/20">
                           <td className="px-4 py-2">{m.fullName}</td>
-                          <td className="px-4 py-2">{m.cccd}</td>
-                          <td className="px-4 py-2">
-                            {m.relationship}
-                            {m.isHead ? " (Chủ hộ)" : ""}
-                          </td>
+                          <td className="px-4 py-2">{m.gender ?? "—"}</td>
+                          <td className="px-4 py-2">{m.dob ? new Date(m.dob).toLocaleDateString("vi-VN") : "—"}</td>
+                          <td className="px-4 py-2">{m.cccd ?? "—"}</td>
+                          <td className="px-4 py-2">{m.relationship || "—"}</td>
+                          <td className="px-4 py-2">{m.isHead ? "Chủ hộ" : "Thành viên"}</td>
                         </tr>
                       ))}
                     </tbody>
