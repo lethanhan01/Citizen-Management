@@ -131,4 +131,10 @@
   *:focus-visible {
     --tw-ring-color: #95c6bd !important;
   }
+
+  /* Adjust dropdown arrow position - shift left */
+  select {
+    background-position: right 0.5rem center !important;
+    padding-right: 2rem !important;
+  }
 }

@@ -356,11 +356,13 @@ export default function TempAbsence() {
             disabled={isLoading || progressPercentage < 100}
             className="
               px-6 py-2.5 rounded-lg font-medium
+              border border-second/40 dark:border-second/30
               bg-third text-first
-              hover:bg-third/90
+              hover:bg-emerald-400 dark:hover:bg-emerald-500
+              hover:border-emerald-300 dark:hover:border-emerald-400
               disabled:opacity-50 disabled:cursor-not-allowed
               flex items-center gap-2
-              transition
+              transition-colors
             "
           >
             {isLoading ? (

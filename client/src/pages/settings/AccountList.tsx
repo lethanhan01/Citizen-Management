@@ -219,16 +219,33 @@ export default function AccountList() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Tìm theo họ tên, username, email, SĐT"
-              className="w-full pl-10 pr-3 py-2.5 rounded-lg border border-input bg-card text-card-foreground placeholder:text-second dark:placeholder:text-darkmodetext/40 focus:outline-none focus:ring-1 focus:ring-selectring"
+              className="
+                w-full pl-10 pr-3 py-2.5 rounded-lg
+                bg-white dark:bg-transparent dark:border
+                border border-second/40 dark:border-second/30
+                text-first dark:text-darkmodetext
+                placeholder:text-second dark:placeholder:text-darkmodetext/40
+                focus:outline-none focus:ring-1 focus:ring-selectring transition
+              "
             />
             <Search className="w-4 h-4 text-second absolute left-3 top-3" />
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            <SortButton label="Sắp xếp theo tên" active={sortBy === "name"} onClick={() => setSortBy("name")} />
-            <SortButton label="Theo vai trò" active={sortBy === "role"} onClick={() => setSortBy("role")} />
-            <SortButton label="Theo trạng thái" active={sortBy === "status"} onClick={() => setSortBy("status")} />
-          </div>
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as "name" | "role" | "status")}
+            className="
+              px-4 py-2 rounded-lg text-sm font-medium
+              bg-white dark:bg-transparent dark:border
+              border border-second/40 dark:border-second/30
+              text-first dark:text-darkmodetext
+              focus:outline-none focus:ring-1 focus:ring-selectring transition
+            "
+          >
+            <option value="name">Sắp xếp theo tên</option>
+            <option value="role">Theo vai trò</option>
+            <option value="status">Theo trạng thái</option>
+          </select>
         </div>
 
         {/* Bulk bar */}
@@ -406,7 +423,13 @@ export default function AccountList() {
                 <select
                   value={formData.role}
                   onChange={(e) => setFormData({ ...formData, role: e.target.value as Role })}
-                  className="w-full px-3 py-2 rounded-lg border border-input bg-card text-card-foreground focus:outline-none focus:ring-1 focus:ring-selectring"
+                  className="
+                    w-full px-3 py-2 rounded-lg
+                    bg-white dark:bg-transparent dark:border
+                    border border-second/40 dark:border-second/30
+                    text-first dark:text-darkmodetext
+                    focus:outline-none focus:ring-1 focus:ring-selectring transition
+                  "
                 >
                   <option value="admin">Quản trị viên</option>
                   <option value="staff">Nhân viên</option>
@@ -421,7 +444,13 @@ export default function AccountList() {
                 <select
                   value={formData.status}
                   onChange={(e) => setFormData({ ...formData, status: e.target.value as Status })}
-                  className="w-full px-3 py-2 rounded-lg border border-input bg-card text-card-foreground focus:outline-none focus:ring-1 focus:ring-selectring"
+                  className="
+                    w-full px-3 py-2 rounded-lg
+                    bg-white dark:bg-transparent dark:border
+                    border border-second/40 dark:border-second/30
+                    text-first dark:text-darkmodetext
+                    focus:outline-none focus:ring-1 focus:ring-selectring transition
+                  "
                 >
                   <option value="Hoạt động">Hoạt động</option>
                   <option value="Khóa">Khóa</option>
@@ -447,7 +476,7 @@ export default function AccountList() {
               <button
                 onClick={handleSave}
                 disabled={isSaving || !formData.fullName.trim() || !formData.username.trim()}
-                className="flex-1 px-4 py-2 rounded-lg bg-third text-first hover:bg-third/90 disabled:opacity-50 flex items-center justify-center gap-2"
+                className="flex-1 px-4 py-2 rounded-lg border border-second/40 dark:border-second/30 bg-third text-first hover:bg-emerald-400 dark:hover:bg-emerald-500 hover:border-emerald-300 dark:hover:border-emerald-400 disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {isSaving ? (
                   <>
@@ -466,21 +495,6 @@ export default function AccountList() {
         </div>
       )}
     </div>
-  );
-}
-
-function SortButton({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`px-3 py-2 rounded-lg border text-sm font-medium transition ${
-        active
-          ? "bg-third text-first border-third"
-          : "border-second/40 dark:border-second/30 text-first dark:text-darkmodetext hover:bg-second/10 dark:hover:bg-second/30"
-      }`}
-    >
-      {label}
-    </button>
   );
 }
 
@@ -506,7 +520,14 @@ function Field({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full px-3 py-2 rounded-lg border border-input bg-card text-card-foreground focus:outline-none focus:ring-1 focus:ring-selectring"
+        className="
+          w-full px-3 py-2 rounded-lg
+          bg-white dark:bg-transparent dark:border
+          border border-second/40 dark:border-second/30
+          text-first dark:text-darkmodetext
+          placeholder:text-second dark:placeholder:text-darkmodetext/40
+          focus:outline-none focus:ring-1 focus:ring-selectring transition
+        "
       />
     </div>
   );
