@@ -120,7 +120,6 @@ svg {
   --sidebar-bg-light: #ffffff; /*lighter than fourth*/
   --darkmodetext: #ffffff; /*dark mode text*/
   --lightmodetext: #244c76; /*light mode text - changed from 000000*/
-  --selectring: #244c76; /*input focus ring - changed from 9b9b9b*/
   --blueblue: #7eb1db; /*blue accent*/
   --lightblue: #dbeff4; /*light blue accent*/
   --darkblue: #244c76; /*dark blue accent*/
@@ -160,6 +159,11 @@ svg {
   --sidebar-primary-foreground: var(--lightmodetext);
 
   --radius: 0.625rem;
+  --selectring: #244c76;
+}
+
+.dark {
+  --selectring: #b8c1d1;
 }
 
 a {
@@ -390,8 +394,8 @@ h1 {
 }
 
 .dark select option {
-  background-color: #ffffff;
-  color: var(--darkblue);
+  background-color: #313f4e;
+  color: #e5e7eb;
 }
 
 .light select option {
@@ -527,4 +531,18 @@ h1 {
 
 *:hover {
   scrollbar-color: #7eb1db transparent;
+}
+
+/* Dropdown arrow position adjustment - better approach */
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+  background-position: right 0.5rem center;
+  background-repeat: no-repeat;
+  background-size: 1.25em 1.25em;
+  padding-right: 2.25rem;
+}
+
+.dark select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%23d1d5db' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
 }

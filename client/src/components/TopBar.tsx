@@ -2,23 +2,41 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Bell, Search, User, LogOut } from "lucide-react";
+import { Bell, User, LogOut, X } from "lucide-react";
 import { useAuthStore } from "@/stores/auth.store";
 
+interface Notification {
+  id: string;
+  message: string;
+  date: string;
+  isRead: boolean;
+}
+
 interface TopBarProps {
-  onSearch?: (query: string) => void;
   userInitial?: string;
 }
 
 export default function TopBar({
-  onSearch,
   userInitial = "A",
 }: TopBarProps) {
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const notifRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const location = useLocation();
   const { logout } = useAuthStore();
+
+  const [notifications, setNotifications] = useState<Notification[]>([
+    {
+      id: "1",
+      message: "Chào mừng đến với hệ thống quản lý nhân khẩu phường La Khê!",
+      date: new Date().toISOString().split("T")[0],
+      isRead: false,
+    },
+  ]);
+
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
 
 
   // Get page title from route
@@ -57,11 +75,24 @@ export default function TopBar({
     navigate('/login', { replace: true });
   };
 
+  const markAsRead = (id: string) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
+    );
+  };
+
+  const markAllAsRead = () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+  };
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setShowDropdown(false);
+      }
+      if (notifRef.current && !notifRef.current.contains(event.target as Node)) {
+        setShowNotifications(false);
       }
     };
 
@@ -76,30 +107,72 @@ export default function TopBar({
         {getPageTitle()}
       </h1>
 
-      {/* RIGHT – SEARCH + BELL + AVATAR */}
+      {/* RIGHT – BELL + AVATAR */}
       <div className="flex items-center gap-6">
-        {/* SEARCH BAR */}
-        <div className="relative">
-          <input
-            className="
-              pl-10 pr-4 py-2 rounded-lg text-sm w-56
-              bg-second/10 dark:bg-second/20
-              border border-second/40 dark:border-second/30
-              text-first dark:text-darkmodetext
-              placeholder:text-second dark:placeholder:text-darkmodetext/40
-              focus:outline-none focus:ring-1 focus:ring-selectring transition
-            "
-            placeholder="Tìm kiếm..."
-            onChange={(e) => onSearch?.(e.target.value)}
-          />
-          <Search className="w-4 h-4 absolute left-3 top-2.5 text-second dark:text-darkmodetext/60" />
-        </div>
-
         {/* NOTIFICATION */}
-        <button className="relative p-2 rounded-lg hover:bg-second/20 dark:hover:bg-second/30 transition">
-          <Bell className="w-5 h-5 text-first dark:text-darkmodetext" />
-          <span className="absolute top-1 right-1 w-2 h-2 bg-darkblue rounded-full dark:bg-white"></span>
-        </button>
+        <div className="relative" ref={notifRef}>
+          <button
+            onClick={() => setShowNotifications(!showNotifications)}
+            className="relative p-2 rounded-lg hover:bg-second/20 dark:hover:bg-second/30 transition"
+          >
+            <Bell className="w-5 h-5 text-first dark:text-darkmodetext" />
+            {unreadCount > 0 && (
+              <span className="absolute top-1 right-1 w-2 h-2 bg-darkblue rounded-full dark:bg-white"></span>
+            )}
+          </button>
+
+          {showNotifications && (
+            <div className="absolute right-0 mt-2 w-80 bg-card text-card-foreground border border-border rounded-lg shadow-lg z-50 max-h-96 overflow-hidden flex flex-col">
+              <div className="flex items-center justify-between p-4 border-b border-border">
+                <h3 className="font-semibold text-first dark:text-darkmodetext">
+                  Thông báo {unreadCount > 0 && `(${unreadCount})`}
+                </h3>
+                <div className="flex items-center gap-2">
+                  {unreadCount > 0 && (
+                    <button
+                      onClick={markAllAsRead}
+                      className="text-xs text-blue-500 hover:text-blue-600 dark:hover:text-blue-400"
+                    >
+                      Đánh dấu tất cả đã đọc
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setShowNotifications(false)}
+                    className="p-1 rounded hover:bg-second/10 dark:hover:bg-second/20"
+                  >
+                    <X className="w-4 h-4 text-first dark:text-darkmodetext" />
+                  </button>
+                </div>
+              </div>
+              <div className="overflow-y-auto">
+                {notifications.length === 0 ? (
+                  <div className="p-8 text-center text-second dark:text-darkmodetext/70">
+                    Không có thông báo nào
+                  </div>
+                ) : (
+                  notifications.map((notif) => (
+                    <div
+                      key={notif.id}
+                      onClick={() => markAsRead(notif.id)}
+                      className={`p-4 border-b border-border last:border-b-0 cursor-pointer transition ${
+                        notif.isRead
+                          ? "bg-transparent"
+                          : "bg-blue-50 dark:bg-blue-900/10"
+                      } hover:bg-second/5 dark:hover:bg-second/10`}
+                    >
+                      <p className="text-sm text-first dark:text-darkmodetext mb-1">
+                        {notif.message}
+                      </p>
+                      <p className="text-xs text-second dark:text-darkmodetext/70">
+                        {notif.date}
+                      </p>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* USER AVATAR WITH DROPDOWN */}
         <div className="relative" ref={dropdownRef}>

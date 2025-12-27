@@ -92,6 +92,8 @@ export default function ChangeOwner() {
     try {
       await new Promise((resolve) => setTimeout(resolve, 1500));
       // Logic: Update isHead flag for old and new head
+      // Close popup after successful save
+      closeForm();
       navigate("/households");
     } catch (err) {
       console.error(err);
@@ -245,7 +247,7 @@ export default function ChangeOwner() {
               <button
                 onClick={handleSave}
                 disabled={isLoading}
-                className="flex-1 px-4 py-2 rounded-lg bg-third text-first hover:bg-third/90 disabled:opacity-50 flex items-center justify-center gap-2"
+                className="flex-1 px-4 py-2 rounded-lg border border-input bg-third text-first hover:bg-emerald-400 dark:hover:bg-emerald-500 hover:border-emerald-300 dark:hover:border-emerald-400 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors"
               >
                 {isLoading ? (
                   <>

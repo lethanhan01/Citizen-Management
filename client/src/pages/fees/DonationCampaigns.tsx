@@ -13,6 +13,7 @@ import {
 interface DonationRecord {
   householdCode: string;
   headName: string;
+  headCCCD: string;
   address: string;
   amount: number;
   donatedDate: string;
@@ -34,6 +35,7 @@ const MOCK_CAMPAIGNS: Campaign[] = [
       {
         householdCode: "HK001",
         headName: "Nguyễn Văn A",
+        headCCCD: "001234567890",
         address: "123 Lê Lợi, Q1",
         amount: 200000,
         donatedDate: "2025-12-01",
@@ -41,6 +43,7 @@ const MOCK_CAMPAIGNS: Campaign[] = [
       {
         householdCode: "HK002",
         headName: "Trần Thị B",
+        headCCCD: "001234567891",
         address: "45 Nguyễn Trãi, Q5",
         amount: 150000,
         donatedDate: "2025-12-03",
@@ -55,6 +58,7 @@ const MOCK_CAMPAIGNS: Campaign[] = [
       {
         householdCode: "HK003",
         headName: "Phạm Văn C",
+        headCCCD: "001234567892",
         address: "88 Hai Bà Trưng, Q3",
         amount: 500000,
         donatedDate: "2025-12-10",
@@ -64,10 +68,10 @@ const MOCK_CAMPAIGNS: Campaign[] = [
 ];
 
 const MOCK_ALL_HOUSEHOLDS = [
-  { code: "HK001", headName: "Nguyễn Văn A", address: "123 Lê Lợi, Q1" },
-  { code: "HK002", headName: "Trần Thị B", address: "45 Nguyễn Trãi, Q5" },
-  { code: "HK003", headName: "Phạm Văn C", address: "88 Hai Bà Trưng, Q3" },
-  { code: "HK004", headName: "Lê Thị D", address: "22 Lý Tự Trọng, Q1" },
+  { code: "HK001", headName: "Nguyễn Văn A", headCCCD: "001234567890", address: "123 Lê Lợi, Q1" },
+  { code: "HK002", headName: "Trần Thị B", headCCCD: "001234567891", address: "45 Nguyễn Trãi, Q5" },
+  { code: "HK003", headName: "Phạm Văn C", headCCCD: "001234567892", address: "88 Hai Bà Trưng, Q3" },
+  { code: "HK004", headName: "Lê Thị D", headCCCD: "001234567893", address: "22 Lý Tự Trọng, Q1" },
 ];
 
 export default function DonationCampaigns() {
@@ -135,6 +139,7 @@ export default function DonationCampaigns() {
       const newDonation: DonationRecord = {
         householdCode: household.code,
         headName: household.headName,
+        headCCCD: household.headCCCD,
         address: household.address,
         amount: parseFloat(donationAmount),
         donatedDate: new Date().toISOString().split("T")[0],
@@ -178,12 +183,12 @@ export default function DonationCampaigns() {
         return (
           <div
             key={campaign.id}
-            className="bg-white dark:bg-transparent dark:border dark:border-second/40 dark:backdrop-blur-md rounded-xl shadow-sm dark:shadow-none overflow-hidden"
+            className="bg-card text-card-foreground border border-border rounded-xl shadow-sm overflow-hidden"
           >
             {/* Header */}
             <button
               onClick={() => toggleCampaign(campaign.id)}
-              className="w-full flex items-center justify-between p-5 hover:bg-second/5 dark:hover:bg-second/10 transition"
+              className="w-full flex items-center justify-between p-5 hover:bg-muted/10 transition"
             >
               <div className="flex items-center gap-3">
                 {isExpanded ? (
@@ -209,7 +214,7 @@ export default function DonationCampaigns() {
 
             {/* Content */}
             {isExpanded && (
-              <div className="p-5 border-t border-second/20 dark:border-second/30 space-y-6">
+              <div className="p-5 border-t border-border space-y-6">
                 {/* Stats */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <StatCard label="Số hộ đóng góp" value={householdCount} color="blue" />
@@ -225,11 +230,12 @@ export default function DonationCampaigns() {
                   <h4 className="text-sm font-semibold text-first dark:text-darkmodetext mb-3">
                     Danh sách đóng góp
                   </h4>
-                  <div className="overflow-x-auto border border-second/30 dark:border-second/30 rounded-lg">
+                  <div className="overflow-x-auto border border-border rounded-lg">
                     <table className="min-w-full text-sm">
-                      <thead className="bg-second/10 dark:bg-second/20">
+                      <thead className="bg-muted/10">
                         <tr className="text-left">
                           <th className="py-2 px-3 text-first dark:text-darkmodetext">Mã hộ</th>
+                          <th className="py-2 px-3 text-first dark:text-darkmodetext">CCCD chủ hộ</th>
                           <th className="py-2 px-3 text-first dark:text-darkmodetext">Chủ hộ</th>
                           <th className="py-2 px-3 text-first dark:text-darkmodetext">Địa chỉ</th>
                           <th className="py-2 px-3 text-first dark:text-darkmodetext">Số tiền</th>
@@ -238,8 +244,9 @@ export default function DonationCampaigns() {
                       </thead>
                       <tbody>
                         {campaign.donations.map((d, idx) => (
-                          <tr key={idx} className="border-t border-second/20 dark:border-second/30">
+                          <tr key={idx} className="border-t border-border">
                             <td className="py-2 px-3 text-first dark:text-darkmodetext">{d.householdCode}</td>
+                            <td className="py-2 px-3 text-first dark:text-darkmodetext">{d.headCCCD}</td>
                             <td className="py-2 px-3 text-first dark:text-darkmodetext">{d.headName}</td>
                             <td className="py-2 px-3 text-first dark:text-darkmodetext">{d.address}</td>
                             <td className="py-2 px-3 text-first dark:text-darkmodetext font-semibold">
@@ -250,7 +257,7 @@ export default function DonationCampaigns() {
                         ))}
                         {campaign.donations.length === 0 && (
                           <tr>
-                            <td colSpan={5} className="py-4 text-center text-second dark:text-darkmodetext/70">
+                            <td colSpan={6} className="py-4 text-center text-second dark:text-darkmodetext/70">
                               Chưa có hộ nào đóng góp
                             </td>
                           </tr>
@@ -334,7 +341,7 @@ export default function DonationCampaigns() {
                 <button
                   onClick={handleSaveDonation}
                   disabled={isLoading || !selectedHouseholdCode || !donationAmount || parseFloat(donationAmount) <= 0}
-                  className="flex-1 px-4 py-2 rounded-lg bg-third text-first hover:bg-third/90 disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="flex-1 px-4 py-2 rounded-lg border border-second/40 dark:border-second/30 bg-third text-first hover:bg-emerald-400 dark:hover:bg-emerald-500 hover:border-emerald-300 dark:hover:border-emerald-400 disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {isLoading ? (
                     <>
@@ -411,7 +418,7 @@ export default function DonationCampaigns() {
                 <button
                   onClick={handleSaveNewCampaign}
                   disabled={isLoading || !newCampaignName.trim()}
-                  className="flex-1 px-4 py-2 rounded-lg bg-third text-first hover:bg-third/90 disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="flex-1 px-4 py-2 rounded-lg border border-second/40 dark:border-second/30 bg-third text-first hover:bg-emerald-400 dark:hover:bg-emerald-500 hover:border-emerald-300 dark:hover:border-emerald-400 disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {isLoading ? (
                     <>

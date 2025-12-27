@@ -8,6 +8,7 @@ import {
   Save,
   UserX,
   HeartPulse,
+  Loader,
 } from "lucide-react";
 import * as PersonAPI from "@/api/person.api";
 import { useAuthStore } from "@/stores/auth.store";
@@ -111,6 +112,9 @@ export default function UpdatePerson() {
   const [formData, setFormData] = useState<CitizenItem | null>(null);
   const [errors, setErrors] = useState<FormErrors>({});
   const [loading, setLoading] = useState<boolean>(false);
+  const [saving, setSaving] = useState<boolean>(false);
+  const [moving, setMoving] = useState<boolean>(false);
+  const [deceasedLoading, setDeceasedLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const token = useAuthStore((s) => s.token);
   const persistedToken = useMemo(() => token || localStorage.getItem("token"), [token]);
@@ -210,6 +214,7 @@ export default function UpdatePerson() {
 
   const saveChanges = async () => {
     if (!formData || !validate()) return;
+    setSaving(true);
     try {
       const payload = toUpdatePayload(formData);
       await PersonAPI.updatePerson(formData.id, payload);
@@ -219,13 +224,18 @@ export default function UpdatePerson() {
       setCitizens((prev) => prev.map((c) => (c.id === mapped.id ? mapped : c)));
       setSelected(mapped);
       setFormData(mapped);
+      // Close the drawer after successful save
+      closeDrawer();
     } catch (e: any) {
       alert(e?.message || "Cập nhật thất bại");
+    } finally {
+      setSaving(false);
     }
   };
 
   const markMovedAway = async () => {
     if (!formData) return;
+    setMoving(true);
     const updatedLocal = { ...formData, status: "Đã chuyển đi" as Status };
     try {
       await PersonAPI.updatePerson(formData.id, {
@@ -236,11 +246,14 @@ export default function UpdatePerson() {
       setFormData(updatedLocal);
     } catch (e: any) {
       alert(e?.message || "Cập nhật trạng thái chuyển đi thất bại");
+    } finally {
+      setMoving(false);
     }
   };
 
   const toggleDeceased = async () => {
     if (!formData) return;
+    setDeceasedLoading(true);
     const nextDeceased = !formData.isDeceased;
     const nextLocal = { ...formData, isDeceased: nextDeceased, status: nextDeceased ? "Đã chuyển đi" : formData.status };
     try {
@@ -252,8 +265,12 @@ export default function UpdatePerson() {
       setFormData(nextLocal);
     } catch (e: any) {
       alert(e?.message || "Cập nhật trạng thái qua đời thất bại");
+    } finally {
+      setDeceasedLoading(false);
     }
   };
+
+  const isBusy = saving || moving || deceasedLoading;
 
   return (
     <div className="space-y-6">
@@ -519,27 +536,57 @@ export default function UpdatePerson() {
               <div className="flex flex-col sm:flex-row gap-3 justify-end border-t border-second/20 dark:border-second/30 pt-4">
                 <button
                   onClick={markMovedAway}
-                  className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-second/40 dark:border-second/30 text-first dark:text-darkmodetext hover:bg-second/10 dark:hover:bg-second/30"
+                  className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-second/40 dark:border-second/30 text-first dark:text-darkmodetext hover:bg-gray-100 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500 disabled:opacity-60 transition-colors"
                   type="button"
+                  disabled={isBusy}
                 >
-                  <UserX className="w-4 h-4" />
-                  Chuyển đi nơi khác
+                  {moving ? (
+                    <>
+                      <Loader className="w-4 h-4 animate-spin" />
+                      Đang lưu...
+                    </>
+                  ) : (
+                    <>
+                      <UserX className="w-4 h-4" />
+                      Chuyển đi nơi khác
+                    </>
+                  )}
                 </button>
                 <button
                   onClick={toggleDeceased}
-                  className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-second/40 dark:border-second/30 text-first dark:text-darkmodetext hover:bg-second/10 dark:hover:bg-second/30"
+                  className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-second/40 dark:border-second/30 text-first dark:text-darkmodetext hover:bg-gray-100 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500 disabled:opacity-60 transition-colors"
                   type="button"
+                  disabled={isBusy}
                 >
-                  <HeartPulse className="w-4 h-4" />
-                  Đánh dấu đã qua đời
+                  {deceasedLoading ? (
+                    <>
+                      <Loader className="w-4 h-4 animate-spin" />
+                      Đang lưu...
+                    </>
+                  ) : (
+                    <>
+                      <HeartPulse className="w-4 h-4" />
+                      Đánh dấu đã qua đời
+                    </>
+                  )}
                 </button>
                 <button
                   onClick={saveChanges}
-                  className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-third text-first hover:bg-third/90"
+                  className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-second/40 dark:border-second/30 bg-third text-first hover:bg-emerald-500 dark:hover:bg-emerald-500 hover:border-emerald-400 dark:hover:border-emerald-400 disabled:opacity-60 transition-colors"
                   type="button"
+                  disabled={isBusy}
                 >
-                  <Save className="w-4 h-4" />
-                  Lưu thay đổi
+                  {saving ? (
+                    <>
+                      <Loader className="w-4 h-4 animate-spin" />
+                      Đang lưu...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4" />
+                      Lưu thay đổi
+                    </>
+                  )}
                 </button>
               </div>
             </div>

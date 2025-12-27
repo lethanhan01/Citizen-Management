@@ -44,6 +44,9 @@ const DonationCampaigns = lazy(() => import("../pages/fees/DonationCampaigns.tsx
 const AccountList = lazy(() => import("../pages/settings/AccountList.tsx"));
 const AddAccount = lazy(() => import("../pages/settings/AddAccount.tsx"));
 
+// Demo popup khi vào page không đủ quyền, dùng .../demo/auth-popup vào đuôi link
+const AuthPopupDemo = lazy(() => import("../pages/AuthPopupDemo.tsx"));
+
 //Router
 const router = createBrowserRouter([
     {
@@ -83,6 +86,9 @@ const router = createBrowserRouter([
               // Settings
               { path: '/settings/accounts', element: <AccountList /> },
               { path: '/settings/add-account', element: <AddAccount /> },
+
+              // Demo
+              { path: '/demo/auth-popup', element: <AuthPopupDemo /> },
             ],
           },
         ],
