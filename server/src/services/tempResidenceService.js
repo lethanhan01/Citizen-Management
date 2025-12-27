@@ -2,10 +2,50 @@ import { Op } from "sequelize";
 import db from "../models/index.js";
 
 let createTempResidence = async (data) => {
+    const person = await db.Person.create({
+        full_name: data.full_name,
+        residency_status: "temporary_resident",
+        gender: data.gender,
+        dob: data.dob,
+    });
+
+    const household = await db.Household.findOne({
+        where: { household_no: data.household_no },
+    });
+
+    await db.HouseholdMembership.create({
+        person_id: person.person_id,
+        household_id: household.household_id,
+        is_head: false,
+        relation_to_head: data.relation_to_head || "Tạm trú",
+        start_date: data.from_date,
+        end_date: data.to_date || null,
+    });
+
+    return await db.TempResidence.create({
+        person_id: person.person_id,
+        type: "TEMPORARY_STAY",
+        household_id: household.household_id,
+        from_date: data.from_date,
+        to_date: data.to_date,
+        status: data.status || "ACTIVE",
+        registered_by_person_id: data.registered_by_person_id || null,
+        note: data.note || null,
+    });
+};
+
+let createTempAbsence = async (data) => {
+    const household = await db.Household.findOne({
+        where: { household_no: data.household_no },
+    });
+    const person = await db.Person.findByPk(data.person_id);
+    await person.update({
+        residency_status: "temporary_absent",
+    });
     return await db.TempResidence.create({
         person_id: data.person_id,
-        type: data.type,
-        household_id: data.household_id,
+        type: "TEMPORARY_ABSENCE",
+        household_id: household.household_id,
         from_date: data.from_date,
         to_date: data.to_date,
         status: data.status || "ACTIVE",
@@ -61,6 +101,7 @@ let deleteTempResidence = async (id) => {
 };
 export default {
     createTempResidence,
+    createTempAbsence,
     getTempResidence,
     updateTempResidence,
     deleteTempResidence,
