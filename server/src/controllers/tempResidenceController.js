@@ -7,13 +7,32 @@ let createTempResidence = async (req, res) => {
             data
         );
         return res.status(201).json({
-            message: "Tạo tạm trú/tạm vắng thành công",
+            message: "Tạo tạm trú thành công",
             tempResidence: newTempResidence,
         });
     } catch (error) {
-        console.error("Lỗi khi tạo tạm trú/tạm vắng:", error);
+        console.error("Lỗi khi tạo tạm trú:", error);
         return res.status(500).json({
-            message: "Lỗi máy chủ khi tạo tạm trú/tạm vắng",
+            message: "Lỗi máy chủ khi tạo tạm trú",
+            error: error.message,
+        });
+    }
+};
+
+let createTempAbsence = async (req, res) => {
+    try {
+        const data = req.body;
+        const newTempAbsence = await tempResidenceService.createTempAbsence(
+            data
+        );
+        return res.status(201).json({
+            message: "Tạo tạm vắng thành công",
+            tempResidence: newTempAbsence,
+        });
+    } catch (error) {
+        console.error("Lỗi khi tạo tạm vắng:", error);
+        return res.status(500).json({
+            message: "Lỗi máy chủ khi tạo tạm vắng",
             error: error.message,
         });
     }
@@ -84,6 +103,7 @@ let deleteTempResidence = async (req, res) => {
 
 export {
     createTempResidence,
+    createTempAbsence,
     getTempResidence,
     updateTempResidence,
     deleteTempResidence,

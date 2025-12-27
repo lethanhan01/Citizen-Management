@@ -19,6 +19,7 @@ import {
 } from "../controllers/personController.js";
 import {
     createTempResidence,
+    createTempAbsence,
     getTempResidence,
     updateTempResidence,
     deleteTempResidence,
@@ -254,10 +255,15 @@ let initWebRoutes = (app) => {
 
     // Quản lý tạm trú tạm vắng
     router.post(
-        "/api/v1/tam-tru-vang",
-        verifyToken,
-        checkRole(["admin"]),
+        "/api/v1/tam-tru",
+
         createTempResidence
+    );
+
+    router.post(
+        "/api/v1/tam-vang",
+
+        createTempAbsence
     );
 
     router.get(
