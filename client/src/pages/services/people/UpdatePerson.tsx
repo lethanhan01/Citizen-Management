@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Search,
   Pencil,
@@ -9,6 +9,8 @@ import {
   UserX,
   HeartPulse,
 } from "lucide-react";
+import * as PersonAPI from "@/api/person.api";
+import { useAuthStore } from "@/stores/auth.store";
 
 type Status = "Thường trú" | "Tạm trú" | "Đã chuyển đi";
 
@@ -36,72 +38,105 @@ interface FormErrors {
   [key: string]: string;
 }
 
-const MOCK_CITIZENS: CitizenItem[] = [
-  {
-    id: "1",
-    cccd: "012345678901",
-    fullName: "Nguyễn Văn A",
-    dateOfBirth: "1990-05-12",
-    gender: "Nam",
-    householdCode: "HK001",
-    address: "123 Lê Lợi, Quận 1, TP.HCM",
-    status: "Thường trú",
-    nationality: "Việt Nam",
-    occupation: "Kỹ sư phần mềm",
-    workplace: "Công ty ABC",
-    cmndCccdIssueDate: "2018-06-01",
-    cmndCccdIssuePlace: "TP.HCM",
-    permanentResidenceDate: "2015-09-10",
-    relationshipToHead: "Chủ hộ",
-    isHead: true,
-    isDeceased: false,
-  },
-  {
-    id: "2",
-    cccd: "098765432109",
-    fullName: "Trần Thị B",
-    dateOfBirth: "1995-11-23",
-    gender: "Nữ",
-    householdCode: "HK002",
-    address: "45 Nguyễn Trãi, Hà Nội",
-    status: "Tạm trú",
-    nationality: "Việt Nam",
-    occupation: "Nhân viên kế toán",
-    workplace: "Công ty DEF",
-    cmndCccdIssueDate: "2019-02-15",
-    cmndCccdIssuePlace: "Hà Nội",
-    permanentResidenceDate: "2017-03-20",
-    relationshipToHead: "Vợ",
-    isHead: false,
-    isDeceased: false,
-  },
-  {
-    id: "3",
-    cccd: "123456789012",
-    fullName: "Phạm Văn C",
-    dateOfBirth: "1988-03-05",
-    gender: "Nam",
-    householdCode: "HK003",
-    address: "88 Hai Bà Trưng, Đà Nẵng",
-    status: "Thường trú",
-    nationality: "Việt Nam",
-    occupation: "Tài xế",
-    workplace: "Hãng vận tải GHI",
-    cmndCccdIssueDate: "2016-10-01",
-    cmndCccdIssuePlace: "Đà Nẵng",
-    permanentResidenceDate: "2014-01-01",
-    relationshipToHead: "Chồng",
-    isHead: false,
-    isDeceased: false,
-  },
-];
+// Helpers: map BE data ↔ FE view model
+function mapGenderToView(g: string | null | undefined): "Nam" | "Nữ" {
+  if (!g) return "Nam";
+  const val = String(g).toLowerCase();
+  return val.startsWith("m") || val.includes("nam") ? "Nam" : "Nữ";
+}
+function mapStatusToView(s: string | null | undefined): Status {
+  const val = String(s || "permanent").toLowerCase();
+  if (val === "permanent") return "Thường trú";
+  if (val === "temporary") return "Tạm trú";
+  return "Đã chuyển đi";
+}
+function toCitizenItem(p: any): CitizenItem {
+  const firstHousehold = Array.isArray(p?.households) && p.households.length > 0 ? p.households[0] : null;
+  const relation = Array.isArray(p?.householdMemberships) && p.householdMemberships.length > 0 ? p.householdMemberships[0]?.relation_to_head : undefined;
+  const isHead = !!(firstHousehold?.HouseholdMembership?.is_head);
+  return {
+    id: String(p?.person_id ?? p?.id ?? ""),
+    cccd: String(p?.citizen_id_num ?? ""),
+    fullName: String(p?.full_name ?? ""),
+    dateOfBirth: p?.dob ?? "",
+    gender: mapGenderToView(p?.gender),
+    householdCode: String(firstHousehold?.household_no ?? ""),
+    address: String(firstHousehold?.address ?? ""),
+    status: mapStatusToView(p?.residency_status),
+    nationality: String(p?.ethnicity ?? ""),
+    occupation: String(p?.occupation ?? ""),
+    workplace: String(p?.workplace ?? ""),
+    cmndCccdIssueDate: p?.citizen_id_issued_date ?? "",
+    cmndCccdIssuePlace: p?.citizen_id_issued_place ?? "",
+    permanentResidenceDate: p?.residence_registered_date ?? "",
+    isDeceased: String(p?.residency_status ?? "").toLowerCase() === "deceased",
+    relationshipToHead: relation ?? "",
+    isHead,
+  };
+}
+
+function mapGenderToServer(g: "Nam" | "Nữ"): string {
+  return g === "Nam" ? "male" : "female";
+}
+function mapStatusToServer(s: Status, isDeceased?: boolean): string {
+  if (isDeceased) return "deceased";
+  if (s === "Thường trú") return "permanent";
+  if (s === "Tạm trú") return "temporary";
+  return "moved_out";
+}
+function toUpdatePayload(form: CitizenItem) {
+  const payload: Record<string, any> = {
+    full_name: form.fullName,
+    dob: form.dateOfBirth || null,
+    gender: mapGenderToServer(form.gender),
+    citizen_id_num: form.cccd,
+    ethnicity: form.nationality || null,
+    occupation: form.occupation || null,
+    workplace: form.workplace || null,
+    citizen_id_issued_date: form.cmndCccdIssueDate || null,
+    citizen_id_issued_place: form.cmndCccdIssuePlace || null,
+    residency_status: mapStatusToServer(form.status, form.isDeceased),
+    residence_registered_date: form.permanentResidenceDate || null,
+  };
+  if (form.relationshipToHead && form.relationshipToHead.trim() !== "") {
+    payload["relation_to_head"] = form.relationshipToHead;
+  }
+  return payload;
+}
 
 export default function UpdatePerson() {
-  const [citizens, setCitizens] = useState<CitizenItem[]>(MOCK_CITIZENS);
+  const [citizens, setCitizens] = useState<CitizenItem[]>([]);
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<CitizenItem | null>(null);
   const [formData, setFormData] = useState<CitizenItem | null>(null);
   const [errors, setErrors] = useState<FormErrors>({});
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const token = useAuthStore((s) => s.token);
+  const persistedToken = useMemo(() => token || localStorage.getItem("token"), [token]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const resp = await PersonAPI.getPersons({ page: 1, limit: 100 });
+        const items = Array.isArray(resp.rows) ? resp.rows.map(toCitizenItem) : [];
+        setCitizens(items);
+      } catch (e: any) {
+        setError(e?.message || "Không tải được danh sách nhân khẩu");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (!persistedToken) {
+      // Chưa có token (đang hydrate hoặc chưa đăng nhập), không báo lỗi sớm
+      setCitizens([]);
+      return;
+    }
+    fetchData();
+  }, [persistedToken]);
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -173,26 +208,51 @@ export default function UpdatePerson() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const saveChanges = () => {
+  const saveChanges = async () => {
     if (!formData || !validate()) return;
-    setCitizens((prev) => prev.map((c) => (c.id === formData.id ? formData : c)));
-    setSelected(formData);
+    try {
+      const payload = toUpdatePayload(formData);
+      await PersonAPI.updatePerson(formData.id, payload);
+      // Optionally refresh single item from BE
+      const fresh = await PersonAPI.getPersonById(formData.id);
+      const mapped = fresh ? toCitizenItem(fresh) : formData;
+      setCitizens((prev) => prev.map((c) => (c.id === mapped.id ? mapped : c)));
+      setSelected(mapped);
+      setFormData(mapped);
+    } catch (e: any) {
+      alert(e?.message || "Cập nhật thất bại");
+    }
   };
 
-  const markMovedAway = () => {
+  const markMovedAway = async () => {
     if (!formData) return;
-    const updated = { ...formData, status: "Đã chuyển đi" as Status };
-    setCitizens((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
-    setSelected(updated);
-    setFormData(updated);
+    const updatedLocal = { ...formData, status: "Đã chuyển đi" as Status };
+    try {
+      await PersonAPI.updatePerson(formData.id, {
+        residency_status: mapStatusToServer("Đã chuyển đi" as Status),
+      });
+      setCitizens((prev) => prev.map((c) => (c.id === updatedLocal.id ? updatedLocal : c)));
+      setSelected(updatedLocal);
+      setFormData(updatedLocal);
+    } catch (e: any) {
+      alert(e?.message || "Cập nhật trạng thái chuyển đi thất bại");
+    }
   };
 
-  const toggleDeceased = () => {
+  const toggleDeceased = async () => {
     if (!formData) return;
-    const updated = { ...formData, isDeceased: !formData.isDeceased };
-    setCitizens((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
-    setSelected(updated);
-    setFormData(updated);
+    const nextDeceased = !formData.isDeceased;
+    const nextLocal = { ...formData, isDeceased: nextDeceased, status: nextDeceased ? "Đã chuyển đi" : formData.status };
+    try {
+      await PersonAPI.updatePerson(formData.id, {
+        residency_status: nextDeceased ? "deceased" : mapStatusToServer(nextLocal.status),
+      });
+      setCitizens((prev) => prev.map((c) => (c.id === nextLocal.id ? nextLocal : c)));
+      setSelected(nextLocal);
+      setFormData(nextLocal);
+    } catch (e: any) {
+      alert(e?.message || "Cập nhật trạng thái qua đời thất bại");
+    }
   };
 
   return (
@@ -235,7 +295,17 @@ export default function UpdatePerson() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((c) => (
+              {loading && (
+                <tr>
+                  <td className="py-4 text-center" colSpan={6}>Đang tải dữ liệu…</td>
+                </tr>
+              )}
+              {error && !loading && (
+                <tr>
+                  <td className="py-4 text-center text-red-500" colSpan={6}>{error}</td>
+                </tr>
+              )}
+              {!loading && !error && filtered.map((c) => (
                 <tr
                   key={c.id}
                   className="border-b border-second/10 dark:border-second/20 hover:bg-second/10 dark:hover:bg-second/20 transition"
@@ -270,7 +340,7 @@ export default function UpdatePerson() {
                   </td>
                 </tr>
               ))}
-              {filtered.length === 0 && (
+              {!loading && !error && filtered.length === 0 && (
                 <tr>
                   <td className="py-4 text-center text-second dark:text-darkmodetext/70" colSpan={6}>
                     Không tìm thấy kết quả
