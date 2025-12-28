@@ -261,10 +261,32 @@ export default function FixedFees() {
             ) : (
               <ChevronRight className="w-5 h-5" />
             )}
-            <h3 className="text-lg font-semibold text-foreground">
-              {currentCategory?.item_type || 'Chưa chọn khoản thu'}
-            </h3>
+
+            {/* ✅ Dropdown chọn khoản thu */}
+            <select
+              value={selectedRateId ?? ""}
+              onClick={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
+              onChange={(e) => {
+                e.stopPropagation();
+                setCurrentPage(1);
+                setSearchQuery("");
+                setStatusFilter("all");
+                setSortBy("status");
+                setSelectedRateId(Number(e.target.value));
+              }}
+              className="px-2 py-1 rounded-md border border-input bg-card text-foreground"
+            >
+              {fees.map((f) => (
+                <option key={f.rate_id} value={f.rate_id}>
+                  {f.item_type}
+                </option>
+              ))}
+
+            </select>
+
           </div>
+
           {currentCategory && (
             <button
               onClick={(e) => {
