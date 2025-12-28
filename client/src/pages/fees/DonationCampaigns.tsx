@@ -10,21 +10,27 @@ import {
   X,
   Save,
   Loader,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 
 export default function DonationCampaigns() {
-  const {
-    campaigns,
-    detailsById,
-    loadingList,
-    loadingDetailById,
-    submitting,
-    error,
-    fetchCampaigns,
-    fetchCampaignById,
-    createCampaign,
-    contribute,
-  } = useCampaignStore();
+
+const {
+  campaigns,
+  detailsById,
+  loadingList,
+  loadingDetailById,
+  submitting,
+  error,
+  fetchCampaigns,
+  fetchCampaignById,
+  createCampaign,
+  contribute,
+  updateCampaign,
+  deleteCampaign,
+} = useCampaignStore();
+
 
   const [expandedCampaigns, setExpandedCampaigns] = useState<number[]>([]);
   const [showDonationModal, setShowDonationModal] = useState(false);
@@ -38,6 +44,14 @@ export default function DonationCampaigns() {
   const [newCampaignDesc, setNewCampaignDesc] = useState("");
   const [newCampaignStart, setNewCampaignStart] = useState("");
   const [newCampaignEnd, setNewCampaignEnd] = useState<string>("");
+  const [showEditCampaignModal, setShowEditCampaignModal] = useState(false);
+  const [editCampaignId, setEditCampaignId] = useState<number | null>(null);
+
+  const [editCampaignName, setEditCampaignName] = useState("");
+  const [editCampaignDesc, setEditCampaignDesc] = useState("");
+  const [editCampaignStart, setEditCampaignStart] = useState("");
+  const [editCampaignEnd, setEditCampaignEnd] = useState<string>("");
+
 
   useEffect(() => {
     fetchCampaigns();
@@ -112,6 +126,48 @@ export default function DonationCampaigns() {
     }
   };
 
+  const handleOpenEditCampaign = (campaign: any) => {
+    setEditCampaignId(campaign.campaign_id);
+
+    // prefill từ list (nếu list không có start/end thì vẫn sửa được name/end_date theo yêu cầu)
+    setEditCampaignName(campaign.name ?? "");
+    setEditCampaignDesc(campaign.description ?? "");
+    setEditCampaignStart(campaign.start_date ?? "");
+    setEditCampaignEnd(campaign.end_date ?? "");
+
+    setShowEditCampaignModal(true);
+  };
+
+  const handleSaveEditCampaign = async () => {
+    if (!editCampaignId) return;
+    if (!editCampaignName.trim()) return;
+
+    const ok = await updateCampaign(editCampaignId, {
+      name: editCampaignName.trim(),
+      description: editCampaignDesc?.trim() || "",
+      // Nếu BE cho phép update start_date thì giữ lại; nếu không thì bỏ 2 dòng start_date/description tùy API của bạn
+      start_date: editCampaignStart || undefined,
+      end_date: editCampaignEnd ? editCampaignEnd : null,
+    });
+
+    if (ok) {
+      setShowEditCampaignModal(false);
+      setEditCampaignId(null);
+    }
+  };
+
+  const handleDeleteCampaign = async (campaignId: number) => {
+    const yes = window.confirm("Xóa chiến dịch này và toàn bộ lịch sử đóng góp liên quan?");
+    if (!yes) return;
+
+    const ok = await deleteCampaign(campaignId);
+    if (ok) {
+      // đóng panel nếu đang mở
+      setExpandedCampaigns((prev) => prev.filter((id) => id !== campaignId));
+    }
+  };
+
+
 
 
   return (
@@ -181,16 +237,47 @@ export default function DonationCampaigns() {
                 </div>
               </div>
 
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleAddDonation(campaign.campaign_id);
-                }}
-                className="p-2 rounded-lg border border-second/40 dark:border-second/30 hover:bg-second/10 dark:hover:bg-second/30"
-              >
-                <Plus className="w-4 h-4 text-third" />
-              </button>
+              <div className="flex items-center gap-2">
+                {/* Edit */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleOpenEditCampaign(campaign);
+                  }}
+                  className="p-2 rounded-lg border border-second/40 dark:border-second/30 hover:bg-second/10 dark:hover:bg-second/30"
+                  title="Sửa chiến dịch"
+                >
+                  <Pencil className="w-4 h-4 text-first dark:text-darkmodetext" />
+                </button>
+
+                {/* Delete */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteCampaign(campaign.campaign_id);
+                  }}
+                  className="p-2 rounded-lg border border-second/40 dark:border-second/30 hover:bg-red-500/10 dark:hover:bg-red-500/20"
+                  title="Xóa chiến dịch"
+                >
+                  <Trash2 className="w-4 h-4 text-red-500" />
+                </button>
+
+                {/* Add donation */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleAddDonation(campaign.campaign_id);
+                  }}
+                  className="p-2 rounded-lg border border-second/40 dark:border-second/30 hover:bg-second/10 dark:hover:bg-second/30"
+                  title="Thêm đóng góp"
+                >
+                  <Plus className="w-4 h-4 text-third" />
+                </button>
+              </div>
+
             </div>
 
 
@@ -370,6 +457,107 @@ export default function DonationCampaigns() {
           </div>
         </div>
       )}
+      {/* Edit Campaign Modal */}
+        {showEditCampaignModal && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+            onClick={() => setShowEditCampaignModal(false)}
+          >
+            <div
+              className="bg-card text-card-foreground rounded-xl shadow-2xl p-6 w-full max-w-md"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-first dark:text-darkmodetext">Sửa chiến dịch</h3>
+                <button
+                  onClick={() => setShowEditCampaignModal(false)}
+                  className="p-2 hover:bg-second/10 dark:hover:bg-second/30 rounded-lg"
+                >
+                  <X className="w-5 h-5 text-first dark:text-darkmodetext" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-first dark:text-darkmodetext mb-2">
+                    Tên chiến dịch <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={editCampaignName}
+                    onChange={(e) => setEditCampaignName(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg border border-input bg-card text-card-foreground focus:outline-none focus:ring-1 focus:ring-selectring"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-first dark:text-darkmodetext mb-2">
+                    Mô tả
+                  </label>
+                  <textarea
+                    value={editCampaignDesc}
+                    onChange={(e) => setEditCampaignDesc(e.target.value)}
+                    rows={3}
+                    className="w-full px-3 py-2 rounded-lg border border-input bg-card text-card-foreground focus:outline-none focus:ring-1 focus:ring-selectring"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium text-first dark:text-darkmodetext mb-2">
+                      Ngày bắt đầu
+                    </label>
+                    <input
+                      type="date"
+                      value={editCampaignStart}
+                      onChange={(e) => setEditCampaignStart(e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg border border-input bg-card text-card-foreground"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-first dark:text-darkmodetext mb-2">
+                      Ngày kết thúc
+                    </label>
+                    <input
+                      type="date"
+                      value={editCampaignEnd}
+                      onChange={(e) => setEditCampaignEnd(e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg border border-input bg-card text-card-foreground"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowEditCampaignModal(false)}
+                    disabled={submitting}
+                    className="flex-1 px-4 py-2 rounded-lg border border-second/40 dark:border-second/30 text-first dark:text-darkmodetext hover:bg-second/10 dark:hover:bg-second/30 disabled:opacity-50"
+                  >
+                    Hủy bỏ
+                  </button>
+                  <button
+                    onClick={handleSaveEditCampaign}
+                    disabled={submitting || !editCampaignName.trim()}
+                    className="flex-1 px-4 py-2 rounded-lg border border-second/40 dark:border-second/30 bg-third text-first hover:bg-emerald-400 dark:hover:bg-emerald-500 hover:border-emerald-300 dark:hover:border-emerald-400 disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {submitting ? (
+                      <>
+                        <Loader className="w-4 h-4 animate-spin" />
+                        Đang lưu...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-4 h-4" />
+                        Lưu
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
       {/* New Campaign Modal */}
       {showNewCampaignModal && (
