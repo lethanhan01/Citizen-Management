@@ -49,6 +49,9 @@ export default function FixedFees() {
   const [showRateModal, setShowRateModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
 
+  const [paymentAmount, setPaymentAmount] = useState<number>(0); // Số tiền thực nộp
+  const [paymentNote, setPaymentNote] = useState<string>('');
+
   const [selectedRateId, setSelectedRateId] = useState<number | null>(null);
   const [editingRate, setEditingRate] = useState(0);
   const [selectedHousehold, setSelectedHousehold] =
@@ -194,6 +197,8 @@ export default function FixedFees() {
 
   const handleAddPayment = (household: HouseholdFeeUI) => {
     setSelectedHousehold(household);
+    setPaymentAmount(household.totalAmount);
+    setPaymentNote(household.note || '');
     setShowPaymentModal(true);
   };
 
@@ -203,14 +208,23 @@ export default function FixedFees() {
     try {
       const success = await confirmPayment({
         payment_id: selectedHousehold.paymentId,
-        amount: selectedHousehold.totalAmount,
+        amount: paymentAmount, // Gửi số tiền thực nộp (có thể thiếu)
         payment_method: 'Cash',
-        note: selectedHousehold.note,
+        note: paymentNote,
       });
+
       if (success) {
-        toast.success('Đã xác nhận thu tiền thành công!');
+        // Thông báo thông minh hơn
+        if (paymentAmount < selectedHousehold.totalAmount) {
+          toast.success('Đã ghi nhận nộp 1 phần (còn thiếu)!');
+        } else {
+          toast.success('Đã xác nhận thu đủ tiền!');
+        }
         setShowPaymentModal(false);
         setSelectedHousehold(null);
+        // Refresh data để cập nhật trạng thái mới
+        if (selectedRateId)
+          fetchPayments({ rate_id: selectedRateId, limit: 5000 });
       } else {
         toast.error('Có lỗi xảy ra.');
       }
@@ -480,7 +494,7 @@ export default function FixedFees() {
         </div>
       )}
 
-      {showPaymentModal && selectedHousehold && currentCategory && (
+      {/* {showPaymentModal && selectedHousehold && currentCategory && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
           onClick={() => setShowPaymentModal(false)}
@@ -540,6 +554,98 @@ export default function FixedFees() {
                   ) : (
                     <DollarSign className="w-4 h-4" />
                   )}{' '}
+                  Xác nhận
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )} */}
+
+      {/* PAYMENT MODAL */}
+      {showPaymentModal && selectedHousehold && currentCategory && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+          onClick={() => setShowPaymentModal(false)}
+        >
+          <div
+            className="bg-card text-card-foreground rounded-xl shadow-2xl p-6 w-full max-w-md"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">Xác nhận thu tiền</h3>
+              <button onClick={() => setShowPaymentModal(false)}>
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              {/* Thông tin hộ */}
+              <div className="p-3 bg-muted/20 rounded-lg space-y-1">
+                <p className="text-sm opacity-70">
+                  Mã hộ: <span className="font-medium text-foreground">{selectedHousehold.householdCode}</span>
+                </p>
+                <p className="font-semibold">{selectedHousehold.headName}</p>
+                <div className="flex justify-between text-sm">
+                    <span className="opacity-70">Nhân khẩu: {selectedHousehold.memberCount}</span>
+                    <span className="opacity-70">Mức thu: {Number(currentCategory.amount).toLocaleString()} đ</span>
+                </div>
+              </div>
+
+              {/* Input Số tiền thực nộp */}
+              <div>
+                <label className="block text-sm font-medium mb-1.5">Số tiền thực nộp (VND)</label>
+                <input 
+                    type="number"
+                    value={paymentAmount}
+                    onChange={(e) => setPaymentAmount(Number(e.target.value))}
+                    className="w-full px-3 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition font-semibold text-lg"
+                />
+                
+                {/* Gợi ý trạng thái dựa trên số tiền nhập */}
+                <div className="mt-2 text-sm">
+                    {paymentAmount >= selectedHousehold.totalAmount ? (
+                        <span className="text-green-600 flex items-center gap-1">
+                            ✓ Đủ tiền (Hoàn tất)
+                        </span>
+                    ) : (
+                        <span className="text-yellow-600 flex items-center gap-1">
+                            ⚠ Còn thiếu: <b>{(selectedHousehold.totalAmount - paymentAmount).toLocaleString()} VND</b> (Nộp 1 phần)
+                        </span>
+                    )}
+                </div>
+              </div>
+
+              {/* Input Ghi chú */}
+              <div>
+                <label className="block text-sm font-medium mb-1.5">Ghi chú</label>
+                <textarea 
+                    value={paymentNote}
+                    onChange={(e) => setPaymentNote(e.target.value)}
+                    rows={2}
+                    className="w-full px-3 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary/20 transition text-sm"
+                    placeholder="VD: Người nộp là con trai..."
+                />
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={() => setShowPaymentModal(false)}
+                  className="flex-1 px-4 py-2 border rounded-lg hover:bg-muted/10 transition"
+                >
+                  Hủy
+                </button>
+                <button
+                  onClick={handleSavePayment}
+                  disabled={isProcessing || paymentAmount < 0}
+                  className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg flex justify-center gap-2 items-center hover:bg-primary/90 transition shadow-sm"
+                >
+                  {isProcessing ? (
+                    <Loader className="animate-spin w-4 h-4" />
+                  ) : (
+                    <DollarSign className="w-4 h-4" />
+                  )}
                   Xác nhận
                 </button>
               </div>
