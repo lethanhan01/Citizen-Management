@@ -119,7 +119,9 @@ export default function Dashboard() {
                       labels: { color: textColor }
                     },
                   },
+                  maintainAspectRatio: false,
                 }}
+                style={{ height: "220px" }}
               />
             </div>
 
@@ -148,7 +150,9 @@ export default function Dashboard() {
                       labels: { color: textColor }
                     },
                   },
+                  maintainAspectRatio: false,
                 }}
+                style={{ height: "220px" }}
               />
             </div>
           </div>
@@ -170,6 +174,7 @@ export default function Dashboard() {
                     backgroundColor: "#8b5cf6",
                     borderColor: "#7c3aed",
                     data: [45, 58, 92, 78, 65, 720, 176],
+                    maxBarThickness: 32,
                   },
                 ],
               }}
@@ -190,7 +195,9 @@ export default function Dashboard() {
                     grid: { color: "rgba(128, 128, 128, 0.1)" }
                   },
                 },
+                maintainAspectRatio: false,
               }}
+              style={{ height: "260px" }}
             />
           </div>
         </div>
@@ -236,6 +243,7 @@ export default function Dashboard() {
                     backgroundColor: "#3b82f6",
                     borderColor: "#2563eb",
                     data: [5, 6, 7, 8, 7, 9, 10, 9, 8, 11, 12, 10],
+                    maxBarThickness: 28,
                   },
                 ],
               }}
@@ -256,7 +264,9 @@ export default function Dashboard() {
                     grid: { color: "rgba(128, 128, 128, 0.1)" }
                   },
                 },
+                maintainAspectRatio: false,
               }}
+              style={{ height: "260px" }}
             />
           </div>
 
@@ -286,7 +296,9 @@ export default function Dashboard() {
                       labels: { color: textColor }
                     } 
                   },
+                  maintainAspectRatio: false,
                 }}
+                style={{ height: "220px" }}
               />
             </div>
 
@@ -307,6 +319,7 @@ export default function Dashboard() {
                       backgroundColor: "#4cc0aa",
                       borderColor: "#38a48f",
                       data: [12, 18, 9, 15],
+                      maxBarThickness: 32,
                     },
                   ],
                 }}
@@ -327,7 +340,9 @@ export default function Dashboard() {
                       grid: { color: "rgba(128, 128, 128, 0.1)" }
                     },
                   },
+                  maintainAspectRatio: false,
                 }}
+                style={{ height: "240px" }}
               />
             </div>
           </div>
@@ -412,8 +427,3 @@ function StatCard({
     </div>
   );
 }
-
-
-
-
-
