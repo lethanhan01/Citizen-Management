@@ -89,7 +89,7 @@ export default function Dashboard() {
         data: taiChinh.doanhThuTheoThang,
       },
       paymentStatus: {
-        labels: ['Đã thu', 'Chưa thu / Nợ'],
+        labels: ['Đã thu', 'Nộp một phần', 'Chưa thu'],
         data: [
           taiChinh.trangThaiThu.daHoanThanh,
           taiChinh.trangThaiThu.nopMotPhan,
@@ -161,15 +161,21 @@ export default function Dashboard() {
       {activeTab === 'citizens' && chartData && (
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-card text-card-foreground border border-border rounded-xl p-6 shadow-sm">
-              <div className="flex items-center gap-4">
-                {icon5 && (
+            <div className="bg-card text-card-foreground border border-border rounded-xl p-6 shadow-sm relative overflow-hidden">
+              {icon5 && (
+                <div className="group absolute -right-10 -bottom-10 w-40 h-40 cursor-pointer z-20">
                   <img
                     src={icon5}
                     alt="Dân số"
-                    className="w-12 h-12 flex-shrink-0"
+                    className="w-full h-full -rotate-30"
                   />
-                )}
+                  <div className="absolute top-1/3 -translate-y-1/2 right-full mr-3 px-4 py-2 opacity-0 pointer-events-none transition-all duration-300 group-hover:opacity-100 group-hover:pointer-events-auto bg-[#eaf8fb] dark:bg-[#22303f] text-primary-foreground dark:text-white rounded-lg text-sm whitespace-nowrap shadow-lg">
+                    <span>bước sang tuổi 36<br /> cảm ơn mother physics<br /> cảm ơn gia đình</span>
+                    <div className="absolute top-1/2 -translate-y-1/2 left-full w-0 h-0 border-8 border-transparent border-l-[#eaf8fb] dark:border-l-[#22303f]"></div>
+                  </div>
+                </div>
+              )}
+              <div className="flex items-center gap-4 relative z-10">
                 <div>
                   <p className="text-sm text-muted-foreground">Tổng dân số</p>
                   <p className="text-3xl font-bold text-foreground">
@@ -182,15 +188,21 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <div className="bg-card text-card-foreground border border-border rounded-xl p-6 shadow-sm">
-              <div className="flex items-center gap-4">
-                {icon6 && (
+            <div className="bg-card text-card-foreground border border-border rounded-xl p-6 shadow-sm relative overflow-hidden">
+              {icon6 && (
+                <div className="group absolute -right-10 -bottom-10 w-40 h-40 cursor-pointer z-20">
                   <img
                     src={icon6}
                     alt="Hộ khẩu"
-                    className="w-12 h-12 flex-shrink-0"
+                    className="w-full h-full -rotate-30"
                   />
-                )}
+                  <div className="absolute top-1/3 -translate-y-1/2 right-full mr-3 px-4 py-2 opacity-0 pointer-events-none transition-all duration-300 group-hover:opacity-100 group-hover:pointer-events-auto bg-[#eaf8fb] dark:bg-[#22303f] text-primary-foreground dark:text-white rounded-lg text-sm whitespace-nowrap shadow-lg">
+                    <span>Sẽ có những con cá phải giả chó</span>
+                    <div className="absolute top-1/2 -translate-y-1/2 left-full w-0 h-0 border-8 border-transparent border-l-[#eaf8fb] dark:border-l-[#22303f]"></div>
+                  </div>
+                </div>
+              )}
+              <div className="flex items-center gap-4 relative z-10">
                 <div>
                   <p className="text-sm text-muted-foreground">
                     Tổng số hộ khẩu
@@ -238,7 +250,7 @@ export default function Dashboard() {
                   },
                   maintainAspectRatio: false,
                 }}
-                style={{ height: "220px" }}
+                style={{ height: "220px", marginTop: '30px' }}
               />
             </div>
 
@@ -273,7 +285,7 @@ export default function Dashboard() {
                   },
                   maintainAspectRatio: false,
                 }}
-                style={{ height: "220px" }}
+                style={{ height: "220px", marginTop: '30px' }}
               />
             </div>
           </div>
@@ -296,7 +308,7 @@ export default function Dashboard() {
                 datasets: [
                   {
                     label: 'Số người',
-                    backgroundColor: '#8b5cf6',
+                    backgroundColor: '#7eb1db',
                     borderColor: '#7c3aed',
                     data: chartData.age.data,
                   },
@@ -328,7 +340,7 @@ export default function Dashboard() {
                 },
                 maintainAspectRatio: false,
               }}
-              style={{ height: "260px" }}
+              style={{ height: "260px", marginTop: '30px' }}
             />
           </div>
         </div>
@@ -390,7 +402,7 @@ export default function Dashboard() {
                 datasets: [
                   {
                     label: 'Thu (VNĐ)',
-                    backgroundColor: '#3b82f6',
+                    backgroundColor: '#7eb1db',
                     borderColor: '#2563eb',
                     data: chartData.monthlyRevenue.data,
                   },
@@ -422,7 +434,7 @@ export default function Dashboard() {
                 },
                 maintainAspectRatio: false,
               }}
-              style={{ height: "260px" }}
+              style={{ height: "260px", marginTop: '30px' }}
             />
           </div>
 
@@ -458,7 +470,7 @@ export default function Dashboard() {
                   },
                   maintainAspectRatio: false,
                 }}
-                style={{ height: "220px" }}
+                style={{ height: "220px", marginTop: '30px' }}
               />
             </div>
 
@@ -512,7 +524,7 @@ export default function Dashboard() {
                   },
                   maintainAspectRatio: false,
                 }}
-                style={{ height: "240px" }}
+                style={{ height: "240px", marginTop: '30px' }}
               />
             </div>
           </div>
@@ -598,10 +610,10 @@ function StatCard({
   icon?: string;
 }) {
   return (
-    <div className="bg-card text-card-foreground border border-border rounded-xl p-6 shadow-sm">
-      <div className="flex items-center gap-4">
+    <div className="bg-card text-card-foreground border border-border rounded-xl p-6 shadow-sm relative overflow-hidden">
+      <div className="flex items-center gap-4 relative z-10">
         {icon && (
-          <img src={icon} alt={title} className="w-12 h-12 flex-shrink-0" />
+          <img src={icon} alt={title} className="w-30 h-30 flex-shrink-0 absolute -right-15 -bottom-15 -rotate-45" />
         )}
         <div>
           <p className="text-sm text-muted-foreground">{title}</p>

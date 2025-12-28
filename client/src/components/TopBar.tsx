@@ -34,6 +34,12 @@ export default function TopBar({
       date: new Date().toISOString().split("T")[0],
       isRead: false,
     },
+    {
+      id: "2",
+      message: "Nhóm 3 hí anh em nhá",
+      date: new Date().toISOString().split("T")[0],
+      isRead: false,
+    },
   ]);
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
@@ -67,8 +73,23 @@ export default function TopBar({
     return titleMap[path] || "Dashboard";
   };
 
+  // Load notifications from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('notifications');
+    if (saved) {
+      try {
+        setNotifications(JSON.parse(saved));
+      } catch {}
+    }
+  }, []);
+
+  // Persist notifications to localStorage on change
+  useEffect(() => {
+    localStorage.setItem('notifications', JSON.stringify(notifications));
+  }, [notifications]);
+
   const handleLogout = () => {
-    // Sử dụng store để đảm bảo reset state + redirect thống nhất
+    localStorage.removeItem('notifications');
     logout();
     navigate('/login', { replace: true });
   };

@@ -37,7 +37,11 @@ const createFeeWave = async (data) => {
           model: Person,
           as: "residents",
           // Chỉ đếm những người đang thường trú/tạm trú (tuỳ nghiệp vụ, ở đây mình đếm hết)
-          attributes: ["person_id"],
+          attributes: ["person_id", "residency_status"],
+          where: {
+            residency_status: { [Op.notIn]: ["move_out", "deceased"] },
+          },
+          required: false,
         },
       ],
     });
@@ -153,17 +157,27 @@ const getPaymentList = async (queryParams) => {
 
   // B. Xây dựng điều kiện lọc cho bảng Household (Tìm theo số hộ khẩu)
   let householdWhere = {};
+  let headPersonWhere = {};
 
-  if (keyword) {
-    // Tìm keyword trong household_no HOẶC payer_name (ở bảng Payment)
-    // Vì payer_name nằm ở bảng Payment, household_no nằm ở bảng Household
-    // nên ta xử lý logic OR này hơi khéo léo một chút:
-    // Nếu keyword nhìn giống số hộ khẩu (HK...) thì tìm ở Household
-    // Nếu không thì tìm tên người nộp ở Payment.
-    if (keyword.toUpperCase().startsWith("HK")) {
-      householdWhere.household_no = { [Op.iLike]: `%${keyword}` };
+  if (keyword && keyword.trim() !== "") {
+    const cleanKeyword = keyword.trim();
+    // Tìm trong bảng Household (Mã hộ)
+    const householdCondition = {
+      household_no: { [Op.iLike]: `%${cleanKeyword}%` },
+    };
+
+    // Tìm trong bảng Person (Tên hoặc CCCD)
+    const personCondition = {
+      [Op.or]: [
+        { full_name: { [Op.iLike]: `%${cleanKeyword}%` } },
+        { citizen_id_num: { [Op.iLike]: `%${cleanKeyword}%` } },
+      ],
+    };
+    if (cleanKeyword.toUpperCase().startsWith("HK")) {
+      householdWhere = householdCondition;
     } else {
-      paymentWhere.payer_name = { [Op.iLike]: `%${keyword}` };
+      // paymentWhere.payer_name = { [Op.iLike]: `%${keyword}` };
+      headPersonWhere = personCondition;
     }
   }
 
@@ -176,7 +190,19 @@ const getPaymentList = async (queryParams) => {
         as: "household",
         attributes: ["household_no", "address", "head_person_id"],
         where: Object.keys(householdWhere).length > 0 ? householdWhere : null,
-        required: Object.keys(householdWhere).length > 0,
+        required:
+          Object.keys(householdWhere).length > 0 ||
+          Object.keys(headPersonWhere).length > 0,
+        include: [
+          {
+            model: Person,
+            as: "headPerson",
+            attributes: ["full_name", "citizen_id_num"],
+            where:
+              Object.keys(headPersonWhere).length > 0 ? headPersonWhere : null,
+            required: Object.keys(headPersonWhere).length > 0,
+          },
+        ],
       },
       {
         model: FeeRate,
@@ -190,6 +216,26 @@ const getPaymentList = async (queryParams) => {
     ],
     limit: parseInt(limit),
     offset: parseInt(offset),
+    distinct: true,
+  });
+
+  const statsData = await Payment.findAll({
+    attributes: [
+      "payment_status",
+      [db.sequelize.fn("COUNT", db.sequelize.col("payment_id")), "count"],
+    ],
+    where: { rate_id: rate_id }, // Chỉ thống kê trong đợt thu này
+    group: ["payment_status"],
+    raw: true,
+  });
+
+  // Format stats
+  let stats = { paid: 0, partial: 0, pending: 0 };
+  statsData.forEach((item) => {
+    if (item.payment_status === "paid") stats.paid = parseInt(item.count);
+    else if (item.payment_status === "partial")
+      stats.partial = parseInt(item.count);
+    else stats.pending += parseInt(item.count); // pending hoặc unpaid
   });
 
   // D. Query 2: Tính tổng tiền toàn bộ
@@ -215,6 +261,7 @@ const getPaymentList = async (queryParams) => {
     totalPages: Math.ceil(count / limit),
     currentPage: parseInt(page),
     data: rows,
+    stats: stats,
   };
 };
 
@@ -263,7 +310,7 @@ const markPaymentAsPaid = async (data) => {
     payment_status: newStatus,
     paid_amount: newPaidAmount, // Cập nhật tổng tiền đã đóng
     payment_method: payment_method || "Cash",
-    date: new Date(), // Cập nhật ngày đóng gần nhất
+    date: date || new Date(), // Cập nhật ngày đóng gần nhất
     note: note || payment.note, // Giữ note cũ hoặc ghi đè
   });
 
