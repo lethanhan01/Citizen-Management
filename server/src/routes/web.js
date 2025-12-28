@@ -178,7 +178,6 @@ let initWebRoutes = (app) => {
     "/api/v1/nhan-khau",
     verifyToken,
     checkRole(["admin"]),
-
     getAllNhanKhau
   );
   router.put(
