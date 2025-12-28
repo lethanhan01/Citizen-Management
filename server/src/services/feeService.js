@@ -310,7 +310,7 @@ const markPaymentAsPaid = async (data) => {
     payment_status: newStatus,
     paid_amount: newPaidAmount, // Cập nhật tổng tiền đã đóng
     payment_method: payment_method || "Cash",
-    date: new Date(), // Cập nhật ngày đóng gần nhất
+    date: date || new Date(), // Cập nhật ngày đóng gần nhất
     note: note || payment.note, // Giữ note cũ hoặc ghi đè
   });
 

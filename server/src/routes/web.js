@@ -310,7 +310,7 @@ let initWebRoutes = (app) => {
   );
   // Xem chi tiết
   router.get(
-    "/api/v1/chien-dich/:id",
+    "/api/v1/chien-dich/chi-tiet/:id",
     verifyToken,
     checkRole(["admin", "accountant"]),
     campaignController.handleShow

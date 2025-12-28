@@ -19,7 +19,7 @@ const getAllCampaigns = async () => {
 };
 
 // 3. Xem chi tiết 1 đợt (kèm danh sách các hộ đã đóng)
-const getCampaignDetail = async () => {
+const getCampaignDetail = async (id) => {
   const campaign = await Campaign.findByPk(id, {
     include: [
       {
