@@ -29,6 +29,7 @@ interface HouseholdFeeUI {
   status: 'paid' | 'pending' | 'partial';
   paidDate?: string;
   totalAmount: number;
+  paidAmount: number;
   note?: string;
 }
 
@@ -114,6 +115,7 @@ export default function FixedFees() {
           ? new Date(p.date).toISOString().split('T')[0]
           : undefined,
         totalAmount: Number(p.total_amount),
+        paidAmount: Number(p.paid_amount || 0),
         note: p.note,
       };
     });
@@ -197,7 +199,8 @@ export default function FixedFees() {
 
   const handleAddPayment = (household: HouseholdFeeUI) => {
     setSelectedHousehold(household);
-    setPaymentAmount(household.totalAmount);
+    const remaining = household.totalAmount - household.paidAmount;
+    setPaymentAmount(remaining > 0 ? remaining : 0);
     setPaymentNote(household.note || '');
     setShowPaymentModal(true);
   };
@@ -319,7 +322,7 @@ export default function FixedFees() {
               />
 
               {/* TABLE */}
-              <div className="overflow-x-auto border border-border rounded-t-lg min-h-[300px]">
+              {/* <div className="overflow-x-auto border border-border rounded-t-lg min-h-[300px]">
                 <table className="min-w-full text-sm">
                   <thead className="bg-muted/10">
                     <tr className="text-left">
@@ -328,7 +331,7 @@ export default function FixedFees() {
                       <th className="py-2 px-3 text-foreground">Chủ hộ</th>
                       <th className="py-2 px-3 text-foreground">Địa chỉ</th>
                       <th className="py-2 px-3 text-foreground">Số người</th>
-                      <th className="py-2 px-3 text-foreground">Tổng tiền</th>
+                      <th className="py-2 px-3 text-foreground">Cần thu</th>
                       <th className="py-2 px-3 text-foreground">Trạng thái</th>
                       <th className="py-2 px-3 text-foreground">Ngày thu</th>
                       <th className="py-2 px-3 text-foreground">Hành động</th>
@@ -408,6 +411,136 @@ export default function FixedFees() {
                           </td>
                         </tr>
                       ))
+                    ) : (
+                      <tr>
+                        <td
+                          colSpan={9}
+                          className="py-12 text-center text-muted-foreground"
+                        >
+                          {searchQuery
+                            ? 'Không tìm thấy kết quả phù hợp'
+                            : 'Danh sách trống'}
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div> */}
+              {/* Table */}
+              <div className="overflow-x-auto border border-border rounded-t-lg min-h-[300px]">
+                <table className="min-w-full text-sm">
+                  <thead className="bg-muted/10">
+                    <tr className="text-left">
+                      <th className="py-2 px-3 text-foreground">Mã hộ</th>
+                      <th className="py-2 px-3 text-foreground">CCCD chủ hộ</th>
+                      <th className="py-2 px-3 text-foreground">Chủ hộ</th>
+                      <th className="py-2 px-3 text-foreground">Địa chỉ</th>
+                      <th className="py-2 px-3 text-foreground">Số người</th>
+                      {/* SỬA TIÊU ĐỀ CỘT TIỀN */}
+                      <th className="py-2 px-3 text-foreground">Cần thu</th>
+                      <th className="py-2 px-3 text-foreground">Trạng thái</th>
+                      <th className="py-2 px-3 text-foreground">Ngày thu</th>
+                      <th className="py-2 px-3 text-foreground">Hành động</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {loading ? (
+                      <tr>
+                        <td colSpan={9} className="py-12 text-center">
+                          <div className="flex justify-center items-center gap-2">
+                            <Loader className="animate-spin w-5 h-5" /> Đang tải
+                            dữ liệu...
+                          </div>
+                        </td>
+                      </tr>
+                    ) : paginatedHouseholds.length > 0 ? (
+                      paginatedHouseholds.map((h) => {
+                        // TÍNH TOÁN SỐ TIỀN CÒN LẠI
+                        const remainingAmount = h.totalAmount - h.paidAmount;
+
+                        return (
+                          <tr
+                            key={h.paymentId}
+                            className="border-t border-border hover:bg-muted/5"
+                          >
+                            <td className="py-2 px-3 text-foreground">
+                              {h.householdCode}
+                            </td>
+                            <td className="py-2 px-3 text-foreground">
+                              {h.headCCCD}
+                            </td>
+                            <td className="py-2 px-3 text-foreground">
+                              {h.headName}
+                            </td>
+                            <td
+                              className="py-2 px-3 text-foreground max-w-[200px] truncate"
+                              title={h.address}
+                            >
+                              {h.address}
+                            </td>
+                            <td className="py-2 px-3 text-foreground">
+                              {h.memberCount}
+                            </td>
+
+                            {/* HIỂN THỊ SỐ TIỀN CÒN LẠI */}
+                            <td className="py-2 px-3 text-foreground">
+                              <div className="font-semibold text-primary">
+                                {remainingAmount > 0
+                                  ? remainingAmount.toLocaleString()
+                                  : 0}{' '}
+                                VND
+                              </div>
+                              {/* Nếu nộp 1 phần, hiển thị tổng gốc bên dưới cho rõ */}
+                              {h.status === 'partial' && (
+                                <div className="text-xs text-muted-foreground">
+                                  Tổng: {h.totalAmount.toLocaleString()}
+                                </div>
+                              )}
+                            </td>
+
+                            <td className="py-2 px-3">
+                              {h.status === 'paid' && (
+                                <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                                  Đã thu
+                                </span>
+                              )}
+                              {(h.status === 'pending' ||
+                                h.status === ('unpaid' as any)) && (
+                                <span className="px-2 py-1 text-xs rounded-full bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
+                                  Chưa thu
+                                </span>
+                              )}
+                              {h.status === 'partial' && (
+                                <span className="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
+                                  Nộp thiếu
+                                </span>
+                              )}
+                            </td>
+                            <td className="py-2 px-3 text-foreground">
+                              {h.paidDate || '-'}
+                            </td>
+                            <td className="py-2 px-3">
+                              {h.status === 'paid' ? (
+                                <button
+                                  onClick={() => handlePrint(h)}
+                                  className="p-2 rounded-lg border border-input hover:bg-muted/10"
+                                >
+                                  <Printer className="w-4 h-4" />
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => handleAddPayment(h)}
+                                  className="p-2 rounded-lg border border-input hover:bg-emerald-400 dark:hover:bg-emerald-500 hover:border-emerald-300 dark:hover:border-emerald-400"
+                                  title="Thu tiền"
+                                >
+                                  <Plus className="w-4 h-4" />
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })
                     ) : (
                       <tr>
                         <td
@@ -578,53 +711,94 @@ export default function FixedFees() {
                 <X className="w-5 h-5" />
               </button>
             </div>
-            
+
             <div className="space-y-4">
               {/* Thông tin hộ */}
               <div className="p-3 bg-muted/20 rounded-lg space-y-1">
                 <p className="text-sm opacity-70">
-                  Mã hộ: <span className="font-medium text-foreground">{selectedHousehold.householdCode}</span>
+                  Mã hộ:{' '}
+                  <span className="font-medium text-foreground">
+                    {selectedHousehold.householdCode}
+                  </span>
                 </p>
                 <p className="font-semibold">{selectedHousehold.headName}</p>
                 <div className="flex justify-between text-sm">
-                    <span className="opacity-70">Nhân khẩu: {selectedHousehold.memberCount}</span>
-                    <span className="opacity-70">Mức thu: {Number(currentCategory.amount).toLocaleString()} đ</span>
+                  <span className="opacity-70">
+                    Nhân khẩu: {selectedHousehold.memberCount}
+                  </span>
+                  <span className="opacity-70">
+                    Mức thu: {Number(currentCategory.amount).toLocaleString()} đ
+                  </span>
                 </div>
               </div>
 
               {/* Input Số tiền thực nộp */}
               <div>
-                <label className="block text-sm font-medium mb-1.5">Số tiền thực nộp (VND)</label>
-                <input 
-                    type="number"
-                    value={paymentAmount}
-                    onChange={(e) => setPaymentAmount(Number(e.target.value))}
-                    className="w-full px-3 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition font-semibold text-lg"
+                <label className="block text-sm font-medium mb-1.5">
+                  Số tiền thực nộp (VND)
+                </label>
+                <input
+                  type="number"
+                  value={paymentAmount}
+                  onChange={(e) => setPaymentAmount(Number(e.target.value))}
+                  className="w-full px-3 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition font-semibold text-lg"
                 />
-                
+
                 {/* Gợi ý trạng thái dựa trên số tiền nhập */}
-                <div className="mt-2 text-sm">
-                    {paymentAmount >= selectedHousehold.totalAmount ? (
-                        <span className="text-green-600 flex items-center gap-1">
-                            ✓ Đủ tiền (Hoàn tất)
+                {/* <div className="mt-2 text-sm">
+                  {paymentAmount >= selectedHousehold.totalAmount ? (
+                    <span className="text-green-600 flex items-center gap-1">
+                      ✓ Đủ tiền (Hoàn tất)
+                    </span>
+                  ) : (
+                    <span className="text-yellow-600 flex items-center gap-1">
+                      ⚠ Còn thiếu:{' '}
+                      <b>
+                        {(
+                          selectedHousehold.totalAmount - paymentAmount
+                        ).toLocaleString()}{' '}
+                        VND
+                      </b>{' '}
+                      (Nộp 1 phần)
+                    </span>
+                  )}
+                </div> */}
+                {/* Gợi ý tính toán */}
+                <div className="mt-2 text-xs">
+                  {(() => {
+                    const remaining =
+                      selectedHousehold.totalAmount -
+                      selectedHousehold.paidAmount;
+                    const afterPayment = remaining - paymentAmount;
+
+                    if (afterPayment <= 0)
+                      return (
+                        <span className="text-green-600">
+                          ✓ Sẽ hoàn thành đóng phí
                         </span>
-                    ) : (
-                        <span className="text-yellow-600 flex items-center gap-1">
-                            ⚠ Còn thiếu: <b>{(selectedHousehold.totalAmount - paymentAmount).toLocaleString()} VND</b> (Nộp 1 phần)
-                        </span>
-                    )}
+                      );
+                    return (
+                      <span className="text-yellow-600">
+                        ⚠ Vẫn còn thiếu:{' '}
+                        <b>{afterPayment.toLocaleString()} đ</b> (Sẽ ghi nhận
+                        Nộp 1 phần)
+                      </span>
+                    );
+                  })()}
                 </div>
               </div>
 
               {/* Input Ghi chú */}
               <div>
-                <label className="block text-sm font-medium mb-1.5">Ghi chú</label>
-                <textarea 
-                    value={paymentNote}
-                    onChange={(e) => setPaymentNote(e.target.value)}
-                    rows={2}
-                    className="w-full px-3 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary/20 transition text-sm"
-                    placeholder="VD: Người nộp là con trai..."
+                <label className="block text-sm font-medium mb-1.5">
+                  Ghi chú
+                </label>
+                <textarea
+                  value={paymentNote}
+                  onChange={(e) => setPaymentNote(e.target.value)}
+                  rows={2}
+                  className="w-full px-3 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary/20 transition text-sm"
+                  placeholder="VD: Người nộp là con trai..."
                 />
               </div>
 
