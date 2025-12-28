@@ -308,6 +308,13 @@ export default function Dashboard() {
                     labels: { color: textColor },
                   },
                 },
+                datasets: {
+                  bar: {
+                    categoryPercentage: 0.6,
+                    barPercentage: 0.7,
+                    maxBarThickness: 32,
+                  },
+                },
                 scales: {
                   x: {
                     ticks: { color: textColor },
@@ -395,6 +402,13 @@ export default function Dashboard() {
                     labels: { color: textColor },
                   },
                 },
+                datasets: {
+                  bar: {
+                    categoryPercentage: 0.6,
+                    barPercentage: 0.7,
+                    maxBarThickness: 32,
+                  },
+                },
                 scales: {
                   x: {
                     ticks: { color: textColor },
@@ -476,6 +490,13 @@ export default function Dashboard() {
                   plugins: {
                     legend: {
                       labels: { color: textColor },
+                    },
+                  },
+                  datasets: {
+                    bar: {
+                      categoryPercentage: 0.6,
+                      barPercentage: 0.7,
+                      maxBarThickness: 32,
                     },
                   },
                   scales: {
