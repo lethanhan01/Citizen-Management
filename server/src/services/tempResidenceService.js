@@ -7,6 +7,7 @@ let createTempResidence = async (data) => {
         residency_status: "temporary_resident",
         gender: data.gender,
         dob: data.dob,
+        citizen_id_num: data.citizen_id,
     });
 
     const household = await db.Household.findOne({
@@ -18,6 +19,7 @@ let createTempResidence = async (data) => {
         household_id: household.household_id,
         is_head: false,
         relation_to_head: data.relation_to_head || "Tạm trú",
+        membership_type: data.membership_type || "family_member",
         start_date: data.from_date,
         end_date: data.to_date || null,
     });
@@ -38,7 +40,9 @@ let createTempAbsence = async (data) => {
     const household = await db.Household.findOne({
         where: { household_no: data.household_no },
     });
-    const person = await db.Person.findByPk(data.person_id);
+    const person = await db.Person.findOne({
+        where: { citizen_id_num: data.citizen_id },
+    });
     await person.update({
         residency_status: "temporary_absent",
     });
