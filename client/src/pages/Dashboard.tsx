@@ -42,7 +42,7 @@ export default function Dashboard() {
     if (!dashboardData) return null;
 
     // Giới tính
-    const { nam, nu, khac } = dashboardData.thongKeGioiTinh;
+    const { nam, nu } = dashboardData.thongKeGioiTinh;
     const totalGender = nam + nu || 1;
     const percentNam = ((nam / totalGender) * 100).toFixed(1);
     const percentNu = ((nu / totalGender) * 100).toFixed(1);
