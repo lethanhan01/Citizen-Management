@@ -11,7 +11,7 @@ interface FormData {
   householdCode: string;
   relationshipToHead: string;
   address: string;
-  status: "Thường trú" | "Tạm trú" | "Đã chuyển đi" | "";
+  status: "Thường trú" | "Tạm trú" | "";
   permanentResidenceDate: string;
   nationality: string;
   cccd: string;
@@ -240,7 +240,7 @@ export default function AddNewborn() {
               label="Tình trạng cư trú"
               required
               type="select"
-              options={["Thường trú", "Tạm trú", "Đã chuyển đi"]}
+              options={["Thường trú", "Tạm trú"]}
               value={formData.status}
               onChange={(v) => handleInputChange("status", v)}
               error={errors.status}

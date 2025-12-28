@@ -261,13 +261,13 @@ export default function TempResidence() {
 
           {/* Địa chỉ tạm trú */}
           <FormField
-            label="Địa chỉ tạm trú"
+            label="Mã hộ khẩu tạm trú"
             required
             type="textarea"
             value={formData.tempAddress}
             onChange={(value) => handleInputChange("tempAddress", value)}
             error={errors.tempAddress}
-            placeholder="Nhập địa chỉ tạm trú"
+            placeholder="Nhập mã hộ khẩu tạm trú"
             rows={3}
           />
 

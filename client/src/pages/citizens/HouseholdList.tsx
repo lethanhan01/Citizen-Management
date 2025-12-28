@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { Search, Eye, ChevronLeft, ChevronRight, Loader } from "lucide-react";
+import { Search, Eye, Loader } from "lucide-react";
 import HouseholdDetailPanel from "@/components/HouseholdDetailPanel";
+import PaginationBar from "@/components/PaginationBar";
 import type { Household } from "@/types/household";
 import { useHouseholdStore } from "@/stores/household.store";
 import * as HouseholdAPI from "@/api/household.api";
@@ -266,53 +267,15 @@ export default function HouseholdList() {
                 </table>
               </div>
 
-              {/* Pagination */}
-              <div className="border-t border-second/40 dark:border-second/30 px-4 py-3 flex items-center justify-between bg-second/5 dark:bg-second/10">
-                <p className="text-sm text-second dark:text-darkmodetext/70">
-                  Hiển thị {startIdx + 1}-{Math.min(startIdx + ITEMS_PER_PAGE, filteredHouseholds.length)} của{" "}
-                  {filteredHouseholds.length}
-                </p>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                    className="p-2 rounded-md hover:bg-second/20 dark:hover:bg-second/30 disabled:opacity-50 transition"
-                  >
-                    <ChevronLeft className="w-5 h-5 text-first dark:text-darkmodetext" />
-                  </button>
-
-                  <div className="flex items-center gap-1">
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                      (page) => (
-                        <button
-                          key={page}
-                          onClick={() => setCurrentPage(page)}
-                          className={`
-                            px-2 py-1 rounded text-sm font-medium transition
-                            ${
-                              currentPage === page
-                                ? "bg-third text-first"
-                                : "hover:bg-second/20 dark:hover:bg-second/30 text-first dark:text-darkmodetext"
-                            }
-                          `}
-                        >
-                          {page}
-                        </button>
-                      )
-                    )}
-                  </div>
-
-                  <button
-                    onClick={() =>
-                      setCurrentPage((p) => Math.min(totalPages, p + 1))
-                    }
-                    disabled={currentPage === totalPages}
-                    className="p-2 rounded-md hover:bg-second/20 dark:hover:bg-second/30 disabled:opacity-50 transition"
-                  >
-                    <ChevronRight className="w-5 h-5 text-first dark:text-darkmodetext" />
-                  </button>
-                </div>
-              </div>
+              <PaginationBar
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalItems={filteredHouseholds.length}
+                startIdx={startIdx}
+                pageSize={ITEMS_PER_PAGE}
+                currentCount={paginatedHouseholds.length}
+                onPageChange={(page) => setCurrentPage(page)}
+              />
             </>
           )}
         </div>

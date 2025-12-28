@@ -3,6 +3,7 @@
 import { Loader } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { search as searchApi } from "@/api/search.api";
 
 interface FormData {
   fullName: string;
@@ -15,7 +16,6 @@ interface FormData {
   cmndCccdIssueDate: string;
   cmndCccdIssuePlace: string;
   address: string;
-  status: "Thường trú" | "Tạm trú" | "Đã chuyển đi" | "";
   householdCode: string;
   permanentResidenceDate: string;
   relationshipToHead: string;
@@ -37,7 +37,6 @@ const REQUIRED_FIELDS: (keyof FormData)[] = [
   "cmndCccdIssueDate",
   "cmndCccdIssuePlace",
   "address",
-  "status",
   "permanentResidenceDate",
   "relationshipToHead",
 ];
@@ -57,12 +56,12 @@ export default function AddNewArrival() {
     cmndCccdIssueDate: "",
     cmndCccdIssuePlace: "",
     address: "",
-    status: "",
     householdCode: "",
     permanentResidenceDate: "",
     relationshipToHead: "",
     isHead: false,
   });
+  const [isLookupAddress, setIsLookupAddress] = useState(false);
 
   const filledRequiredFields = useMemo(() => {
     return REQUIRED_FIELDS.filter((field) => {
@@ -141,6 +140,33 @@ export default function AddNewArrival() {
   };
 
   const handleCancel = () => navigate(-1);
+
+  const handleLookupHouseholdAddress = async () => {
+    const code = formData.householdCode?.trim();
+    if (!code) return;
+    try {
+      setIsLookupAddress(true);
+      const data = await searchApi({ household_no: code, limit: 1, page: 1 });
+      // data is array of persons with included households
+      const first = Array.isArray(data?.data) ? data.data[0] : null;
+      const households = first?.households || first?.Households || [];
+      // Try to find exact match first
+      const match = households?.find((h: any) => (h.household_no || h.householdNo) === code) || households?.[0];
+      const addr = match?.address || match?.Address;
+      if (addr && typeof addr === "string") {
+        setFormData((prev) => ({ ...prev, address: addr }));
+        // Clear address error if autofilled
+        if (errors.address) {
+          setErrors((prev) => { const n = { ...prev }; delete n.address; return n; });
+        }
+      }
+    } catch (e) {
+      // ignore errors, user can fill manually
+      console.warn("Lookup household address failed", e);
+    } finally {
+      setIsLookupAddress(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -273,6 +299,14 @@ export default function AddNewArrival() {
         <div className="space-y-4 border-t border-second/20 dark:border-second/30 pt-6">
           <SectionTitle title="4. Thông tin thường trú" />
           <FormField
+            label="Mã hộ gia đình (tuỳ chọn)"
+            value={formData.householdCode}
+            onChange={(v) => handleInputChange("householdCode", v)}
+            placeholder="Nhập mã hộ nếu muốn thêm vào hộ hiện hữu"
+            helperText="Điền mã hộ để tự động điền địa chỉ (Khi nhập xong, click ra ngoài ô này để tìm)."
+            onBlur={handleLookupHouseholdAddress}
+          />
+          <FormField
             label="Địa chỉ thường trú"
             required
             type="textarea"
@@ -282,17 +316,11 @@ export default function AddNewArrival() {
             error={errors.address}
             placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành"
           />
+          {isLookupAddress && (
+            <p className="text-xs text-second dark:text-darkmodetext/60">Đang tìm địa chỉ theo mã hộ...</p>
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              label="Tình trạng cư trú"
-              required
-              type="select"
-              options={["Thường trú", "Tạm trú", "Đã chuyển đi"]}
-              value={formData.status}
-              onChange={(v) => handleInputChange("status", v)}
-              error={errors.status}
-            />
             <FormField
               label="Ngày đăng ký thường trú"
               required
@@ -304,13 +332,6 @@ export default function AddNewArrival() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              label="Mã hộ gia đình (tuỳ chọn)"
-              value={formData.householdCode}
-              onChange={(v) => handleInputChange("householdCode", v)}
-              placeholder="Nhập mã hộ nếu muốn thêm vào hộ hiện hữu"
-              helperText="Để trống để hệ thống tự sinh mã hộ mới. Nếu điền, công dân sẽ được thêm vào hộ tương ứng."
-            />
             <FormField
               label="Quan hệ với chủ hộ"
               required
@@ -373,6 +394,7 @@ interface FormFieldProps {
   error?: string;
   placeholder?: string;
   helperText?: string;
+  onBlur?: () => void;
 }
 
 function FormField({
@@ -386,6 +408,7 @@ function FormField({
   error,
   placeholder,
   helperText,
+  onBlur,
 }: FormFieldProps) {
   const baseClasses = `
     w-full px-4 py-2.5 rounded-lg
@@ -411,6 +434,7 @@ function FormField({
           rows={rows}
           value={value}
           onChange={(e) => onChange(e.target.value)}
+          onBlur={onBlur}
           placeholder={placeholder}
           className={baseClasses}
         />
@@ -418,6 +442,7 @@ function FormField({
         <select
           value={value}
           onChange={(e) => onChange(e.target.value)}
+          onBlur={onBlur}
           className={baseClasses}
         >
           <option value="">-- Chọn --</option>
@@ -432,6 +457,7 @@ function FormField({
           type={type}
           value={value}
           onChange={(e) => onChange(e.target.value)}
+          onBlur={onBlur}
           placeholder={placeholder}
           className={baseClasses}
         />

@@ -32,6 +32,6 @@ export function mapPersonToCitizen(p: any): Citizen {
     isHead: Boolean(householdMembership?.is_head ?? false),
     relationshipToHead: householdMembership?.relation_to_head ?? undefined,
 
-    isDeceased: false,
+    isDeceased: String(p?.residency_status ?? "").toLowerCase() === "deceased",
   };
 }

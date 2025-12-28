@@ -1,7 +1,7 @@
 "use client";
 
 import { useNavigate } from "react-router-dom";
-import { Search, Plus, Pencil, Trash2, Lock, Unlock, X, Save, Loader } from "lucide-react";
+import { Search, Plus, Pencil, Trash2, X, Save, Loader } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { accountApi } from "@/api/account.api";
 import type { Account, Role, Status } from "@/types/account";
@@ -19,6 +19,8 @@ export default function AccountList() {
   const [showModal, setShowModal] = useState(false);
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
   const [formData, setFormData] = useState<Account | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | string[] | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // loading cho fetch list
   const [isFetching, setIsFetching] = useState(true);
@@ -180,24 +182,25 @@ export default function AccountList() {
   };
 
 
-  const handleDelete = async (id: string) => {
-    await accountApi.remove(id);
-    setAccounts((prev) => prev.filter((a) => a.id !== id));
-    setSelectedIds((prev) => prev.filter((x) => x !== id));
+  const handleDelete = async (idOrIds: string | string[]) => {
+    setIsDeleting(true);
+    try {
+      const idsToDelete = Array.isArray(idOrIds) ? idOrIds : [idOrIds];
+      for (const id of idsToDelete) {
+        await accountApi.remove(id);
+      }
+      setAccounts((prev) => prev.filter((a) => !idsToDelete.includes(a.id)));
+      setSelectedIds((prev) => prev.filter((x) => !idsToDelete.includes(x)));
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsDeleting(false);
+      setDeleteConfirm(null);
+    }
   };
 
-  const handleBulkUnlock = () => {
-    setAccounts((prev) => prev.map((a) => (selectedIds.includes(a.id) ? { ...a, status: "Hoạt động" } : a)));
-  };
 
-  const handleBulkLock = () => {
-    setAccounts((prev) => prev.map((a) => (selectedIds.includes(a.id) ? { ...a, status: "Khóa" } : a)));
-  };
 
-  const handleBulkDelete = () => {
-    setAccounts((prev) => prev.filter((a) => !selectedIds.includes(a.id)));
-    setSelectedIds([]);
-  };
 
   return (
     <div className="space-y-2">
@@ -256,19 +259,7 @@ export default function AccountList() {
             </span>
             <div className="flex gap-2 flex-wrap">
               <button
-                onClick={handleBulkUnlock}
-                className="px-3 py-1.5 rounded-lg border border-second/30 hover:bg-second/20 dark:hover:bg-second/30 flex items-center gap-1"
-              >
-                <Unlock className="w-4 h-4" /> Mở khóa
-              </button>
-              <button
-                onClick={handleBulkLock}
-                className="px-3 py-1.5 rounded-lg border border-second/30 hover:bg-second/20 dark:hover:bg-second/30 flex items-center gap-1"
-              >
-                <Lock className="w-4 h-4" /> Khóa
-              </button>
-              <button
-                onClick={handleBulkDelete}
+                onClick={() => setDeleteConfirm(selectedIds)}
                 className="px-3 py-1.5 rounded-lg border border-red-300 text-red-600 hover:bg-red-50 dark:border-red-400 dark:text-red-300 dark:hover:bg-red-900/20 flex items-center gap-1"
               >
                 <Trash2 className="w-4 h-4" /> Xóa
@@ -348,7 +339,7 @@ export default function AccountList() {
                         <Pencil className="w-4 h-4 text-blue-500" />
                       </button>
                       <button
-                        onClick={() => handleDelete(acc.id)}
+                        onClick={() => setDeleteConfirm(acc.id)}
                         className="p-2 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 dark:border-red-400 dark:text-red-300 dark:hover:bg-red-900/20"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -488,6 +479,62 @@ export default function AccountList() {
                     <Save className="w-4 h-4" />
                     Lưu
                   </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm && (
+        <div
+          className="modal-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+          onClick={() => !isDeleting && setDeleteConfirm(null)}
+        >
+          <div
+            className="modal-content bg-card text-card-foreground rounded-xl shadow-2xl p-6 w-full max-w-sm"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-first dark:text-darkmodetext">
+                Xác nhận xóa tài khoản
+              </h3>
+              <button 
+                onClick={() => setDeleteConfirm(null)}
+                disabled={isDeleting}
+                className="p-2 hover:bg-second/10 dark:hover:bg-second/30 rounded-lg disabled:opacity-50"
+              >
+                <X className="w-5 h-5 text-first dark:text-darkmodetext" />
+              </button>
+            </div>
+
+            <p className="text-sm text-second dark:text-darkmodetext/70 mb-6">
+              {Array.isArray(deleteConfirm)
+                ? `Bạn có chắc muốn xóa ${deleteConfirm.length} tài khoản này? Hành động này không thể hoàn tác.`
+                : "Bạn có chắc muốn xóa tài khoản này? Hành động này không thể hoàn tác."}
+            </p>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                disabled={isDeleting}
+                className="flex-1 px-4 py-2 rounded-lg border border-second/40 dark:border-second/30 text-first dark:text-darkmodetext hover:bg-second/10 dark:hover:bg-second/30 disabled:opacity-50"
+              >
+                Hủy bỏ
+              </button>
+              <button
+                onClick={() => handleDelete(deleteConfirm)}
+                disabled={isDeleting}
+                className="flex-1 px-4 py-2 rounded-lg border border-red-300 bg-red-500 text-white hover:bg-red-600 dark:border-red-400 dark:hover:bg-red-600 disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader className="w-4 h-4 animate-spin" />
+                    Đang xóa...
+                  </>
+                ) : (
+                  <>Xóa</>
                 )}
               </button>
             </div>

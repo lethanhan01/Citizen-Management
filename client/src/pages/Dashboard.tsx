@@ -236,7 +236,9 @@ export default function Dashboard() {
                       labels: { color: textColor },
                     },
                   },
+                  maintainAspectRatio: false,
                 }}
+                style={{ height: "220px" }}
               />
             </div>
 
@@ -269,7 +271,9 @@ export default function Dashboard() {
                       labels: { color: textColor },
                     },
                   },
+                  maintainAspectRatio: false,
                 }}
+                style={{ height: "220px" }}
               />
             </div>
           </div>
@@ -304,6 +308,13 @@ export default function Dashboard() {
                     labels: { color: textColor },
                   },
                 },
+                datasets: {
+                  bar: {
+                    categoryPercentage: 0.6,
+                    barPercentage: 0.7,
+                    maxBarThickness: 32,
+                  },
+                },
                 scales: {
                   x: {
                     ticks: { color: textColor },
@@ -315,7 +326,9 @@ export default function Dashboard() {
                     grid: { color: 'rgba(128, 128, 128, 0.1)' },
                   },
                 },
+                maintainAspectRatio: false,
               }}
+              style={{ height: "260px" }}
             />
           </div>
         </div>
@@ -389,6 +402,13 @@ export default function Dashboard() {
                     labels: { color: textColor },
                   },
                 },
+                datasets: {
+                  bar: {
+                    categoryPercentage: 0.6,
+                    barPercentage: 0.7,
+                    maxBarThickness: 32,
+                  },
+                },
                 scales: {
                   x: {
                     ticks: { color: textColor },
@@ -400,7 +420,9 @@ export default function Dashboard() {
                     grid: { color: 'rgba(128, 128, 128, 0.1)' },
                   },
                 },
+                maintainAspectRatio: false,
               }}
+              style={{ height: "260px" }}
             />
           </div>
 
@@ -434,7 +456,9 @@ export default function Dashboard() {
                       labels: { color: textColor },
                     },
                   },
+                  maintainAspectRatio: false,
                 }}
+                style={{ height: "220px" }}
               />
             </div>
 
@@ -468,6 +492,13 @@ export default function Dashboard() {
                       labels: { color: textColor },
                     },
                   },
+                  datasets: {
+                    bar: {
+                      categoryPercentage: 0.6,
+                      barPercentage: 0.7,
+                      maxBarThickness: 32,
+                    },
+                  },
                   scales: {
                     x: {
                       ticks: { color: textColor },
@@ -479,7 +510,9 @@ export default function Dashboard() {
                       grid: { color: 'rgba(128, 128, 128, 0.1)' },
                     },
                   },
+                  maintainAspectRatio: false,
                 }}
+                style={{ height: "240px" }}
               />
             </div>
           </div>
