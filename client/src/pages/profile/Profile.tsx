@@ -1,32 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { User, Lock, LogOut, Eye, EyeOff, Loader } from "lucide-react";
-
-interface UserProfile {
-  username: string;
-  fullName: string;
-  role: string;
-  email: string;
-  cccd: string;
-  phone: string;
-  avatar?: string;
-}
-
-const MOCK_USER: UserProfile = {
-  username: "admin",
-  fullName: "Nguyễn Văn Admin",
-  role: "Quản trị viên",
-  email: "admin@example.com",
-  cccd: "012345678901",
-  phone: "0901234567",
-  avatar: undefined,
-};
+import { useAuthStore } from "@/stores/auth.store";
 
 export default function Profile() {
   const navigate = useNavigate();
-  const [user] = useState<UserProfile>(MOCK_USER);
+  const { user, loading, error, fetchMe, logout } = useAuthStore();
+  useEffect(() => {
+    fetchMe();
+  }, [fetchMe]);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [oldPassword, setOldPassword] = useState("");
@@ -39,12 +23,12 @@ export default function Profile() {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
+    logout();
     navigate("/login", { replace: true });
   };
 
   const confirmLogout = () => {
-    localStorage.removeItem("token");
+    logout();
     navigate("/login", { replace: true });
   };
 
@@ -89,6 +73,9 @@ export default function Profile() {
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-first dark:text-darkmodetext">Thông tin tài khoản</h2>
+      {error && (
+        <p className="text-sm text-red-500">{error}</p>
+      )}
 
       {/* Account Info Card */}
       <div className="bg-card text-card-foreground border border-border rounded-xl p-6 shadow-sm">
@@ -96,8 +83,8 @@ export default function Profile() {
           {/* Avatar */}
           <div className="flex-shrink-0">
             <div className="w-24 h-24 rounded-full bg-third/20 flex items-center justify-center">
-              {user.avatar ? (
-                <img src={user.avatar} alt={user.fullName} className="w-24 h-24 rounded-full object-cover" />
+              {user?.avatar ? (
+                <img src={user.avatar} alt={user?.full_name ?? user?.fullName ?? "Avatar"} className="w-24 h-24 rounded-full object-cover" />
               ) : (
                 <User className="w-12 h-12 text-third" />
               )}
@@ -106,13 +93,20 @@ export default function Profile() {
 
           {/* Info Grid */}
           <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
-            <InfoField label="Họ và tên" value={user.fullName} />
-            <InfoField label="Vai trò" value={user.role} />
-            <InfoField label="Tên đăng nhập" value={user.username} />
-            <InfoField label="Mật khẩu" value="••••••••" />
-            <InfoField label="Email khôi phục" value={user.email} />
-            <InfoField label="CCCD" value={user.cccd} />
-            <InfoField label="Số điện thoại" value={user.phone} />
+            {loading && !user ? (
+              <div className="col-span-2 flex items-center gap-2 text-second">
+                <Loader className="w-4 h-4 animate-spin" /> Đang tải thông tin người dùng...
+              </div>
+            ) : (
+              <>
+                <InfoField label="Họ và tên" value={(user?.full_name ?? user?.fullName ?? user?.name ?? "—").toString()} />
+                <InfoField label="Vai trò" value={(user?.role_name ?? user?.role ?? "—").toString()} />
+                <InfoField label="Tên đăng nhập" value={(user?.username ?? "—").toString()} />
+                <InfoField label="Mật khẩu" value={"••••••••"} />
+                <InfoField label="CCCD" value={(user?.cccd ?? user?.citizen_id ?? user?.citizen_id_num ?? "—").toString()} />
+                <InfoField label="Số điện thoại" value={(user?.phone ?? user?.phone_number ?? "—").toString()} />
+              </>
+            )}
           </div>
         </div>
 

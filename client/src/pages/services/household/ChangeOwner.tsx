@@ -1,8 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Search, UserCheck, X, Save, Loader } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useHouseholdStore } from "@/stores/household.store";
+import * as HouseholdAPI from "@/api/household.api";
+import PaginationBar from "@/components/PaginationBar";
 
 interface Member {
   id: string;
@@ -17,6 +20,7 @@ interface HouseholdItem {
   code: string;
   headName: string;
   address: string;
+  memberCount: number;
   members: Member[];
 }
 
@@ -24,50 +28,93 @@ interface FormErrors {
   [key: string]: string;
 }
 
-const MOCK_HOUSEHOLDS: HouseholdItem[] = [
-  {
-    id: "1",
-    code: "HK001",
-    headName: "Nguyễn Văn A",
-    address: "123 Lê Lợi, Q1, HCM",
-    members: [
-      { id: "1", fullName: "Nguyễn Văn A", cccd: "012345678901", relationship: "Chủ hộ", isHead: true },
-      { id: "2", fullName: "Nguyễn Thị B", cccd: "012345678902", relationship: "Vợ", isHead: false },
-      { id: "3", fullName: "Nguyễn Văn C", cccd: "012345678903", relationship: "Con", isHead: false },
-    ],
-  },
-  {
-    id: "2",
-    code: "HK002",
-    headName: "Trần Văn E",
-    address: "45 Nguyễn Trãi, Hà Nội",
-    members: [
-      { id: "5", fullName: "Trần Văn E", cccd: "098765432101", relationship: "Chủ hộ", isHead: true },
-      { id: "6", fullName: "Trần Thị F", cccd: "098765432102", relationship: "Vợ", isHead: false },
-    ],
-  },
-];
+function toHouseholdItem(h: any): HouseholdItem {
+  const head = Array.isArray(h?.residents)
+    ? h.residents.find((m: any) => m?.HouseholdMembership?.is_head || m?.is_head)
+    : h?.headPerson || h?.head || null;
+  const headNameValue =
+    head?.full_name ??
+    h?.headPerson?.full_name ??
+    h?.head_full_name ??
+    h?.head_name ??
+    h?.owner_full_name ??
+    h?.chu_ho_name ??
+    h?.household_head_name ??
+    h?.headName ??
+    "";
+
+  const members: Member[] = Array.isArray(h?.residents)
+    ? h.residents.map((m: any) => ({
+        id: String(m?.person_id ?? m?.id ?? ""),
+        fullName: String(m?.full_name ?? ""),
+        cccd: String(m?.citizen_id_num ?? m?.citizen_id ?? ""),
+        relationship: m?.HouseholdMembership?.relation_to_head ?? m?.relationship ?? "",
+        isHead: Boolean(m?.HouseholdMembership?.is_head ?? m?.isHead ?? false),
+      }))
+    : [];
+
+  return {
+    id: String(h?.household_id ?? h?.id ?? ""),
+    code: String(h?.household_no ?? h?.code ?? ""),
+    headName: String(headNameValue),
+    address: String(h?.address ?? ""),
+    memberCount: Number(
+      h?.members_count ?? (Array.isArray(h?.residents) ? h.residents.length : 0)
+    ),
+    members,
+  };
+}
+
+const ITEMS_PER_PAGE = 10;
 
 export default function ChangeOwner() {
   const navigate = useNavigate();
+  const { data, loading, error, fetchHouseholds } = useHouseholdStore();
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<HouseholdItem | null>(null);
   const [newHeadId, setNewHeadId] = useState("");
   const [errors, setErrors] = useState<FormErrors>({});
   const [isLoading, setIsLoading] = useState(false);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  useEffect(() => {
+    fetchHouseholds({ page: 1, limit: 500 });
+  }, [fetchHouseholds]);
+
+  const sourceHouseholds: HouseholdItem[] = useMemo(() => {
+    const arr = Array.isArray(data) ? data : [];
+    return arr.map(toHouseholdItem);
+  }, [data]);
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
-    if (!term) return MOCK_HOUSEHOLDS;
-    return MOCK_HOUSEHOLDS.filter((h) =>
-      [h.code, h.headName].some((v) => v.toLowerCase().includes(term))
+    if (!term) return sourceHouseholds;
+    return sourceHouseholds.filter((h) =>
+      [h.code, h.headName, h.address].some((v) => v.toLowerCase().includes(term))
     );
-  }, [search]);
+  }, [search, sourceHouseholds]);
 
-  const handleSelect = (household: HouseholdItem) => {
+  // Pagination
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedHouseholds = filtered.slice(startIdx, startIdx + ITEMS_PER_PAGE);
+
+  const handleSelect = async (household: HouseholdItem) => {
     setSelected(household);
     setNewHeadId("");
     setErrors({});
+    try {
+      setDetailLoading(true);
+      const detail = await HouseholdAPI.getHouseholdById(String(household.id));
+      if (detail) {
+        setSelected(toHouseholdItem(detail));
+      }
+    } catch (e) {
+      // keep base selected if detail fails
+    } finally {
+      setDetailLoading(false);
+    }
   };
 
   const closeForm = () => {
@@ -90,9 +137,13 @@ export default function ChangeOwner() {
     if (!validate()) return;
     setIsLoading(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      // Logic: Update isHead flag for old and new head
-      // Close popup after successful save
+      if (!selected) throw new Error("No household selected");
+      await HouseholdAPI.changeHouseholdHead(String(selected.id), {
+        chuHoMoiId: String(newHeadId),
+        relationOldHead: "Thành viên gia đình",
+      });
+      // Refresh list and close
+      await fetchHouseholds({ page: 1, limit: 500 });
       closeForm();
       navigate("/households");
     } catch (err) {
@@ -111,7 +162,10 @@ export default function ChangeOwner() {
             type="text"
             placeholder="Tìm theo mã hộ, tên chủ hộ..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setCurrentPage(1);
+            }}
             className="
               w-full pl-10 pr-4 py-2.5 rounded-lg
               bg-white dark:bg-transparent dark:border
@@ -139,7 +193,21 @@ export default function ChangeOwner() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((h) => (
+              {loading ? (
+                <tr>
+                  <td className="py-4 text-center" colSpan={5}>
+                    <span className="inline-flex items-center gap-2 text-second">
+                      <Loader className="w-4 h-4 animate-spin" /> Đang tải danh sách hộ khẩu...
+                    </span>
+                  </td>
+                </tr>
+              ) : error ? (
+                <tr>
+                  <td className="py-4 text-center text-red-500" colSpan={5}>
+                    {error}
+                  </td>
+                </tr>
+              ) : paginatedHouseholds.map((h) => (
                 <tr
                   key={h.id}
                   className="border-b border-border/50 hover:bg-muted/10 transition"
@@ -147,7 +215,7 @@ export default function ChangeOwner() {
                   <td className="py-3 px-2 font-medium text-first dark:text-darkmodetext">{h.code}</td>
                   <td className="py-3 px-2 text-first dark:text-darkmodetext">{h.headName}</td>
                   <td className="py-3 px-2 text-first dark:text-darkmodetext">{h.address}</td>
-                  <td className="py-3 px-2 text-first dark:text-darkmodetext">{h.members.length}</td>
+                  <td className="py-3 px-2 text-first dark:text-darkmodetext">{h.memberCount}</td>
                   <td className="py-3 px-2 text-center">
                     <button
                       onClick={() => handleSelect(h)}
@@ -168,6 +236,15 @@ export default function ChangeOwner() {
             </tbody>
           </table>
         </div>
+        <PaginationBar
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={filtered.length}
+          startIdx={startIdx}
+          pageSize={ITEMS_PER_PAGE}
+          currentCount={paginatedHouseholds.length}
+          onPageChange={(page) => setCurrentPage(page)}
+        />
       </div>
 
       {/* Change Owner Modal */}
@@ -198,34 +275,42 @@ export default function ChangeOwner() {
                   Chọn chủ hộ mới <span className="text-red-500">*</span>
                 </label>
                 <div className="space-y-2 border border-border rounded-lg p-3">
-                  {selected.members
-                    .filter((m) => !m.isHead)
-                    .map((member) => (
-                      <label
-                        key={member.id}
-                        className="flex items-center gap-2 p-2 hover:bg-muted/10 rounded-lg cursor-pointer"
-                      >
-                        <input
-                          type="radio"
-                          name="newHead"
-                          value={member.id}
-                          checked={newHeadId === member.id}
-                          onChange={(e) => {
-                            setNewHeadId(e.target.value);
-                            if (errors.newHead) setErrors((prev) => ({ ...prev, newHead: "" }));
-                          }}
-                          className="w-4 h-4"
-                        />
-                        <div className="flex-1">
-                          <span className="text-sm font-medium text-first dark:text-darkmodetext">{member.fullName}</span>
-                          <span className="text-xs text-second dark:text-darkmodetext/70 ml-2">({member.relationship})</span>
-                        </div>
-                      </label>
-                    ))}
-                  {selected.members.filter((m) => !m.isHead).length === 0 && (
-                    <p className="text-sm text-second dark:text-darkmodetext/70 text-center py-2">
-                      Không có thành viên khác trong hộ
-                    </p>
+                  {detailLoading ? (
+                    <div className="flex items-center gap-2 text-second">
+                      <Loader className="w-4 h-4 animate-spin" /> Đang tải danh sách thành viên...
+                    </div>
+                  ) : (
+                    <>
+                      {selected.members
+                        .filter((m) => !m.isHead)
+                        .map((member) => (
+                          <label
+                            key={member.id}
+                            className="flex items-center gap-2 p-2 hover:bg-muted/10 rounded-lg cursor-pointer"
+                          >
+                            <input
+                              type="radio"
+                              name="newHead"
+                              value={member.id}
+                              checked={newHeadId === member.id}
+                              onChange={(e) => {
+                                setNewHeadId(e.target.value);
+                                if (errors.newHead) setErrors((prev) => ({ ...prev, newHead: "" }));
+                              }}
+                              className="w-4 h-4"
+                            />
+                            <div className="flex-1">
+                              <span className="text-sm font-medium text-first dark:text-darkmodetext">{member.fullName}</span>
+                              <span className="text-xs text-second dark:text-darkmodetext/70 ml-2">({member.relationship})</span>
+                            </div>
+                          </label>
+                        ))}
+                      {selected.members.filter((m) => !m.isHead).length === 0 && (
+                        <p className="text-sm text-second dark:text-darkmodetext/70 text-center py-2">
+                          Không có thành viên khác trong hộ
+                        </p>
+                      )}
+                    </>
                   )}
                 </div>
                 {errors.newHead && <p className="text-xs text-red-500 mt-1">{errors.newHead}</p>}

@@ -69,7 +69,7 @@ export default function HouseholdList() {
   const { data, loading, error, fetchHouseholds } = useHouseholdStore();
 
   useEffect(() => {
-    fetchHouseholds({ page: 1, limit: 100 });
+    fetchHouseholds({ page: 1, limit: 500 });
   }, [fetchHouseholds]);
 
   const sourceHouseholds: Household[] = useMemo(() => {
