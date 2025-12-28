@@ -1,60 +1,155 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { CChart } from "@coreui/react-chartjs";
-import icon5 from "@/assets/icon5.svg";
-import icon6 from "@/assets/icon6.svg";
-import icon1 from "@/assets/icon.svg";
-import icon2 from "@/assets/icon2.svg";
-import icon3 from "@/assets/icon3.svg";
+import { useState, useEffect, useMemo } from 'react';
+import { CChart } from '@coreui/react-chartjs';
+import { useStatisticStore } from '@/stores/statistic.store.ts';
+import icon5 from '@/assets/icon5.svg';
+import icon6 from '@/assets/icon6.svg';
+import icon1 from '@/assets/icon.svg';
+import icon2 from '@/assets/icon2.svg';
+import icon3 from '@/assets/icon3.svg';
 
 export default function Dashboard() {
-  const [activeTab, setActiveTab] = useState<"citizens" | "fees">("citizens");
-  const [textColor, setTextColor] = useState("#666666");
+  const [activeTab, setActiveTab] = useState<'citizens' | 'fees'>('citizens');
+  const [textColor, setTextColor] = useState('#666666');
+
+  // 1. Lấy dữ liệu và action từ Store
+  const { dashboardData, fetchDashboard, loading } = useStatisticStore();
+
+  // 2. Gọi API
+  useEffect(() => {
+    fetchDashboard();
+  }, [fetchDashboard]);
 
   useEffect(() => {
     const updateColors = () => {
-      const isDark = document.documentElement.classList.contains("dark");
-      setTextColor(isDark ? "#e5e7eb" : "#666666");
+      const isDark = document.documentElement.classList.contains('dark');
+      setTextColor(isDark ? '#e5e7eb' : '#666666');
     };
 
     updateColors();
     const observer = new MutationObserver(updateColors);
     observer.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ["class"],
+      attributeFilter: ['class'],
     });
 
     return () => observer.disconnect();
   }, []);
 
-  return (
-    
-    <div className="space-y-6">
+  // Tính toán dữ liệu hiển thị
+  const chartData = useMemo(() => {
+    if (!dashboardData) return null;
 
+    // Giới tính
+    const { nam, nu } = dashboardData.thongKeGioiTinh;
+    const totalGender = nam + nu || 1;
+    const percentNam = ((nam / totalGender) * 100).toFixed(1);
+    const percentNu = ((nu / totalGender) * 100).toFixed(1);
+
+    // Cư trú
+    const { thuongTru, tamTru, tamVang } = dashboardData.thongKeCuTru;
+    const totalResidency = thuongTru + tamTru + tamVang || 1;
+    const pThuongTru = ((thuongTru / totalResidency) * 100).toFixed(1);
+    const pTamTru = ((tamTru / totalResidency) * 100).toFixed(1);
+    const pTamVang = ((tamVang / totalResidency) * 100).toFixed(1);
+
+    // Dữ liệu Tài chính (Xử lý an toàn nếu chưa có) ---
+    const taiChinh = dashboardData.thongKeTaiChinh || {
+      doanhThuTheoThang: Array(12).fill(0),
+      trangThaiThu: { daHoanThanh: 0, nopMotPhan: 0, chuaNop: 0 },
+      topChienDich: [],
+      giaoDichGanNhat: [],
+    };
+
+    return {
+      gender: {
+        labels: [`Nam (${percentNam})`, `Nữ (${percentNu})`],
+        data: [nam, nu],
+      },
+      residency: {
+        labels: [
+          `Thường trú (${pThuongTru}%)`,
+          `Tạm trú (${pTamTru}%)`,
+          `Tạm vắng (${pTamVang}%)`,
+        ],
+        data: [thuongTru, tamTru, tamVang],
+      },
+      age: {
+        labels: ['Mầm non', 'Học sinh', 'Lao động', 'Nghỉ hưu'],
+        data: [
+          dashboardData.thongKeDoTuoi.mamNon,
+          dashboardData.thongKeDoTuoi.hocSinh,
+          dashboardData.thongKeDoTuoi.laoDong,
+          dashboardData.thongKeDoTuoi.nghiHuu,
+        ],
+      },
+      // Tài chính
+      monthlyRevenue: {
+        data: taiChinh.doanhThuTheoThang,
+      },
+      paymentStatus: {
+        labels: ['Đã thu', 'Chưa thu / Nợ'],
+        data: [
+          taiChinh.trangThaiThu.daHoanThanh,
+          taiChinh.trangThaiThu.nopMotPhan,
+          taiChinh.trangThaiThu.chuaNop,
+        ],
+        backgroundColor: ['#22c55e', '#facc15', '#ef4444'],
+      },
+      campaigns: {
+        labels: taiChinh.topChienDich.map((c) => c.tenChienDich),
+        data: taiChinh.topChienDich.map((c) => c.soTien),
+      },
+    };
+  }, [dashboardData]);
+
+  if (loading && !dashboardData) {
+    return (
+      <div className="p-6 text-center text-muted-foreground">
+        Đang tải dữ liệu thống kê...
+      </div>
+    );
+  }
+
+  // Safe access data
+  const data = dashboardData || {
+    tongSoNhanKhau: 0,
+    tongSoHoKhau: 0,
+    thongKeTaiChinh: {
+      tongThuThangNay: 0,
+      tongDaThuNamNay: 0,
+      tongCanThuNamNay: 0,
+      tongChuaThu: 0,
+      giaoDichGanNhat: [],
+    },
+  };
+
+  return (
+    <div className="space-y-6">
       {/* TABS */}
       <div className="flex gap-4 border-b border-border">
         <button
-          onClick={() => setActiveTab("citizens")}
+          onClick={() => setActiveTab('citizens')}
           className={`
             px-4 py-2 font-medium transition border-b-2
             ${
-              activeTab === "citizens"
-                ? "border-primary text-foreground"
-                : "border-transparent text-muted-foreground hover:text-foreground"
+              activeTab === 'citizens'
+                ? 'border-primary text-foreground'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
             }
           `}
         >
           Thống kê dân cư
         </button>
         <button
-          onClick={() => setActiveTab("fees")}
+          onClick={() => setActiveTab('fees')}
           className={`
             px-4 py-2 font-medium transition border-b-2
             ${
-              activeTab === "fees"
-                ? "border-primary text-foreground"
-                : "border-transparent text-muted-foreground hover:text-foreground"
+              activeTab === 'fees'
+                ? 'border-primary text-foreground'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
             }
           `}
         >
@@ -63,18 +158,26 @@ export default function Dashboard() {
       </div>
 
       {/* TAB CONTENT */}
-      {activeTab === "citizens" && (
+      {activeTab === 'citizens' && chartData && (
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="bg-card text-card-foreground border border-border rounded-xl p-6 shadow-sm">
               <div className="flex items-center gap-4">
                 {icon5 && (
-                  <img src={icon5} alt="Dân số" className="w-12 h-12 flex-shrink-0" />
+                  <img
+                    src={icon5}
+                    alt="Dân số"
+                    className="w-12 h-12 flex-shrink-0"
+                  />
                 )}
                 <div>
                   <p className="text-sm text-muted-foreground">Tổng dân số</p>
-                  <p className="text-3xl font-bold text-foreground">1,234</p>
-                  <p className="text-xs text-green-600 dark:text-green-400">+2.3% so với tháng trước</p>
+                  <p className="text-3xl font-bold text-foreground">
+                    {data.tongSoNhanKhau.toLocaleString()}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Nhân khẩu hiện tại
+                  </p>
                 </div>
               </div>
             </div>
@@ -82,12 +185,22 @@ export default function Dashboard() {
             <div className="bg-card text-card-foreground border border-border rounded-xl p-6 shadow-sm">
               <div className="flex items-center gap-4">
                 {icon6 && (
-                  <img src={icon6} alt="Hộ khẩu" className="w-12 h-12 flex-shrink-0" />
+                  <img
+                    src={icon6}
+                    alt="Hộ khẩu"
+                    className="w-12 h-12 flex-shrink-0"
+                  />
                 )}
                 <div>
-                  <p className="text-sm text-muted-foreground">Tổng số hộ khẩu</p>
-                  <p className="text-3xl font-bold text-foreground">456</p>
-                  <p className="text-xs text-green-600 dark:text-green-400">+1.8% so với tháng trước</p>
+                  <p className="text-sm text-muted-foreground">
+                    Tổng số hộ khẩu
+                  </p>
+                  <p className="text-3xl font-bold text-foreground">
+                    {data.tongSoHoKhau.toLocaleString()}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Hộ gia đình quản lý
+                  </p>
                 </div>
               </div>
             </div>
@@ -97,26 +210,30 @@ export default function Dashboard() {
             <div className="bg-card text-card-foreground border border-border rounded-xl p-6 shadow-sm">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <p className="text-sm text-muted-foreground">Phân bố theo giới tính</p>
-                  <h3 className="text-lg font-semibold text-foreground">Tỷ lệ nam/nữ</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Phân bố theo giới tính
+                  </p>
+                  <h3 className="text-lg font-semibold text-foreground">
+                    Tỷ lệ nam/nữ
+                  </h3>
                 </div>
               </div>
               <CChart
                 type="pie"
                 data={{
-                  labels: ["Nam (51.2%)", "Nữ (48.8%)"],
+                  labels: chartData.gender.labels,
                   datasets: [
                     {
-                      backgroundColor: ["#3b82f6", "#ec4899"],
-                      data: [632, 602],
+                      backgroundColor: ['#3b82f6', '#ec4899'],
+                      data: chartData.gender.data,
                     },
                   ],
                 }}
                 options={{
-                  plugins: { 
-                    legend: { 
-                      position: "bottom",
-                      labels: { color: textColor }
+                  plugins: {
+                    legend: {
+                      position: 'bottom',
+                      labels: { color: textColor },
                     },
                   },
                   maintainAspectRatio: false,
@@ -128,26 +245,30 @@ export default function Dashboard() {
             <div className="bg-card text-card-foreground border border-border rounded-xl p-6 shadow-sm">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <p className="text-sm text-muted-foreground">Tạm trú / Tạm vắng</p>
-                  <h3 className="text-lg font-semibold text-foreground">Trạng thái cư trú</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Tạm trú / Tạm vắng
+                  </p>
+                  <h3 className="text-lg font-semibold text-foreground">
+                    Trạng thái cư trú
+                  </h3>
                 </div>
               </div>
               <CChart
                 type="pie"
                 data={{
-                  labels: ["Thường trú (89.3%)", "Tạm trú (6.5%)", "Tạm vắng (4.2%)"],
+                  labels: chartData.residency.labels,
                   datasets: [
                     {
-                      backgroundColor: ["#22c55e", "#facc15", "#f97316"],
-                      data: [1102, 80, 52],
+                      backgroundColor: ['#22c55e', '#facc15', '#f97316'],
+                      data: chartData.residency.data,
                     },
                   ],
                 }}
                 options={{
-                  plugins: { 
-                    legend: { 
-                      position: "bottom",
-                      labels: { color: textColor }
+                  plugins: {
+                    legend: {
+                      position: 'bottom',
+                      labels: { color: textColor },
                     },
                   },
                   maintainAspectRatio: false,
@@ -160,39 +281,42 @@ export default function Dashboard() {
           <div className="bg-card text-card-foreground border border-border rounded-xl p-6 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <p className="text-sm text-muted-foreground">Phân bố theo nhóm tuổi</p>
-                <h3 className="text-lg font-semibold text-foreground">Cơ cấu dân số</h3>
+                <p className="text-sm text-muted-foreground">
+                  Phân bố theo nhóm tuổi
+                </p>
+                <h3 className="text-lg font-semibold text-foreground">
+                  Cơ cấu dân số
+                </h3>
               </div>
             </div>
             <CChart
               type="bar"
               data={{
-                labels: ["Mầm non", "Mẫu giáo", "Cấp 1", "Cấp 2", "Cấp 3", "Độ tuổi lao động", "Nghỉ hưu"],
+                labels: chartData.age.labels,
                 datasets: [
                   {
-                    label: "Số người",
-                    backgroundColor: "#8b5cf6",
-                    borderColor: "#7c3aed",
-                    data: [45, 58, 92, 78, 65, 720, 176],
-                    maxBarThickness: 32,
+                    label: 'Số người',
+                    backgroundColor: '#8b5cf6',
+                    borderColor: '#7c3aed',
+                    data: chartData.age.data,
                   },
                 ],
               }}
               options={{
                 plugins: {
                   legend: {
-                    labels: { color: textColor }
-                  }
+                    labels: { color: textColor },
+                  },
                 },
                 scales: {
                   x: {
                     ticks: { color: textColor },
-                    grid: { color: "rgba(128, 128, 128, 0.1)" }
+                    grid: { color: 'rgba(128, 128, 128, 0.1)' },
                   },
-                  y: { 
+                  y: {
                     beginAtZero: true,
                     ticks: { color: textColor },
-                    grid: { color: "rgba(128, 128, 128, 0.1)" }
+                    grid: { color: 'rgba(128, 128, 128, 0.1)' },
                   },
                 },
                 maintainAspectRatio: false,
@@ -203,25 +327,27 @@ export default function Dashboard() {
         </div>
       )}
 
-      {activeTab === "fees" && (
+      {activeTab === 'fees' && chartData && data.thongKeTaiChinh && (
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <StatCard
               title="Tổng thu trong tháng"
-              value="45.6M"
+              value={data.thongKeTaiChinh.tongThuThangNay.toLocaleString()}
               subtitle="VNĐ"
               icon={icon1}
             />
             <StatCard
-              title="Đã thu"
-              value="38.2M"
-              subtitle="83.8%"
+              title="Đã thu (Năm nay)"
+              value={
+                data.thongKeTaiChinh.tongDaThuNamNay.toLocaleString() + ' VNĐ'
+              }
+              subtitle={`${((data.thongKeTaiChinh.tongDaThuNamNay / (data.thongKeTaiChinh.tongCanThuNamNay || 1)) * 100).toFixed(1)}% chỉ tiêu năm`}
               icon={icon2}
             />
             <StatCard
               title="Chưa thu"
-              value="7.4M"
-              subtitle="16.2%"
+              value={data.thongKeTaiChinh.tongChuaThu.toLocaleString() + ' VNĐ'}
+              subtitle="Công nợ hiện tại"
               icon={icon3}
             />
           </div>
@@ -229,39 +355,55 @@ export default function Dashboard() {
           <div className="bg-card text-card-foreground border border-border rounded-xl p-6 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <p className="text-sm text-muted-foreground">Xu hướng theo tháng</p>
-                <h3 className="text-lg font-semibold text-foreground">Thu phí 12 tháng</h3>
+                <p className="text-sm text-muted-foreground">
+                  Xu hướng theo tháng
+                </p>
+                <h3 className="text-lg font-semibold text-foreground">
+                  Thu phí 12 tháng
+                </h3>
               </div>
             </div>
             <CChart
               type="bar"
               data={{
-                labels: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"],
+                labels: [
+                  '1',
+                  '2',
+                  '3',
+                  '4',
+                  '5',
+                  '6',
+                  '7',
+                  '8',
+                  '9',
+                  '10',
+                  '11',
+                  '12',
+                ],
                 datasets: [
                   {
-                    label: "Thu (triệu)",
-                    backgroundColor: "#3b82f6",
-                    borderColor: "#2563eb",
-                    data: [5, 6, 7, 8, 7, 9, 10, 9, 8, 11, 12, 10],
-                    maxBarThickness: 28,
+                    label: 'Thu (VNĐ)',
+                    backgroundColor: '#3b82f6',
+                    borderColor: '#2563eb',
+                    data: chartData.monthlyRevenue.data,
                   },
                 ],
               }}
               options={{
                 plugins: {
                   legend: {
-                    labels: { color: textColor }
-                  }
+                    labels: { color: textColor },
+                  },
                 },
                 scales: {
                   x: {
                     ticks: { color: textColor },
-                    grid: { color: "rgba(128, 128, 128, 0.1)" }
+                    grid: { color: 'rgba(128, 128, 128, 0.1)' },
                   },
-                  y: { 
+                  y: {
                     beginAtZero: true,
                     ticks: { color: textColor },
-                    grid: { color: "rgba(128, 128, 128, 0.1)" }
+                    grid: { color: 'rgba(128, 128, 128, 0.1)' },
                   },
                 },
                 maintainAspectRatio: false,
@@ -274,27 +416,31 @@ export default function Dashboard() {
             <div className="bg-card text-card-foreground border border-border rounded-xl p-6 shadow-sm">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <p className="text-sm text-muted-foreground">Trạng thái thu trong tháng</p>
-                  <h3 className="text-lg font-semibold text-foreground">Số hộ theo trạng thái</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Trạng thái thu (Năm nay)
+                  </p>
+                  <h3 className="text-lg font-semibold text-foreground">
+                    Số hộ theo trạng thái
+                  </h3>
                 </div>
               </div>
               <CChart
                 type="doughnut"
                 data={{
-                  labels: ["Đã thu", "Pending", "Chưa thu"],
+                  labels: chartData.paymentStatus.labels,
                   datasets: [
                     {
-                      backgroundColor: ["#22c55e", "#facc15", "#ef4444"],
-                      data: [120, 25, 40],
+                      backgroundColor: chartData.paymentStatus.backgroundColor,
+                      data: chartData.paymentStatus.data,
                     },
                   ],
                 }}
                 options={{
-                  plugins: { 
-                    legend: { 
-                      position: "bottom",
-                      labels: { color: textColor }
-                    } 
+                  plugins: {
+                    legend: {
+                      position: 'bottom',
+                      labels: { color: textColor },
+                    },
                   },
                   maintainAspectRatio: false,
                 }}
@@ -305,39 +451,42 @@ export default function Dashboard() {
             <div className="bg-card text-card-foreground border border-border rounded-xl p-6 shadow-sm">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <p className="text-sm text-muted-foreground">Tổng tiền theo chiến dịch</p>
-                  <h3 className="text-lg font-semibold text-foreground">Đóng góp chiến dịch</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Tổng tiền theo chiến dịch
+                  </p>
+                  <h3 className="text-lg font-semibold text-foreground">
+                    Top đóng góp
+                  </h3>
                 </div>
               </div>
               <CChart
                 type="bar"
                 data={{
-                  labels: ["Trung thu", "Tết", "Quỹ đường", "Trường học"],
+                  labels: chartData.campaigns.labels,
                   datasets: [
                     {
-                      label: "Số tiền (triệu)",
-                      backgroundColor: "#4cc0aa",
-                      borderColor: "#38a48f",
-                      data: [12, 18, 9, 15],
-                      maxBarThickness: 32,
+                      label: 'Số tiền (VNĐ)',
+                      backgroundColor: '#4cc0aa',
+                      borderColor: '#38a48f',
+                      data: chartData.campaigns.data,
                     },
                   ],
                 }}
                 options={{
                   plugins: {
                     legend: {
-                      labels: { color: textColor }
-                    }
+                      labels: { color: textColor },
+                    },
                   },
                   scales: {
                     x: {
                       ticks: { color: textColor },
-                      grid: { color: "rgba(128, 128, 128, 0.1)" }
+                      grid: { color: 'rgba(128, 128, 128, 0.1)' },
                     },
-                    y: { 
+                    y: {
                       beginAtZero: true,
                       ticks: { color: textColor },
-                      grid: { color: "rgba(128, 128, 128, 0.1)" }
+                      grid: { color: 'rgba(128, 128, 128, 0.1)' },
                     },
                   },
                   maintainAspectRatio: false,
@@ -350,8 +499,12 @@ export default function Dashboard() {
           <div className="bg-card text-card-foreground border border-border rounded-xl p-6 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <p className="text-sm text-muted-foreground">Lịch sử thu gần đây</p>
-                <h3 className="text-lg font-semibold text-foreground">Phiếu thu gần nhất</h3>
+                <p className="text-sm text-muted-foreground">
+                  Lịch sử thu gần đây
+                </p>
+                <h3 className="text-lg font-semibold text-foreground">
+                  Phiếu thu gần nhất
+                </h3>
               </div>
             </div>
             <div className="overflow-x-auto">
@@ -366,31 +519,42 @@ export default function Dashboard() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {[
-                    { household: "HK-001", fee: "Quỹ đường", amount: "1.200.000", status: "Đã thu", date: "12/09" },
-                    { household: "HK-089", fee: "Trường học", amount: "800.000", status: "Pending", date: "11/09" },
-                    { household: "HK-155", fee: "Tết", amount: "1.500.000", status: "Đã thu", date: "10/09" },
-                  ].map((row) => (
-                    <tr key={row.household}>
-                      <td className="py-2 pr-4 font-medium text-foreground">{row.household}</td>
-                      <td className="py-2 pr-4 text-foreground">{row.fee}</td>
-                      <td className="py-2 pr-4 text-foreground">{row.amount}</td>
-                      <td className="py-2 pr-4">
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                            row.status === "Đã thu"
-                              ? "bg-green-100 text-green-700"
-                              : row.status === "Pending"
-                              ? "bg-yellow-100 text-yellow-700"
-                              : "bg-red-100 text-red-700"
-                          }`}
-                        >
-                          {row.status}
-                        </span>
+                  {data.thongKeTaiChinh.giaoDichGanNhat.length > 0 ? (
+                    data.thongKeTaiChinh.giaoDichGanNhat.map((row, index) => (
+                      <tr key={index}>
+                        <td className="py-2 pr-4 font-medium text-foreground">
+                          {row.household_no}
+                        </td>
+                        <td className="py-2 pr-4 text-foreground">
+                          {row.khoan_thu}
+                        </td>
+                        <td className="py-2 pr-4 text-foreground">
+                          {row.so_tien.toLocaleString()}
+                        </td>
+                        <td className="py-2 pr-4">
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                              row.trang_thai === 'Đã thu'
+                                ? 'bg-green-100 text-green-700'
+                                : 'bg-red-100 text-red-700' // Màu đỏ cho Nộp một phần
+                            }`}
+                          >
+                            {row.trang_thai}
+                          </span>
+                        </td>
+                        <td className="py-2 text-foreground">{row.ngay_thu}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td
+                        colSpan={5}
+                        className="py-4 text-center text-muted-foreground"
+                      >
+                        Chưa có giao dịch nào
                       </td>
-                      <td className="py-2 text-foreground">{row.date}</td>
                     </tr>
-                  ))}
+                  )}
                 </tbody>
               </table>
             </div>
