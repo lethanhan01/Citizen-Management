@@ -27,7 +27,6 @@ const TempAbsence = lazy(() => import("../pages/services/residential/TempAbsence
 
 //Pages - Services - People
 const AddNewArrival = lazy(() => import("../pages/services/people/AddNewArrival.tsx"));
-const AddNewborn = lazy(() => import("../pages/services/people/AddNewborn.tsx"));
 const UpdatePerson = lazy(() => import("../pages/services/people/UpdatePerson.tsx"));
 
 //Pages - Services - Household
@@ -69,7 +68,6 @@ const router = createBrowserRouter([
       
               // Services - People
               { path: '/services/add-new-arrival', element: <AddNewArrival /> },
-              { path: '/services/add-newborn', element: <AddNewborn /> },
               { path: '/services/update-person', element: <UpdatePerson /> },
       
               // Services - Household

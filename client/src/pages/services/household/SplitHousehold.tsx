@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Search, Users, X, Save, Loader } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import * as HouseholdAPI from "@/api/household.api";
 
 interface Member {
   id: string;
@@ -20,59 +21,96 @@ interface HouseholdItem {
   members: Member[];
 }
 
+interface TableHouseholdItem {
+  id: string;
+  code: string;
+  headName: string;
+  address: string;
+  membersCount: number;
+}
+
 interface FormErrors {
   [key: string]: string;
 }
 
-const MOCK_HOUSEHOLDS: HouseholdItem[] = [
-  {
-    id: "1",
-    code: "HK001",
-    headName: "Nguyễn Văn A",
-    address: "123 Lê Lợi, Q1, HCM",
-    members: [
-      { id: "1", fullName: "Nguyễn Văn A", cccd: "012345678901", relationship: "Chủ hộ", isHead: true },
-      { id: "2", fullName: "Nguyễn Thị B", cccd: "012345678902", relationship: "Vợ", isHead: false },
-      { id: "3", fullName: "Nguyễn Văn C", cccd: "012345678903", relationship: "Con", isHead: false },
-      { id: "4", fullName: "Nguyễn Thị D", cccd: "012345678904", relationship: "Con", isHead: false },
-    ],
-  },
-  {
-    id: "2",
-    code: "HK002",
-    headName: "Trần Văn E",
-    address: "45 Nguyễn Trãi, Hà Nội",
-    members: [
-      { id: "5", fullName: "Trần Văn E", cccd: "098765432101", relationship: "Chủ hộ", isHead: true },
-      { id: "6", fullName: "Trần Thị F", cccd: "098765432102", relationship: "Vợ", isHead: false },
-    ],
-  },
-];
+// Backend-connected households list
+// Loaded via API: getHouseholds() then mapped for table display
 
 export default function SplitHousehold() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
+  const [households, setHouseholds] = useState<TableHouseholdItem[]>([]);
+  const [listLoading, setListLoading] = useState(false);
   const [selected, setSelected] = useState<HouseholdItem | null>(null);
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
   const [newHead, setNewHead] = useState("");
   const [newAddress, setNewAddress] = useState("");
+  const [newHouseholdCode, setNewHouseholdCode] = useState("");
   const [errors, setErrors] = useState<FormErrors>({});
   const [isLoading, setIsLoading] = useState(false);
+  const [detailLoading, setDetailLoading] = useState(false);
+
+  // Load households from backend
+  useEffect(() => {
+    const load = async () => {
+      setListLoading(true);
+      try {
+        const list = await HouseholdAPI.getHouseholds({ page: 1, limit: 200 });
+        const arr = Array.isArray(list) ? list : Array.isArray(list?.rows) ? list.rows : [];
+        const mapped: TableHouseholdItem[] = arr.map((h: any) => ({
+          id: String(h?.household_id ?? h?.id ?? ""),
+          code: String(h?.household_no ?? h?.code ?? ""),
+          headName: String(h?.headPerson?.full_name ?? h?.head_name ?? ""),
+          address: String(h?.address ?? ""),
+          membersCount: Number(h?.members_count ?? h?.membersCount ?? 0),
+        }));
+        setHouseholds(mapped);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setListLoading(false);
+      }
+    };
+    load();
+  }, []);
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
-    if (!term) return MOCK_HOUSEHOLDS;
-    return MOCK_HOUSEHOLDS.filter((h) =>
+    if (!term) return households;
+    return households.filter((h) =>
       [h.code, h.headName].some((v) => v.toLowerCase().includes(term))
     );
-  }, [search]);
+  }, [search, households]);
 
-  const handleSelect = (household: HouseholdItem) => {
-    setSelected(household);
-    setSelectedMembers([]);
-    setNewHead("");
-    setNewAddress("");
-    setErrors({});
+  const handleSelect = async (household: TableHouseholdItem) => {
+    setDetailLoading(true);
+    try {
+      const detail = await HouseholdAPI.getHouseholdById(household.id);
+      const residents = Array.isArray(detail?.residents) ? detail.residents : [];
+      const members: Member[] = residents.map((m: any) => ({
+        id: String(m?.person_id ?? m?.id ?? ""),
+        fullName: String(m?.full_name ?? m?.fullName ?? m?.name ?? ""),
+        cccd: String(m?.citizen_id_num ?? m?.cccd ?? ""),
+        relationship: String(m?.HouseholdMembership?.relation_to_head ?? m?.relation_to_head ?? ""),
+        isHead: Boolean(m?.HouseholdMembership?.is_head ?? false),
+      }));
+      setSelected({
+        id: household.id,
+        code: household.code,
+        headName: household.headName,
+        address: household.address,
+        members,
+      });
+      setSelectedMembers([]);
+      setNewHead("");
+      setNewAddress("");
+      setNewHouseholdCode("");
+      setErrors({});
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setDetailLoading(false);
+    }
   };
 
   const toggleMember = (memberId: string) => {
@@ -94,6 +132,8 @@ export default function SplitHousehold() {
     if (selectedMembers.length === 0) newErrors.members = "Phải chọn ít nhất 1 người";
     if (!newHead) newErrors.newHead = "Phải chọn chủ hộ mới";
     if (!selectedMembers.includes(newHead)) newErrors.newHead = "Chủ hộ mới phải thuộc danh sách tách";
+    if (!newHouseholdCode.trim()) newErrors.newHouseholdCode = "Phải nhập mã hộ mới";
+    if (!newAddress.trim()) newErrors.newAddress = "Phải nhập địa chỉ hộ mới";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -102,9 +142,16 @@ export default function SplitHousehold() {
     if (!validate()) return;
     setIsLoading(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      // Logic: Create new household with auto-generated code, remove selected members from old household
-      // Close popup after successful save
+      const payload = {
+        hoKhauCuId: selected!.id,
+        thongTinHoKhauMoi: {
+          household_no: newHouseholdCode.trim(),
+          address: newAddress.trim(),
+        },
+        chuHoMoiId: newHead,
+        danhSachNhanKhauTachDi: selectedMembers,
+      };
+      await HouseholdAPI.splitHousehold(payload);
       closeForm();
       navigate("/households");
     } catch (err) {
@@ -159,7 +206,7 @@ export default function SplitHousehold() {
                   <td className="py-3 px-2 font-medium text-first dark:text-darkmodetext">{h.code}</td>
                   <td className="py-3 px-2 text-first dark:text-darkmodetext">{h.headName}</td>
                   <td className="py-3 px-2 text-first dark:text-darkmodetext">{h.address}</td>
-                  <td className="py-3 px-2 text-first dark:text-darkmodetext">{h.members.length}</td>
+                  <td className="py-3 px-2 text-first dark:text-darkmodetext">{h.membersCount}</td>
                   <td className="py-3 px-2 text-center">
                     <button
                       onClick={() => handleSelect(h)}
@@ -173,7 +220,11 @@ export default function SplitHousehold() {
               {filtered.length === 0 && (
                 <tr>
                   <td className="py-4 text-center text-second dark:text-darkmodetext/70" colSpan={5}>
-                    Không tìm thấy
+                    {listLoading ? (
+                      <span className="inline-flex items-center gap-2"><Loader className="w-4 h-4 animate-spin" /> Đang tải...</span>
+                    ) : (
+                      "Không tìm thấy"
+                    )}
                   </td>
                 </tr>
               )}
@@ -182,7 +233,6 @@ export default function SplitHousehold() {
         </div>
       </div>
 
-      {/* Split Form Modal */}
       {selected && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={closeForm}>
           <div
@@ -208,23 +258,27 @@ export default function SplitHousehold() {
                   Chọn thành viên tách ra <span className="text-red-500">*</span>
                 </label>
                 <div className="space-y-2 max-h-48 overflow-y-auto border border-border rounded-lg p-3">
-                  {selected.members.map((member) => (
-                    <label
-                      key={member.id}
-                      className="flex items-center gap-2 p-2 hover:bg-muted/10 rounded-lg cursor-pointer"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedMembers.includes(member.id)}
-                        onChange={() => toggleMember(member.id)}
-                        className="w-4 h-4 rounded"
-                      />
-                      <div className="flex-1">
-                        <span className="text-sm font-medium text-first dark:text-darkmodetext">{member.fullName}</span>
-                        <span className="text-xs text-second dark:text-darkmodetext/70 ml-2">({member.relationship})</span>
-                      </div>
-                    </label>
-                  ))}
+                  {detailLoading ? (
+                    <div className="flex items-center gap-2 text-second"><Loader className="w-4 h-4 animate-spin" /> Đang tải chi tiết...</div>
+                  ) : (
+                    selected.members.map((member) => (
+                      <label
+                        key={member.id}
+                        className="flex items-center gap-2 p-2 hover:bg-muted/10 rounded-lg cursor-pointer"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedMembers.includes(member.id)}
+                          onChange={() => toggleMember(member.id)}
+                          className="w-4 h-4 rounded"
+                        />
+                        <div className="flex-1">
+                          <span className="text-sm font-medium text-first dark:text-darkmodetext">{member.fullName}</span>
+                          <span className="text-xs text-second dark:text-darkmodetext/70 ml-2">({member.relationship || (member.isHead ? "Chủ hộ" : "Thành viên")})</span>
+                        </div>
+                      </label>
+                    ))
+                  )}
                 </div>
                 {errors.members && <p className="text-xs text-red-500 mt-1">{errors.members}</p>}
               </div>
@@ -239,9 +293,7 @@ export default function SplitHousehold() {
                     setNewHead(e.target.value);
                     if (errors.newHead) setErrors((prev) => ({ ...prev, newHead: "" }));
                   }}
-                  className={`w-full px-3 py-2 rounded-lg border ${
-                    errors.newHead ? "border-red-500" : "border-input"
-                  } bg-card text-first dark:text-darkmodetext focus:outline-none focus:ring-1 focus:ring-selectring`}
+                  className={`w-full px-3 py-2 rounded-lg border ${errors.newHead ? "border-red-500" : "border-input"} bg-card text-first dark:text-darkmodetext focus:outline-none focus:ring-1 focus:ring-selectring`}
                 >
                   <option value="">-- Chọn chủ hộ mới --</option>
                   {selected.members
@@ -257,19 +309,33 @@ export default function SplitHousehold() {
 
               <div>
                 <label className="block text-sm font-medium text-first dark:text-darkmodetext mb-1">
-                  Nơi thường trú mới (nếu có)
+                  Mã hộ khẩu mới <span className="text-red-500">*</span>
+                </label>
+                <input
+                  value={newHouseholdCode}
+                  onChange={(e) => setNewHouseholdCode(e.target.value)}
+                  placeholder="VD: HK1234"
+                  className={`w-full px-3 py-2 rounded-lg border ${errors.newHouseholdCode ? "border-red-500" : "border-input"} bg-card text-card-foreground focus:outline-none focus:ring-1 focus:ring-selectring`}
+                />
+                {errors.newHouseholdCode && <p className="text-xs text-red-500 mt-1">{errors.newHouseholdCode}</p>}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-first dark:text-darkmodetext mb-1">
+                  Địa chỉ thường trú mới <span className="text-red-500">*</span>
                 </label>
                 <textarea
                   value={newAddress}
                   onChange={(e) => setNewAddress(e.target.value)}
-                  placeholder="Để trống nếu giữ nguyên địa chỉ cũ"
+                  placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành"
                   rows={3}
                   className="w-full px-3 py-2 rounded-lg border border-input bg-card text-card-foreground focus:outline-none focus:ring-1 focus:ring-selectring"
                 />
+                {errors.newAddress && <p className="text-xs text-red-500 mt-1">{errors.newAddress}</p>}
               </div>
 
               <p className="text-xs text-second dark:text-darkmodetext/60">
-                Mã hộ mới sẽ được sinh tự động. Các thành viên được chọn sẽ tách khỏi hộ gốc.
+                Vui lòng nhập mã hộ và địa chỉ cho hộ mới. Các thành viên được chọn sẽ tách khỏi hộ gốc.
               </p>
             </div>
 
