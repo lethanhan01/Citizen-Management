@@ -249,18 +249,20 @@ let initWebRoutes = (app) => {
     searchController.handleSearch
   );
 
-  // Quản lý tạm trú tạm vắng
-  router.post(
-    "/api/v1/tam-tru",
+    // Quản lý tạm trú tạm vắng
+    router.post(
+        "/api/v1/tam-tru",
+        verifyToken,
+        checkRole(["admin"]),
+        createTempResidence
+    );
 
-    createTempResidence
-  );
-
-  router.post(
-    "/api/v1/tam-vang",
-
-    createTempAbsence
-  );
+    router.post(
+        "/api/v1/tam-vang",
+        verifyToken,
+        checkRole(["admin"]),
+        createTempAbsence
+    );
 
   router.get(
     "/api/v1/tam-tru-vang",
