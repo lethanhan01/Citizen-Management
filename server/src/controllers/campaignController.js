@@ -32,7 +32,8 @@ const handleIndex = async (req, res) => {
 
 const handleShow = async (req, res) => {
   try {
-    const data = await campaignService.getCampaignDetail(req.params.id);
+    const { id } = req.params;
+    const data = await campaignService.getCampaignDetail(id);
     return res.status(200).json({
       success: true,
       data,

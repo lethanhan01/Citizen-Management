@@ -178,7 +178,6 @@ let initWebRoutes = (app) => {
     "/api/v1/nhan-khau",
     verifyToken,
     checkRole(["admin"]),
-
     getAllNhanKhau
   );
   router.put(
@@ -311,7 +310,7 @@ let initWebRoutes = (app) => {
   );
   // Xem chi tiết
   router.get(
-    "/api/v1/chien-dich/:id",
+    "/api/v1/chien-dich/chi-tiet/:id",
     verifyToken,
     checkRole(["admin", "accountant"]),
     campaignController.handleShow

@@ -89,7 +89,7 @@ export default function Dashboard() {
         data: taiChinh.doanhThuTheoThang,
       },
       paymentStatus: {
-        labels: ['Đã thu', 'Chưa thu / Nợ'],
+        labels: ['Đã thu', 'Nộp một phần', 'Chưa thu'],
         data: [
           taiChinh.trangThaiThu.daHoanThanh,
           taiChinh.trangThaiThu.nopMotPhan,
