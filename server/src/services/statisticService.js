@@ -50,34 +50,61 @@ const getDashboardStats = async () => {
         raw: true,
       }),
 
-      // 5. Thống kê Độ tuổi (Theo các mốc: Mầm non, Học sinh, Lao động, Nghỉ hưu)
+      // 5. Thống kê Độ tuổi chi tiết (Mầm non, Cấp 1, 2, 3, Lao động, Nghỉ hưu)
       (async () => {
-        const date6 = getDateFromAge(6); // Mốc 6 tuổi
-        const date19 = getDateFromAge(19); // Mốc 19 tuổi
-        const date61 = getDateFromAge(61); // Mốc 60 tuổi
+        // Định nghĩa các mốc thời gian (Tính từ thời điểm hiện tại lùi về quá khứ)
+        const date6 = getDateFromAge(6); // Mốc vào Cấp 1 (Hết 5 tuổi)
+        const date11 = getDateFromAge(11); // Mốc vào Cấp 2 (Hết 10 tuổi)
+        const date15 = getDateFromAge(15); // Mốc vào Cấp 3 (Hết 14 tuổi)
+        const date18 = getDateFromAge(18); // Mốc trưởng thành/Lao động (Hết 17 tuổi)
+        const date61 = getDateFromAge(61); // Mốc nghỉ hưu (Hết 60 tuổi)
 
-        // Logic so sánh ngày sinh (dob):
-        // - Người < 6 tuổi => Sinh SAU ngày date6 (dob > date6)
-        // - Người > 60 tuổi => Sinh TRƯỚC ngày date60 (dob < date60)
-        const [mamNon, hocSinh, laoDong, nghiHuu] = await Promise.all([
+        // Lưu ý về logic ngày tháng trong SQL/Sequelize:
+        // Ngày sinh (dob) càng lớn (gần hiện tại) -> Tuổi càng nhỏ
+        // Op.between: [ngày_xa_nhất, ngày_gần_nhất] (tức là [người_già_hơn, người_trẻ_hơn])
+
+        const [mamNon, cap1, cap2, cap3, laoDong, nghiHuu] = await Promise.all([
+          // 1. Mầm non: < 6 tuổi (Sinh SAU date6)
           Person.count({
             where: {
               dob: { [Op.gt]: date6 },
               residency_status: { [Op.ne]: "deceased" },
             },
           }),
+
+          // 2. Cấp 1: 6 - 10 tuổi (Sinh trong khoảng 11 năm trước -> 6 năm trước)
           Person.count({
             where: {
-              dob: { [Op.between]: [date19, date6] },
+              dob: { [Op.between]: [date11, date6] },
               residency_status: { [Op.ne]: "deceased" },
             },
           }),
+
+          // 3. Cấp 2: 11 - 14 tuổi (Sinh trong khoảng 15 năm trước -> 11 năm trước)
           Person.count({
             where: {
-              dob: { [Op.between]: [date61, date19] },
+              dob: { [Op.between]: [date15, date11] },
               residency_status: { [Op.ne]: "deceased" },
             },
           }),
+
+          // 4. Cấp 3: 15 - 17 tuổi (Sinh trong khoảng 18 năm trước -> 15 năm trước)
+          Person.count({
+            where: {
+              dob: { [Op.between]: [date18, date15] },
+              residency_status: { [Op.ne]: "deceased" },
+            },
+          }),
+
+          // 5. Lao động: 18 - 60 tuổi (Sinh trong khoảng 61 năm trước -> 18 năm trước)
+          Person.count({
+            where: {
+              dob: { [Op.between]: [date61, date18] },
+              residency_status: { [Op.ne]: "deceased" },
+            },
+          }),
+
+          // 6. Nghỉ hưu: > 60 tuổi (Sinh TRƯỚC date61)
           Person.count({
             where: {
               dob: { [Op.lt]: date61 },
@@ -86,7 +113,7 @@ const getDashboardStats = async () => {
           }),
         ]);
 
-        return { mamNon, hocSinh, laoDong, nghiHuu };
+        return { mamNon, cap1, cap2, cap3, laoDong, nghiHuu };
       })(),
     ]);
 
@@ -298,5 +325,5 @@ export default {
   getDashboardStats,
   getFeeCollectionReport,
   getDonationReport,
-  getFullFeeCollectionReport
+  getFullFeeCollectionReport,
 };
