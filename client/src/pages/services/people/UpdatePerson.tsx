@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Search,
   Pencil,
@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import * as PersonAPI from "@/api/person.api";
-import { useAuthStore } from "@/stores/auth.store";
 import { usePersonStore } from "@/stores/person.store";
 import { useCitizenListParams } from "@/hooks/useCitizenListParams";
 import PaginationBar from "@/components/PaginationBar";
@@ -133,13 +132,8 @@ export default function UpdatePerson() {
   const [selected, setSelected] = useState<CitizenItem | null>(null);
   const [formData, setFormData] = useState<CitizenItem | null>(null);
   const [errors, setErrors] = useState<FormErrors>({});
-  const [loading, setLoading] = useState<boolean>(false);
   const [saving, setSaving] = useState<boolean>(false);
-  const [moving, setMoving] = useState<boolean>(false);
   const [deceasedLoading, setDeceasedLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-  const token = useAuthStore((s) => s.token);
-  const persistedToken = useMemo(() => token || localStorage.getItem("token"), [token]);
 
   // Use same data source + server-side pagination as CitizenList
   const LIMIT = 200;
@@ -209,23 +203,21 @@ export default function UpdatePerson() {
     }
   };
 
-  // Determine available status options based on current status
+  // Determine available status options based on ORIGINAL/SELECTED status (from DB), not form state
   const getAvailableStatusOptions = (): Status[] => {
-    if (!formData) return [];
-    if (formData.isDeceased) return []; // No options if deceased
+    if (!selected) return [];
+    if (selected.isDeceased) return []; // No options if deceased
     
-    const currentStatus = formData.status;
-    console.log("getAvailableStatusOptions - currentStatus:", currentStatus, "isDeceased:", formData.isDeceased);
+    const originalStatus = selected.status; // Status từ DB, không phải formData
     
-    
-    if (currentStatus === "Thường trú") {
-      return ["Đã chuyển đi"]; // Only "Đã chuyển đi"
-    } else if (currentStatus === "Tạm trú") {
-      return ["Đã chuyển đi"]; // Only "Đã chuyển đi"
-    } else if (currentStatus === "Tạm vắng") {
-      return ["Thường trú", "Tạm trú", "Đã chuyển đi"]; // All options
-    } else if (currentStatus === "Đã chuyển đi") {
-      return []; // No options
+    if (originalStatus === "Thường trú") {
+      return ["Thường trú", "Đã chuyển đi"];
+    } else if (originalStatus === "Tạm trú") {
+      return ["Tạm trú", "Đã chuyển đi"];
+    } else if (originalStatus === "Tạm vắng") {
+      return ["Tạm vắng", "Thường trú", "Tạm trú", "Đã chuyển đi"];
+    } else if (originalStatus === "Đã chuyển đi") {
+      return []; // Không có option nào nếu đã là "Đã chuyển đi"
     }
     
     return [];
@@ -265,16 +257,35 @@ export default function UpdatePerson() {
       if (reg < dob) newErrors.permanentResidenceDate = "Ngày đăng ký phải sau ngày sinh";
     }
 
+    // Gỡ bỏ error nếu status được chỉnh sửa hợp lệ (có giá trị)
+    if (formData.status && formData.status.trim() !== "") {
+      delete newErrors.status;
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const saveChanges = async () => {
-    if (!formData || !validate()) return;
+    console.log("saveChanges called, formData:", formData);
+    if (!formData) {
+      console.log("formData is null");
+      return;
+    }
+    const isValid = validate();
+    console.log("validate result:", isValid, "errors:", errors);
+    if (!isValid) {
+      console.log("Validation failed, stopping save");
+      return;
+    }
+    
     setSaving(true);
     try {
       const payload = toUpdatePayload(formData);
+      console.log("Sending payload:", payload);
       await PersonAPI.updatePerson(formData.id, payload);
+      console.log("Update successful, fetching fresh data");
+      
       // Optionally refresh single item from BE
       const fresh = await PersonAPI.getPersonById(formData.id);
       const mapped = fresh ? toCitizenItem(fresh) : formData;
@@ -282,30 +293,21 @@ export default function UpdatePerson() {
       setSelected(mapped);
       setFormData(mapped);
       // Close the drawer after successful save
+      console.log("Closing drawer");
       closeDrawer();
     } catch (e: any) {
+      console.error("Save error:", e);
       alert(e?.message || "Cập nhật thất bại");
     } finally {
       setSaving(false);
     }
   };
 
-  const markMovedAway = async () => {
+  const markMovedAway = () => {
     if (!formData) return;
-    setMoving(true);
+    // Chỉ update form state, không gửi API ngay
     const updatedLocal = { ...formData, status: "Đã chuyển đi" as Status };
-    try {
-      await PersonAPI.updatePerson(formData.id, {
-        residency_status: mapStatusToServer("Đã chuyển đi" as Status),
-      });
-      setCitizens((prev) => prev.map((c) => (c.id === updatedLocal.id ? updatedLocal : c)));
-      setSelected(updatedLocal);
-      setFormData(updatedLocal);
-    } catch (e: any) {
-      alert(e?.message || "Cập nhật trạng thái chuyển đi thất bại");
-    } finally {
-      setMoving(false);
-    }
+    setFormData(updatedLocal);
   };
 
   const toggleDeceased = async () => {
@@ -327,7 +329,7 @@ export default function UpdatePerson() {
     }
   };
 
-  const isBusy = saving || moving || deceasedLoading;
+  const isBusy = saving || deceasedLoading;
 
   return (
     <div className="space-y-6">
@@ -559,16 +561,11 @@ export default function UpdatePerson() {
                         onChange={(e) => handleChange("status", e.target.value as Status)}
                         className={`w-full px-3 py-2.5 rounded-lg border border-border bg-card text-card-foreground focus:outline-none focus:ring-1 focus:ring-selectring transition ${errors.status ? "border-red-500" : ""}`}
                       >
-                        <option value={formData.status} disabled>
-                          {formData.status} (Hiện tại)
-                        </option>
-                        <optgroup label="Có thể thay đổi sang:">
-                          {getAvailableStatusOptions().map((option) => (
-                            <option key={option} value={option}>
-                              {option}
-                            </option>
-                          ))}
-                        </optgroup>
+                        {getAvailableStatusOptions().map((option) => (
+                          <option key={option} value={option}>
+                            {option}
+                          </option>
+                        ))}
                       </select>
                     )}
                     {errors.status && <p className="text-xs text-red-500 mt-1">{errors.status}</p>}
@@ -629,17 +626,8 @@ export default function UpdatePerson() {
                   type="button"
                   disabled={isBusy}
                 >
-                  {moving ? (
-                    <>
-                      <Loader className="w-4 h-4 animate-spin" />
-                      Đang lưu...
-                    </>
-                  ) : (
-                    <>
-                      <UserX className="w-4 h-4" />
-                      Chuyển đi nơi khác
-                    </>
-                  )}
+                  <UserX className="w-4 h-4" />
+                  Chuyển đi nơi khác
                 </button>
                 <button
                   onClick={toggleDeceased}

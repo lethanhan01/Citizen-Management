@@ -54,12 +54,12 @@ export default function TempAbsence() {
   // Shared data source + server pagination
   const LIMIT = 200;
   const [page, setPage] = useState(1);
-  const { data, loading: listLoading, error: listError, pagination, fetchPersons } = usePersonStore();
+  const { data, loading: listLoading, pagination, fetchPersons } = usePersonStore();
 
   // Search & list
   const [search, setSearch] = useState("");
-  const [citizens, setCitizens] = useState<Citizen[]>([]);
-  const [loadingList, setLoadingList] = useState(false);
+  const [] = useState<Citizen[]>([]);
+  const [] = useState(false);
   const [selectedCitizen, setSelectedCitizen] = useState<Citizen | null>(null);
 
   // Form
