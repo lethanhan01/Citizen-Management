@@ -49,7 +49,6 @@ export default function TopBar({
       "/services/temp-residence": "Đăng ký tạm trú",
       "/services/temp-absence": "Đăng ký tạm vắng",
       "/services/add-new-arrival": "Thêm nhân khẩu - Đăng kí thường trú",
-      "/services/add-newborn": "Thêm nhân khẩu - Mới sinh",
       "/services/update-person": "Thay đổi nhân khẩu",
       "/services/household/split": "Tách hộ khẩu",
       "/services/household/change-owner": "Thay đổi chủ hộ",

@@ -47,7 +47,6 @@ const menuItems: MenuItem[] = [
       { label: "Đăng ký tạm trú", href: "/services/temp-residence" },
       { label: "Đăng ký tạm vắng", href: "/services/temp-absence" },
       { label: "Đăng ký thường trú", href: "/services/add-new-arrival" },
-      { label: "Thêm mới sinh", href: "/services/add-newborn" },
       { label: "Thay đổi nhân khẩu", href: "/services/update-person" },
     ],
   },
