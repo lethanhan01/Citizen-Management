@@ -1,28 +1,6 @@
 import { create } from 'zustand';
 import * as FeeAPI from '@/api/fee.api';
 
-// interface FeeState {
-//   data: any[];
-//   loading: boolean;
-//   error: string | null;
-//   fetchFees: (params?: Record<string, any>) => Promise<void>;
-// }
-
-// export const useFeeStore = create<FeeState>((set) => ({
-//   data: [],
-//   loading: false,
-//   error: null,
-//   async fetchFees(params) {
-//     set({ loading: true, error: null });
-//     try {
-//       const data = await FeeAPI.getAllFees(params);
-//       set({ data: Array.isArray(data) ? data : [], loading: false });
-//     } catch (err: any) {
-//       set({ error: err?.message || 'Không tải được danh sách khoản thu', loading: false });
-//     }
-//   },
-// }));
-
 export interface Fee {
   rate_id: number;
   item_type: string;
@@ -137,7 +115,14 @@ export const useFeeStore = create<FeeState>((set, get) => ({
     try {
       const data = await FeeAPI.getAllFees();
 
-      set({ fees: data || [], loading: false });
+      const normalizedFees: Fee[] = (data || []).map((f: any) => ({
+        ...f,
+        rate_id: Number(f.rate_id),
+        amount: Number(f.amount),
+      }));
+
+      set({ fees: normalizedFees, loading: false });
+
     } catch (err: any) {
       set({
         error:
