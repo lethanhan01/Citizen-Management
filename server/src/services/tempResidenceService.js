@@ -43,11 +43,24 @@ let createTempAbsence = async (data) => {
     const person = await db.Person.findOne({
         where: { citizen_id_num: data.citizen_id },
     });
+    const membership = await db.HouseholdMembership.findOne({
+        where: {
+            person_id: person.person_id,
+            household_id: household.household_id,
+        },
+    });
+    if (membership) {
+        await membership.update({
+            end_date: data.from_date,
+        });
+    } else {
+        throw new Error("Person is not a member of the specified household");
+    }
     await person.update({
         residency_status: "temporary_absent",
     });
     return await db.TempResidence.create({
-        person_id: data.person_id,
+        person_id: person.person_id,
         type: "TEMPORARY_ABSENCE",
         household_id: household.household_id,
         from_date: data.from_date,
