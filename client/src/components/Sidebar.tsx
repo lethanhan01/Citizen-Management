@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import {
   Menu,
   LayoutDashboard,
@@ -12,7 +12,7 @@ import {
   Settings,
   ChevronDown,
   ChevronRight,
-} from "lucide-react";
+} from 'lucide-react';
 
 interface SubMenuItem {
   label: string;
@@ -29,66 +29,66 @@ interface MenuItem {
 const menuItems: MenuItem[] = [
   {
     icon: <LayoutDashboard className="w-5 h-5" />,
-    label: "Dashboard",
-    href: "/dashboard",
+    label: 'Dashboard',
+    href: '/dashboard',
   },
   {
     icon: <Users className="w-5 h-5" />,
-    label: "Công dân",
+    label: 'Công dân',
     submenu: [
-      { label: "Xem công dân", href: "/citizens" },
-      { label: "Xem hộ khẩu", href: "/households" },
+      { label: 'Xem công dân', href: '/citizens' },
+      { label: 'Xem hộ khẩu', href: '/households' },
     ],
   },
   {
     icon: <FileText className="w-5 h-5" />,
-    label: "Dịch vụ dân cư",
+    label: 'Dịch vụ dân cư',
     submenu: [
-      { label: "Đăng ký tạm trú", href: "/services/temp-residence" },
-      { label: "Đăng ký tạm vắng", href: "/services/temp-absence" },
-      { label: "Thêm mới đến", href: "/services/add-new-arrival" },
-      { label: "Thêm mới sinh", href: "/services/add-newborn" },
-      { label: "Thay đổi nhân khẩu", href: "/services/update-person" },
+      { label: 'Đăng ký tạm trú', href: '/services/temp-residence' },
+      { label: 'Đăng ký tạm vắng', href: '/services/temp-absence' },
+      { label: 'Thêm mới đến', href: '/services/add-new-arrival' },
+      { label: 'Thêm mới sinh', href: '/services/add-newborn' },
+      { label: 'Thay đổi nhân khẩu', href: '/services/update-person' },
     ],
   },
   {
     icon: <Home className="w-5 h-5" />,
-    label: "Dịch vụ hộ khẩu",
+    label: 'Dịch vụ hộ khẩu',
     submenu: [
-      { label: "Tách hộ", href: "/services/household/split" },
-      { label: "Nhập hộ", href: "/services/household/merge" },
-      { label: "Thay đổi chủ hộ", href: "/services/household/change-owner" },
-      { label: "Lịch sử hộ", href: "/services/household/history" },
+      { label: 'Tách hộ', href: '/services/household/split' },
+      { label: 'Nhập hộ', href: '/services/household/merge' },
+      { label: 'Thay đổi chủ hộ', href: '/services/household/change-owner' },
+      { label: 'Lịch sử hộ', href: '/services/household/history' },
     ],
   },
   {
     icon: <HandCoins className="w-5 h-5" />,
-    label: "Thu phí",
+    label: 'Thu phí',
     submenu: [
-      { label: "Khoản thu cố định", href: "/fees/fixed" },
-      { label: "Chiến dịch quyên góp", href: "/fees/donations" },
+      { label: 'Khoản thu cố định', href: '/fees/fixed' },
+      { label: 'Chiến dịch quyên góp', href: '/fees/donations' },
     ],
   },
   {
     icon: <Settings className="w-5 h-5" />,
-    label: "Cài đặt",
+    label: 'Cài đặt',
     submenu: [
-      { label: "Danh sách tài khoản", href: "/settings/accounts" },
-      { label: "Thêm tài khoản", href: "/settings/add-account" },
+      { label: 'Danh sách tài khoản', href: '/settings/accounts' },
+      { label: 'Thêm tài khoản', href: '/settings/add-account' },
     ],
   },
 ];
 
 export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
-  const [openMenus, setOpenMenus] = useState<string[]>(["Dashboard"]);
+  const [openMenus, setOpenMenus] = useState<string[]>(['Dashboard']);
   const location = useLocation();
 
   const toggleMenu = (label: string) => {
     setOpenMenus((prev) =>
       prev.includes(label)
         ? prev.filter((item) => item !== label)
-        : [...prev, label]
+        : [...prev, label],
     );
   };
 
@@ -97,7 +97,7 @@ export default function Sidebar() {
       className={`
         sticky top-0 h-screen max-h-screen transition-all duration-300
         bg-(--sidebar-bg-light) dark:bg-white/5 dark:backdrop-blur-md shadow-md flex flex-col flex-shrink-0 z-50
-        ${collapsed ? "w-16" : "w-60"}
+        ${collapsed ? 'w-16' : 'w-60'}
       `}
     >
       {/* Sidebar header - NOT scrollable */}
@@ -155,13 +155,15 @@ function ParentMenuButton({
       className={`
         sidebar-radio-item
         w-full flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer font-semibold
-        text-first dark:text-darkmodetext ${active ? "is-active" : ""}
+        text-first dark:text-darkmodetext ${active ? 'is-active' : ''}
       `}
     >
       {icon}
       {!collapsed && (
         <>
-          <span className="text-sm flex-1 text-left font-semibold">{label}</span>
+          <span className="text-sm flex-1 text-left font-semibold">
+            {label}
+          </span>
           {isOpen ? (
             <ChevronDown className="w-4 h-4" />
           ) : (
@@ -188,7 +190,7 @@ function ChildMenuButton({
       to={href}
       className={`
         sidebar-radio-item sidebar-radio-child
-        block px-3 py-1.5 rounded-md text-sm ${isActive ? "is-active" : ""}
+        block px-3 py-1.5 rounded-md text-sm ${isActive ? 'is-active' : ''}
       `}
     >
       {label}
@@ -222,7 +224,7 @@ function SidebarItem({
         className={`
           sidebar-radio-item
           w-full flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer font-semibold
-          text-first dark:text-darkmodetext ${isActive ? "is-active" : ""}
+          text-first dark:text-darkmodetext ${isActive ? 'is-active' : ''}
         `}
       >
         {item.icon}
@@ -257,8 +259,3 @@ function SidebarItem({
     </div>
   );
 }
-
-
-
-
-
