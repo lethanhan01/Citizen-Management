@@ -10,10 +10,14 @@ import {
   HeartPulse,
   Loader,
 } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 import * as PersonAPI from "@/api/person.api";
 import { useAuthStore } from "@/stores/auth.store";
+import { usePersonStore } from "@/stores/person.store";
+import { useCitizenListParams } from "@/hooks/useCitizenListParams";
+import PaginationBar from "@/components/PaginationBar";
 
-type Status = "Thường trú" | "Tạm trú" | "Đã chuyển đi";
+type Status = "Thường trú" | "Tạm trú" | "Tạm vắng" | "Đã chuyển đi";
 
 interface CitizenItem {
   id: string;
@@ -46,15 +50,31 @@ function mapGenderToView(g: string | null | undefined): "Nam" | "Nữ" {
   return val.startsWith("m") || val.includes("nam") ? "Nam" : "Nữ";
 }
 function mapStatusToView(s: string | null | undefined): Status {
-  const val = String(s || "permanent").toLowerCase();
+  if (!s) return "Thường trú"; // Default to "Thường trú" nếu null/undefined
+  
+  const val = String(s).toLowerCase().trim();
+  console.log("mapStatusToView input:", s, "normalized:", val);
+  
   if (val === "permanent") return "Thường trú";
   if (val === "temporary") return "Tạm trú";
-  return "Đã chuyển đi";
+  if (val === "temporary_resident") return "Tạm trú";
+  if (val === "temporary_absence") return "Tạm vắng";
+  if (val === "moved_out" || val === "deceased") return "Đã chuyển đi";
+  
+  // Log warning nếu value không match
+  console.warn("Unexpected residency_status value:", s);
+  return "Thường trú"; // Default fallback
 }
 function toCitizenItem(p: any): CitizenItem {
   const firstHousehold = Array.isArray(p?.households) && p.households.length > 0 ? p.households[0] : null;
   const relation = Array.isArray(p?.householdMemberships) && p.householdMemberships.length > 0 ? p.householdMemberships[0]?.relation_to_head : undefined;
   const isHead = !!(firstHousehold?.HouseholdMembership?.is_head);
+  
+  console.log("toCitizenItem raw data:", {
+    residency_status: p?.residency_status,
+    all_keys: Object.keys(p || {}),
+  });
+  
   return {
     id: String(p?.person_id ?? p?.id ?? ""),
     cccd: String(p?.citizen_id_num ?? ""),
@@ -82,7 +102,8 @@ function mapGenderToServer(g: "Nam" | "Nữ"): string {
 function mapStatusToServer(s: Status, isDeceased?: boolean): string {
   if (isDeceased) return "deceased";
   if (s === "Thường trú") return "permanent";
-  if (s === "Tạm trú") return "temporary";
+  if (s === "Tạm trú") return "temporary_resident";
+  if (s === "Tạm vắng") return "temporary_absence";
   return "moved_out";
 }
 function toUpdatePayload(form: CitizenItem) {
@@ -106,6 +127,7 @@ function toUpdatePayload(form: CitizenItem) {
 }
 
 export default function UpdatePerson() {
+  const [searchParams] = useSearchParams();
   const [citizens, setCitizens] = useState<CitizenItem[]>([]);
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<CitizenItem | null>(null);
@@ -119,40 +141,53 @@ export default function UpdatePerson() {
   const token = useAuthStore((s) => s.token);
   const persistedToken = useMemo(() => token || localStorage.getItem("token"), [token]);
 
+  // Use same data source + server-side pagination as CitizenList
+  const LIMIT = 200;
+  const [page, setPage] = useState(1);
+  const { data, loading: listLoading, error: listError, pagination, fetchPersons } = usePersonStore();
+  const params = useCitizenListParams({
+    page,
+    limit: LIMIT,
+    searchQuery: search,
+    sortBy: "name",
+    filterGender: "all",
+    filterStatus: "all",
+  });
+
+  // Get query params
+  const searchQuery = searchParams.get("search") || "";
+  const citizenId = searchParams.get("citizenId");
+
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const resp = await PersonAPI.getPersons({ page: 1, limit: 100 });
-        const items = Array.isArray(resp.rows) ? resp.rows.map(toCitizenItem) : [];
-        setCitizens(items);
-      } catch (e: any) {
-        setError(e?.message || "Không tải được danh sách nhân khẩu");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (!persistedToken) {
-      // Chưa có token (đang hydrate hoặc chưa đăng nhập), không báo lỗi sớm
-      setCitizens([]);
-      return;
+    // Fetch via store (same as CitizenList)
+    fetchPersons(params);
+    // Seed search from query param once
+    if (searchQuery) {
+      setSearch(searchQuery);
     }
-    fetchData();
-  }, [persistedToken]);
+  }, [params, fetchPersons]);
 
-  const filtered = useMemo(() => {
-    const term = search.trim().toLowerCase();
-    if (!term) return citizens;
-    return citizens.filter((c) =>
-      [c.fullName, c.cccd, c.householdCode]
-        .filter(Boolean)
-        .some((value) => value.toLowerCase().includes(term))
-    );
-  }, [citizens, search]);
+  // Auto-select citizen if citizenId provided
+  useEffect(() => {
+    if (citizenId && citizens.length > 0) {
+      const foundCitizen = citizens.find((c) => c.id === citizenId);
+      if (foundCitizen) {
+        setSelected(foundCitizen);
+        setFormData({ ...foundCitizen });
+        setErrors({});
+      }
+    }
+  }, [citizenId, citizens]);
+
+  // Map store data -> local view model; server handles filter/paginate
+  useEffect(() => {
+    const raw = Array.isArray(data) ? data : [];
+    setCitizens(raw.map(toCitizenItem));
+  }, [data]);
 
   const startEdit = (citizen: CitizenItem) => {
+    console.log("startEdit called with citizen:", citizen);
+    console.log("citizen.status:", citizen.status);
     setSelected(citizen);
     setFormData({ ...citizen });
     setErrors({});
@@ -172,6 +207,28 @@ export default function UpdatePerson() {
       delete copy[field as string];
       setErrors(copy);
     }
+  };
+
+  // Determine available status options based on current status
+  const getAvailableStatusOptions = (): Status[] => {
+    if (!formData) return [];
+    if (formData.isDeceased) return []; // No options if deceased
+    
+    const currentStatus = formData.status;
+    console.log("getAvailableStatusOptions - currentStatus:", currentStatus, "isDeceased:", formData.isDeceased);
+    
+    
+    if (currentStatus === "Thường trú") {
+      return ["Đã chuyển đi"]; // Only "Đã chuyển đi"
+    } else if (currentStatus === "Tạm trú") {
+      return ["Đã chuyển đi"]; // Only "Đã chuyển đi"
+    } else if (currentStatus === "Tạm vắng") {
+      return ["Thường trú", "Tạm trú", "Đã chuyển đi"]; // All options
+    } else if (currentStatus === "Đã chuyển đi") {
+      return []; // No options
+    }
+    
+    return [];
   };
 
   const validate = () => {
@@ -295,6 +352,18 @@ export default function UpdatePerson() {
           />
           <Search className="w-5 h-5 absolute left-3 top-2.5 text-second dark:text-darkmodetext/60" />
         </div>
+        {/* Pagination, matching CitizenList */}
+        {pagination && (
+          <PaginationBar
+            currentPage={pagination.currentPage ?? page}
+            totalPages={pagination.totalPages ?? 1}
+            totalItems={pagination.totalItems ?? 0}
+            startIdx={((pagination.currentPage ?? page) - 1) * (pagination.itemsPerPage ?? LIMIT)}
+            pageSize={pagination.itemsPerPage ?? LIMIT}
+            currentCount={citizens.length}
+            onPageChange={(p) => setPage(p)}
+          />
+        )}
       </div>
 
       {/* Table */}
@@ -312,17 +381,17 @@ export default function UpdatePerson() {
               </tr>
             </thead>
             <tbody>
-              {loading && (
+              {listLoading && (
                 <tr>
                   <td className="py-4 text-center" colSpan={6}>Đang tải dữ liệu…</td>
                 </tr>
               )}
-              {error && !loading && (
+              {listError && !listLoading && (
                 <tr>
-                  <td className="py-4 text-center text-red-500" colSpan={6}>{error}</td>
+                  <td className="py-4 text-center text-red-500" colSpan={6}>{listError}</td>
                 </tr>
               )}
-              {!loading && !error && filtered.map((c) => (
+              {!listLoading && !listError && citizens.map((c) => (
                 <tr
                   key={c.id}
                   className="border-b border-second/10 dark:border-second/20 hover:bg-second/10 dark:hover:bg-second/20 transition"
@@ -357,7 +426,7 @@ export default function UpdatePerson() {
                   </td>
                 </tr>
               ))}
-              {!loading && !error && filtered.length === 0 && (
+              {!listLoading && !listError && citizens.length === 0 && (
                 <tr>
                   <td className="py-4 text-center text-second dark:text-darkmodetext/70" colSpan={6}>
                     Không tìm thấy kết quả
@@ -476,14 +545,34 @@ export default function UpdatePerson() {
                 />
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Field
-                    label="Tình trạng cư trú"
-                    type="select"
-                    options={["Thường trú", "Tạm trú", "Đã chuyển đi"]}
-                    value={formData.status}
-                    onChange={(v) => handleChange("status", v as Status)}
-                    error={errors.status}
-                  />
+                  <div>
+                    <label className="block text-sm font-medium text-first dark:text-darkmodetext mb-1">
+                      Tình trạng cư trú
+                    </label>
+                    {getAvailableStatusOptions().length === 0 ? (
+                      <div className="px-3 py-2.5 rounded-lg border border-second/40 dark:border-second/30 bg-gray-100 dark:bg-gray-800 text-second dark:text-darkmodetext/70 text-sm">
+                        {formData.status}
+                      </div>
+                    ) : (
+                      <select
+                        value={formData.status}
+                        onChange={(e) => handleChange("status", e.target.value as Status)}
+                        className={`w-full px-3 py-2.5 rounded-lg border border-border bg-card text-card-foreground focus:outline-none focus:ring-1 focus:ring-selectring transition ${errors.status ? "border-red-500" : ""}`}
+                      >
+                        <option value={formData.status} disabled>
+                          {formData.status} (Hiện tại)
+                        </option>
+                        <optgroup label="Có thể thay đổi sang:">
+                          {getAvailableStatusOptions().map((option) => (
+                            <option key={option} value={option}>
+                              {option}
+                            </option>
+                          ))}
+                        </optgroup>
+                      </select>
+                    )}
+                    {errors.status && <p className="text-xs text-red-500 mt-1">{errors.status}</p>}
+                  </div>
                   <Field
                     label="Ngày đăng ký thường trú"
                     type="date"

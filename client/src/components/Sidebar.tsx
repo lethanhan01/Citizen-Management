@@ -46,7 +46,7 @@ const menuItems: MenuItem[] = [
     submenu: [
       { label: "Đăng ký tạm trú", href: "/services/temp-residence" },
       { label: "Đăng ký tạm vắng", href: "/services/temp-absence" },
-      { label: "Thêm mới đến", href: "/services/add-new-arrival" },
+      { label: "Đăng ký thường trú", href: "/services/add-new-arrival" },
       { label: "Thêm mới sinh", href: "/services/add-newborn" },
       { label: "Thay đổi nhân khẩu", href: "/services/update-person" },
     ],
@@ -56,7 +56,6 @@ const menuItems: MenuItem[] = [
     label: "Dịch vụ hộ khẩu",
     submenu: [
       { label: "Tách hộ", href: "/services/household/split" },
-      { label: "Nhập hộ", href: "/services/household/merge" },
       { label: "Thay đổi chủ hộ", href: "/services/household/change-owner" },
       { label: "Lịch sử hộ", href: "/services/household/history" },
     ],

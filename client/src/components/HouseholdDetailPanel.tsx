@@ -125,16 +125,6 @@ export default function HouseholdDetailPanel({
               >
                 Tách hộ
               </button>
-              <button
-                onClick={() => navigate("/services/household/merge")}
-                className="
-                  px-4 py-2 rounded-lg text-sm font-medium
-                  transition hover:opacity-90
-                  bg-green-500 text-white
-                "
-              >
-                Nhập hộ
-              </button>
             </div>
 
             {/* History Link */}

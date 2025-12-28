@@ -1,6 +1,6 @@
 "use client";
 
-import { X, Eye, Link as LinkIcon } from "lucide-react";
+import { X, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import type { Citizen } from "@/types/citizen";
 import { useTheme } from "@/context/ThemeProvider";
@@ -21,12 +21,8 @@ export default function CitizenDetailPanel({
 
   if (!citizen) return null;
 
-  const handleViewHousehold = () => {
-    navigate(`/households/${citizen.householdCode}`);
-  };
-
   const handleEdit = () => {
-    navigate(`/services/update-person?citizenId=${citizen.id}`);
+    navigate(`/services/update-person?citizenId=${citizen.id}&search=${encodeURIComponent(citizen.fullName)}`);
   };
 
   return (
@@ -90,6 +86,11 @@ export default function CitizenDetailPanel({
                   return theme === "dark"
                     ? { backgroundColor: "rgba(30,64,175,0.35)", color: "#93c5fd" }
                     : { backgroundColor: "#DBEAFE", color: "#1d4ed8" };
+                }
+                if (citizen.status === "moved_out" || citizen.isDeceased) {
+                  return theme === "dark"
+                    ? { backgroundColor: "rgba(0,0,0,0.60)", color: "#F3F4F6" }
+                    : { backgroundColor: "#000000", color: "#FFFFFF" };
                 }
                 return theme === "dark"
                   ? { backgroundColor: "rgba(31,41,55,0.60)", color: "#D1D5DB" }
@@ -167,19 +168,6 @@ export default function CitizenDetailPanel({
             <h4 className="font-semibold text-foreground">
               Hành động
             </h4>
-
-            <button
-              onClick={handleViewHousehold}
-              className="
-                w-full px-4 py-2 rounded-lg
-                transition flex items-center justify-center gap-2 hover:opacity-90
-                font-medium text-sm
-                bg-primary text-white
-              "
-            >
-              <LinkIcon className="w-4 h-4" />
-              Xem toàn bộ hộ gia đình
-            </button>
 
             <button
               onClick={handleEdit}
