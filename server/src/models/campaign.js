@@ -27,6 +27,12 @@ export default (sequelize, DataTypes) => {
                 type: DataTypes.TEXT,
                 allowNull: true,
             },
+            // description: {
+            //     type: DataTypes.TEXT,
+            //     allowNull: true,
+            //     field: "note", // map attribute description -> DB column note
+            // },
+
             start_date: {
                 type: DataTypes.DATEONLY,
                 allowNull: false,

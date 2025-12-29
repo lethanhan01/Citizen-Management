@@ -5,11 +5,26 @@ const Campaign = db.Campaign;
 const CampaignPayment = db.CampaignPayment;
 const Household = db.Household;
 
+// // 1. Tạo đợt vận động mới
+// const createCampaign = async (data) => {
+//   // Tạo Campaign, không tạo Payment vì đây là tự nguyện
+//   return await Campaign.create(data);
+// };
+
 // 1. Tạo đợt vận động mới
 const createCampaign = async (data) => {
-  // Tạo Campaign, không tạo Payment vì đây là tự nguyện
-  return await Campaign.create(data);
+  const payload = {
+    ...data,
+    // FE gửi description, DB lưu note
+    note: data.note ?? data.description ?? null,
+  };
+
+  // tránh lưu dư field description nếu model không có
+  delete payload.description;
+
+  return await Campaign.create(payload);
 };
+
 
 // 2. Lấy danh sách các đợt vận động
 const getAllCampaigns = async () => {
@@ -52,14 +67,30 @@ const getCampaignDetail = async (id) => {
   };
 };
 
+// // 4. Cập nhật thông tin đợt vận động
+// const updateCampaign = async (id, data) => {
+//   const campaign = await Campaign.findByPk(id);
+//   if (!campaign) {
+//     throw new Error("Chiến dịch không tồn tại");
+//   }
+//   return await Campaign.update(data);
+// };
+
 // 4. Cập nhật thông tin đợt vận động
 const updateCampaign = async (id, data) => {
   const campaign = await Campaign.findByPk(id);
-  if (!campaign) {
-    throw new Error("Chiến dịch không tồn tại");
-  }
-  return await Campaign.update(data);
+  if (!campaign) throw new Error("Chiến dịch không tồn tại");
+
+  const payload = {
+    ...data,
+    note: data.note ?? data.description ?? campaign.note,
+  };
+  delete payload.description;
+
+  await campaign.update(payload);
+  return campaign;
 };
+
 
 // 5. Xóa đợt vận động
 const deleteCampaign = async (id) => {
