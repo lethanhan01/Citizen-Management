@@ -32,6 +32,7 @@ const UpdatePerson = lazy(() => import("../pages/services/people/UpdatePerson.ts
 //Pages - Services - Household
 const SplitHousehold = lazy(() => import("../pages/services/household/SplitHousehold.tsx"));
 const ChangeOwner = lazy(() => import("../pages/services/household/ChangeOwner.tsx"));
+const ChangeAddress = lazy(() => import("../pages/services/household/ChangeAddress.tsx"));
 const HouseholdHistory = lazy(() => import("../pages/services/household/HouseholdHistory.tsx"));
 
 //Pages - Fees
@@ -73,6 +74,7 @@ const router = createBrowserRouter([
               // Services - Household
               { path: '/services/household/split', element: <SplitHousehold /> },
               { path: '/services/household/change-owner', element: <ChangeOwner /> },
+              { path: '/services/household/change-address', element: <ChangeAddress /> },
               { path: '/services/household/history', element: <HouseholdHistory /> },
       
               // Fees
