@@ -151,9 +151,23 @@ export default function SplitHousehold() {
         chuHoMoiId: newHead,
         danhSachNhanKhauTachDi: selectedMembers,
       };
-      await HouseholdAPI.splitHousehold(payload);
+      const result = await HouseholdAPI.splitHousehold(payload);
+      const newHouseholdId = String(
+        result?.newHousehold?.household_id ?? result?.newHousehold?.id ?? ""
+      );
+      const newHouseholdCodeRes = String(
+        result?.newHousehold?.household_no ?? result?.newHousehold?.code ?? ""
+      );
       closeForm();
-      navigate("/households");
+      if (newHouseholdId) {
+        navigate(`/households/${newHouseholdId}`);
+      } else {
+        // Fallback: inform user and go to list
+        if (newHouseholdCodeRes) {
+          window.alert(`Tách hộ thành công. Mã hộ mới: ${newHouseholdCodeRes}`);
+        }
+        navigate("/households");
+      }
     } catch (err) {
       console.error(err);
     } finally {

@@ -129,7 +129,7 @@ export default function HouseholdDetailPanel({
 
             {/* History Link */}
             <button
-              onClick={() => navigate("/services/household/history")}
+              onClick={() => navigate(`/services/household/history?household_no=${household.code}`)}
               className="
                 w-full text-sm text-primary hover:text-primary/80
                 border-b-2 border-primary pb-1

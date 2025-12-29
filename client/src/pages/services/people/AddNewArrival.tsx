@@ -1,16 +1,20 @@
 "use client";
 
 import { Loader } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { search as searchApi } from "@/api/search.api";
+import { createHousehold, addPersonToHousehold } from "@/api/household.api";
 
 interface FormData {
   fullName: string;
+  alias: string;
   dateOfBirth: string;
   gender: string;
   cccd: string;
   nationality: string;
+  birthplace: string;
+  hometown: string;
   occupation: string;
   workplace: string;
   cmndCccdIssueDate: string;
@@ -19,49 +23,59 @@ interface FormData {
   householdCode: string;
   permanentResidenceDate: string;
   relationshipToHead: string;
-  isHead: boolean;
+  previousAddress: string;
+  note: string;
+  arrivalType?: "newborn" | "arrival";
 }
 
 interface FormErrors {
   [key: string]: string;
 }
 
+// Helper to generate a fresh initial form state
+const createInitialFormData = (): FormData => ({
+  fullName: "",
+  alias: "",
+  dateOfBirth: "",
+  gender: "",
+  cccd: "",
+  nationality: "",
+  birthplace: "",
+  hometown: "",
+  occupation: "",
+  workplace: "",
+  cmndCccdIssueDate: "",
+  cmndCccdIssuePlace: "",
+  address: "",
+  householdCode: "",
+  permanentResidenceDate: "",
+  relationshipToHead: "",
+  previousAddress: "",
+  note: "",
+  // arrivalType intentionally left undefined until user selects
+});
+
 const REQUIRED_FIELDS: (keyof FormData)[] = [
   "fullName",
   "dateOfBirth",
   "gender",
-  "cccd",
   "nationality",
-  "occupation",
-  "workplace",
-  "cmndCccdIssueDate",
-  "cmndCccdIssuePlace",
+  "birthplace",
+  "hometown",
   "address",
   "permanentResidenceDate",
   "relationshipToHead",
+  "arrivalType",
 ];
 
 export default function AddNewArrival() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
-  const [formData, setFormData] = useState<FormData>({
-    fullName: "",
-    dateOfBirth: "",
-    gender: "",
-    cccd: "",
-    nationality: "",
-    occupation: "",
-    workplace: "",
-    cmndCccdIssueDate: "",
-    cmndCccdIssuePlace: "",
-    address: "",
-    householdCode: "",
-    permanentResidenceDate: "",
-    relationshipToHead: "",
-    isHead: false,
-  });
+  const [formData, setFormData] = useState<FormData>(createInitialFormData());
   const [isLookupAddress, setIsLookupAddress] = useState(false);
+  const [resolvedHouseholdId, setResolvedHouseholdId] = useState<string | null>(null);
+  const topRef = useRef<HTMLDivElement>(null);
 
   const filledRequiredFields = useMemo(() => {
     return REQUIRED_FIELDS.filter((field) => {
@@ -129,17 +143,119 @@ export default function AddNewArrival() {
 
     setIsLoading(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      navigate("/citizens");
+      // 1) Resolve householdId: from lookup or by creating new household if not provided
+      let householdId = resolvedHouseholdId;
+
+      // If user entered a code but we couldn't resolve yet, try resolving again
+      if (!householdId && formData.householdCode?.trim()) {
+        const code = formData.householdCode.trim();
+        const data = await searchApi({ household_no: code, limit: 1, page: 1 });
+        const first = Array.isArray(data?.data) ? data.data[0] : null;
+        const households = first?.households || first?.Households || [];
+        const match = households?.find((h: any) => (h.household_no || h.householdNo) === code) || households?.[0];
+        const hid = match?.household_id || match?.householdId || match?.id;
+        if (hid) {
+          householdId = String(hid);
+        } else {
+          setErrors((prev) => ({ ...prev, householdCode: "Mã hộ không tồn tại" }));
+          return;
+        }
+      }
+
+      // If no code provided, create a new household
+      if (!householdId) {
+        const newHousehold = await createHousehold({
+          address: formData.address,
+          // household_no omitted to let backend generate if supported
+          household_type: "family",
+          note: "Tạo tự động từ thêm nhân khẩu",
+        });
+        const hid = newHousehold?.household_id || newHousehold?.householdId || newHousehold?.id;
+        if (!hid) {
+          throw new Error("Không thể tạo hộ khẩu mới");
+        }
+        householdId = String(hid);
+      }
+
+      // 2) Map form fields to backend payload
+      const event_type = formData.arrivalType === "newborn" ? "birth" : "move_in";
+      const genderPayload =
+        formData.gender === "Nam"
+          ? "male"
+          : formData.gender === "Nữ"
+          ? "female"
+          : formData.gender;
+      const personPayload: any = {
+        event_type,
+        full_name: formData.fullName,
+        gender: genderPayload,
+        dob: formData.dateOfBirth,
+        alias: formData.alias || undefined,
+        birthplace: formData.birthplace || undefined,
+        hometown: formData.hometown || undefined,
+        ethnicity: formData.nationality,
+        occupation: formData.occupation,
+        workplace: formData.workplace,
+        citizen_id_num: formData.cccd || undefined,
+        citizen_id_issued_date: formData.cmndCccdIssueDate,
+        citizen_id_issued_place: formData.cmndCccdIssuePlace,
+        residency_status: "permanent",
+        residence_registered_date: formData.permanentResidenceDate,
+        relation_to_head: formData.relationshipToHead,
+        is_head: formData.relationshipToHead?.trim() === "Chủ hộ",
+        membership_type: "family_member",
+        start_date: formData.permanentResidenceDate,
+        previous_address:
+          formData.arrivalType === "arrival" && formData.previousAddress
+            ? formData.previousAddress
+            : undefined,
+        note: formData.note || undefined,
+      };
+
+      // 3) Call API to add person to household
+      const result = await addPersonToHousehold(householdId, personPayload);
+
+      // Navigate on success
+      if (result) {
+        navigate("/citizens");
+      }
     } catch (err) {
       console.error("Error submitting form", err);
+      // Basic error surface with safe access
+      const e: any = err as any;
+      const message = e?.response?.data?.message || e?.message || "Có lỗi xảy ra khi lưu";
+      setErrors((prev) => ({ ...prev, submit: message }));
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleCancel = () => navigate(-1);
+  const resetForm = () => {
+    setFormData(createInitialFormData());
+    setErrors({});
+    setResolvedHouseholdId(null);
+    setIsLookupAddress(false);
+  };
+
+  const handleCancel = () => {
+    // Confirm before clearing all inputs and states
+    const ok = window.confirm("Bạn có chắc muốn xóa toàn bộ dữ liệu đã nhập?");
+    if (!ok) return;
+    resetForm();
+    const scrollToTop = () => {
+      // Prefer scrolling the container that owns this page
+      topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      // Fallbacks for various scroll containers
+      if (typeof window !== "undefined") {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+      const se = (document.scrollingElement || document.documentElement) as any;
+      se?.scrollTo?.({ top: 0, behavior: "smooth" });
+      if (se) se.scrollTop = 0;
+    };
+    // Wait for DOM to settle after reset, then scroll
+    window.requestAnimationFrame(scrollToTop);
+  };
 
   const handleLookupHouseholdAddress = async () => {
     const code = formData.householdCode?.trim();
@@ -153,12 +269,16 @@ export default function AddNewArrival() {
       // Try to find exact match first
       const match = households?.find((h: any) => (h.household_no || h.householdNo) === code) || households?.[0];
       const addr = match?.address || match?.Address;
+      const hid = match?.household_id || match?.householdId || match?.id;
       if (addr && typeof addr === "string") {
         setFormData((prev) => ({ ...prev, address: addr }));
         // Clear address error if autofilled
         if (errors.address) {
           setErrors((prev) => { const n = { ...prev }; delete n.address; return n; });
         }
+      }
+      if (hid) {
+        setResolvedHouseholdId(String(hid));
       }
     } catch (e) {
       // ignore errors, user can fill manually
@@ -169,10 +289,9 @@ export default function AddNewArrival() {
   };
 
   return (
-    <div className="space-y-6">
+    <div ref={topRef} className="space-y-6">
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          
           <span className="text-sm font-medium text-first dark:text-darkmodetext">
             Hoàn thành: {progressPercentage}%
           </span>
@@ -214,6 +333,12 @@ export default function AddNewArrival() {
               placeholder="Nhập họ và tên"
             />
             <FormField
+              label="Tên khác (bí danh)"
+              value={formData.alias}
+              onChange={(v) => handleInputChange("alias", v)}
+              placeholder="Nhập bí danh nếu có"
+            />
+            <FormField
               label="Ngày sinh"
               required
               type="date"
@@ -232,7 +357,6 @@ export default function AddNewArrival() {
             />
             <FormField
               label="CCCD/CMND"
-              required
               value={formData.cccd}
               onChange={(v) => handleInputChange("cccd", v)}
               error={errors.cccd}
@@ -246,6 +370,72 @@ export default function AddNewArrival() {
               error={errors.nationality}
               placeholder="Nhập quốc tịch/dân tộc"
             />
+            <FormField
+              label="Nơi sinh"
+              required
+              value={formData.birthplace}
+              onChange={(v) => handleInputChange("birthplace", v)}
+              placeholder="Nhập nơi sinh"
+            />
+            <FormField
+              label="Quê quán"
+              required
+              value={formData.hometown}
+              onChange={(v) => handleInputChange("hometown", v)}
+              placeholder="Nhập quê quán"
+            />
+            <fieldset className="space-y-2">
+            <legend className="block text-sm font-medium text-first dark:text-darkmodetext">
+              Loại nhân khẩu <span className="text-red-500">*</span>
+            </legend>
+            <div className="flex items-center gap-3">
+              <label className="inline-flex items-center">
+                <input
+                  type="radio"
+                  name="arrivalType"
+                  value="newborn"
+                  checked={formData.arrivalType === "newborn"}
+                  onChange={() => handleInputChange("arrivalType", "newborn")}
+                  className="sr-only peer"
+                />
+                <span
+                  className="px-3 py-1.5 rounded-full border text-sm transition-colors
+                  border-border hover:border-border active:border-2 active:border-black dark:active:border-white
+                  text-first dark:text-darkmodetext bg-second/10 dark:bg-second/20
+                  peer-checked:bg-third peer-checked:border-2 peer-checked:border-black dark:peer-checked:border-white
+                  peer-checked:text-first
+                  focus:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-selectring
+                  peer-focus:border-2 peer-focus:border-black dark:peer-focus:border-white"
+                >
+                  Mới sinh
+                </span>
+              </label>
+              <label className="inline-flex items-center">
+                <input
+                  type="radio"
+                  name="arrivalType"
+                  value="arrival"
+                  checked={formData.arrivalType === "arrival"}
+                  onChange={() => handleInputChange("arrivalType", "arrival")}
+                  className="sr-only peer"
+                />
+                <span
+                  className="px-3 py-1.5 rounded-full border text-sm transition-colors
+                  border-border hover:border-border active:border-2 active:border-black dark:active:border-white
+                  text-first dark:text-darkmodetext bg-second/10 dark:bg-second/20
+                  peer-checked:bg-third peer-checked:border-2 peer-checked:border-black dark:peer-checked:border-white
+                  peer-checked:text-first
+                  focus:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-selectring
+                  peer-focus:border-2 peer-focus:border-black dark:peer-focus:border-white"
+                >
+                  Mới đến
+                </span>
+              </label>
+            </div>
+            {errors.arrivalType && (
+              <p className="text-xs text-red-500">{errors.arrivalType}</p>
+            )}
+            </fieldset>
           </div>
         </div>
 
@@ -255,7 +445,6 @@ export default function AddNewArrival() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
               label="Nghề nghiệp"
-              required
               value={formData.occupation}
               onChange={(v) => handleInputChange("occupation", v)}
               error={errors.occupation}
@@ -263,7 +452,6 @@ export default function AddNewArrival() {
             />
             <FormField
               label="Nơi làm việc"
-              required
               value={formData.workplace}
               onChange={(v) => handleInputChange("workplace", v)}
               error={errors.workplace}
@@ -278,7 +466,6 @@ export default function AddNewArrival() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
               label="Ngày cấp CCCD/CMND"
-              required
               type="date"
               value={formData.cmndCccdIssueDate}
               onChange={(v) => handleInputChange("cmndCccdIssueDate", v)}
@@ -286,7 +473,6 @@ export default function AddNewArrival() {
             />
             <FormField
               label="Nơi cấp"
-              required
               value={formData.cmndCccdIssuePlace}
               onChange={(v) => handleInputChange("cmndCccdIssuePlace", v)}
               error={errors.cmndCccdIssuePlace}
@@ -342,15 +528,26 @@ export default function AddNewArrival() {
             />
           </div>
 
-          <label className="flex items-center gap-2 text-sm text-first dark:text-darkmodetext">
-            <input
-              type="checkbox"
-              checked={formData.isHead}
-              onChange={(e) => handleInputChange("isHead", e.target.checked)}
-              className="w-4 h-4 rounded"
+          {formData.arrivalType === "arrival" && (
+            <FormField
+              label="Địa chỉ trước đây (chỉ áp dụng cho nhân khẩu mới đến)"
+              type="textarea"
+              rows={3}
+              value={formData.previousAddress}
+              onChange={(v) => handleInputChange("previousAddress", v)}
+              placeholder="Nhập địa chỉ nơi cư trú trước đây"
+              helperText="Giúp ghi nhận nguồn gốc di chuyển"
             />
-            Đánh dấu là chủ hộ
-          </label>
+          )}
+
+          <FormField
+            label="Ghi chú"
+            type="textarea"
+            rows={2}
+            value={formData.note}
+            onChange={(v) => handleInputChange("note", v)}
+            placeholder="Thông tin bổ sung nếu có"
+          />
         </div>
 
         {/* Actions */}
