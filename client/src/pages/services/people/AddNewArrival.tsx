@@ -19,7 +19,7 @@ interface FormData {
   householdCode: string;
   permanentResidenceDate: string;
   relationshipToHead: string;
-  isHead: boolean;
+  arrivalType?: "newborn" | "arrival";
 }
 
 interface FormErrors {
@@ -30,7 +30,6 @@ const REQUIRED_FIELDS: (keyof FormData)[] = [
   "fullName",
   "dateOfBirth",
   "gender",
-  "cccd",
   "nationality",
   "occupation",
   "workplace",
@@ -39,6 +38,7 @@ const REQUIRED_FIELDS: (keyof FormData)[] = [
   "address",
   "permanentResidenceDate",
   "relationshipToHead",
+  "arrivalType",
 ];
 
 export default function AddNewArrival() {
@@ -59,7 +59,6 @@ export default function AddNewArrival() {
     householdCode: "",
     permanentResidenceDate: "",
     relationshipToHead: "",
-    isHead: false,
   });
   const [isLookupAddress, setIsLookupAddress] = useState(false);
 
@@ -172,7 +171,6 @@ export default function AddNewArrival() {
     <div className="space-y-6">
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          
           <span className="text-sm font-medium text-first dark:text-darkmodetext">
             Hoàn thành: {progressPercentage}%
           </span>
@@ -232,7 +230,6 @@ export default function AddNewArrival() {
             />
             <FormField
               label="CCCD/CMND"
-              required
               value={formData.cccd}
               onChange={(v) => handleInputChange("cccd", v)}
               error={errors.cccd}
@@ -246,6 +243,58 @@ export default function AddNewArrival() {
               error={errors.nationality}
               placeholder="Nhập quốc tịch/dân tộc"
             />
+            <fieldset className="space-y-2">
+            <legend className="block text-sm font-medium text-first dark:text-darkmodetext">
+              Loại nhân khẩu <span className="text-red-500">*</span>
+            </legend>
+            <div className="flex items-center gap-3">
+              <label className="inline-flex items-center">
+                <input
+                  type="radio"
+                  name="arrivalType"
+                  value="newborn"
+                  checked={formData.arrivalType === "newborn"}
+                  onChange={() => handleInputChange("arrivalType", "newborn")}
+                  className="sr-only peer"
+                />
+                <span
+                  className="px-3 py-1.5 rounded-full border text-sm transition-colors
+                  border-border hover:border-border active:border-2 active:border-black dark:active:border-white
+                  text-first dark:text-darkmodetext bg-second/10 dark:bg-second/20
+                  peer-checked:bg-third peer-checked:border-2 peer-checked:border-black dark:peer-checked:border-white
+                  peer-checked:text-first
+                  focus:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-selectring
+                  peer-focus:border-2 peer-focus:border-black dark:peer-focus:border-white"
+                >
+                  Mới sinh
+                </span>
+              </label>
+              <label className="inline-flex items-center">
+                <input
+                  type="radio"
+                  name="arrivalType"
+                  value="arrival"
+                  checked={formData.arrivalType === "arrival"}
+                  onChange={() => handleInputChange("arrivalType", "arrival")}
+                  className="sr-only peer"
+                />
+                <span
+                  className="px-3 py-1.5 rounded-full border text-sm transition-colors
+                  border-border hover:border-border active:border-2 active:border-black dark:active:border-white
+                  text-first dark:text-darkmodetext bg-second/10 dark:bg-second/20
+                  peer-checked:bg-third peer-checked:border-2 peer-checked:border-black dark:peer-checked:border-white
+                  peer-checked:text-first
+                  focus:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-selectring
+                  peer-focus:border-2 peer-focus:border-black dark:peer-focus:border-white"
+                >
+                  Mới đến
+                </span>
+              </label>
+            </div>
+            {errors.arrivalType && (
+              <p className="text-xs text-red-500">{errors.arrivalType}</p>
+            )}
+            </fieldset>
           </div>
         </div>
 
@@ -341,16 +390,6 @@ export default function AddNewArrival() {
               placeholder="VD: Chủ hộ, Vợ, Chồng, Con"
             />
           </div>
-
-          <label className="flex items-center gap-2 text-sm text-first dark:text-darkmodetext">
-            <input
-              type="checkbox"
-              checked={formData.isHead}
-              onChange={(e) => handleInputChange("isHead", e.target.checked)}
-              className="w-4 h-4 rounded"
-            />
-            Đánh dấu là chủ hộ
-          </label>
         </div>
 
         {/* Actions */}
