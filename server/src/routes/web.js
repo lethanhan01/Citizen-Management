@@ -341,7 +341,7 @@ let initWebRoutes = (app) => {
   router.get(
     "/api/v1/so-lieu/tong-quan",
     verifyToken,
-    checkRole(["admin"]),
+    checkRole(["admin", "accountant"]),
     statisticController.getDashboard
   );
 
