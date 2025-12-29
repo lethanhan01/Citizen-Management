@@ -6,12 +6,6 @@ export async function createTempResidence(payload: any) {
   return resp.data?.data ?? null;
 }
 
-// Tạm vắng
-export async function createTempAbsence(payload: any) {
-  const resp = await apiClient.post('/api/v1/tam-vang', payload);
-  return resp.data?.data ?? null;
-}
-
 // Danh sách tạm trú/tạm vắng (có thể truyền params lọc)
 export async function getTempResidence(params?: Record<string, any>) {
   const resp = await apiClient.get('/api/v1/tam-tru-vang', { params });
