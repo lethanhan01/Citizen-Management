@@ -4,6 +4,7 @@ import { Loader } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { search as searchApi } from "@/api/search.api";
+import { createHousehold, addPersonToHousehold } from "@/api/household.api";
 
 interface FormData {
   fullName: string;
@@ -61,6 +62,7 @@ export default function AddNewArrival() {
     relationshipToHead: "",
   });
   const [isLookupAddress, setIsLookupAddress] = useState(false);
+  const [resolvedHouseholdId, setResolvedHouseholdId] = useState<string | null>(null);
 
   const filledRequiredFields = useMemo(() => {
     return REQUIRED_FIELDS.filter((field) => {
@@ -128,11 +130,75 @@ export default function AddNewArrival() {
 
     setIsLoading(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      navigate("/citizens");
+      // 1) Resolve householdId: from lookup or by creating new household if not provided
+      let householdId = resolvedHouseholdId;
+
+      // If user entered a code but we couldn't resolve yet, try resolving again
+      if (!householdId && formData.householdCode?.trim()) {
+        const code = formData.householdCode.trim();
+        const data = await searchApi({ household_no: code, limit: 1, page: 1 });
+        const first = Array.isArray(data?.data) ? data.data[0] : null;
+        const households = first?.households || first?.Households || [];
+        const match = households?.find((h: any) => (h.household_no || h.householdNo) === code) || households?.[0];
+        const hid = match?.household_id || match?.householdId || match?.id;
+        if (hid) {
+          householdId = String(hid);
+        } else {
+          setErrors((prev) => ({ ...prev, householdCode: "Mã hộ không tồn tại" }));
+          return;
+        }
+      }
+
+      // If no code provided, create a new household
+      if (!householdId) {
+        const newHousehold = await createHousehold({
+          address: formData.address,
+          // household_no omitted to let backend generate if supported
+          household_type: "family",
+          note: "Tạo tự động từ thêm nhân khẩu",
+        });
+        const hid = newHousehold?.household_id || newHousehold?.householdId || newHousehold?.id;
+        if (!hid) {
+          throw new Error("Không thể tạo hộ khẩu mới");
+        }
+        householdId = String(hid);
+      }
+
+      // 2) Map form fields to backend payload
+      const event_type = formData.arrivalType === "newborn" ? "birth" : "moved_in";
+      const personPayload: any = {
+        event_type,
+        full_name: formData.fullName,
+        gender: formData.gender,
+        dob: formData.dateOfBirth,
+        ethnicity: formData.nationality,
+        occupation: formData.occupation,
+        workplace: formData.workplace,
+        citizen_id_num: formData.cccd || undefined,
+        citizen_id_issued_date: formData.cmndCccdIssueDate,
+        citizen_id_issued_place: formData.cmndCccdIssuePlace,
+        residency_status: "permanent",
+        residence_registered_date: formData.permanentResidenceDate,
+        relation_to_head: formData.relationshipToHead,
+        is_head: formData.relationshipToHead?.trim() === "Chủ hộ",
+        membership_type: "family_member",
+        start_date: formData.permanentResidenceDate,
+        previous_address: undefined,
+      };
+
+      // 3) Call API to add person to household
+      const result = await addPersonToHousehold(householdId, personPayload);
+
+      // Navigate on success
+      if (result) {
+        navigate("/citizens");
+      }
     } catch (err) {
       console.error("Error submitting form", err);
+      // Basic error surface with safe access
+      const e: any = err as any;
+      const message = e?.response?.data?.message || e?.message || "Có lỗi xảy ra khi lưu";
+      setErrors((prev) => ({ ...prev, submit: message }));
     } finally {
       setIsLoading(false);
     }
@@ -152,12 +218,16 @@ export default function AddNewArrival() {
       // Try to find exact match first
       const match = households?.find((h: any) => (h.household_no || h.householdNo) === code) || households?.[0];
       const addr = match?.address || match?.Address;
+      const hid = match?.household_id || match?.householdId || match?.id;
       if (addr && typeof addr === "string") {
         setFormData((prev) => ({ ...prev, address: addr }));
         // Clear address error if autofilled
         if (errors.address) {
           setErrors((prev) => { const n = { ...prev }; delete n.address; return n; });
         }
+      }
+      if (hid) {
+        setResolvedHouseholdId(String(hid));
       }
     } catch (e) {
       // ignore errors, user can fill manually
