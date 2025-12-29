@@ -8,10 +8,13 @@ import { createHousehold, addPersonToHousehold } from "@/api/household.api";
 
 interface FormData {
   fullName: string;
+  alias: string;
   dateOfBirth: string;
   gender: string;
   cccd: string;
   nationality: string;
+  birthplace: string;
+  hometown: string;
   occupation: string;
   workplace: string;
   cmndCccdIssueDate: string;
@@ -20,6 +23,8 @@ interface FormData {
   householdCode: string;
   permanentResidenceDate: string;
   relationshipToHead: string;
+  previousAddress: string;
+  note: string;
   arrivalType?: "newborn" | "arrival";
 }
 
@@ -48,10 +53,13 @@ export default function AddNewArrival() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [formData, setFormData] = useState<FormData>({
     fullName: "",
+    alias: "",
     dateOfBirth: "",
     gender: "",
     cccd: "",
     nationality: "",
+    birthplace: "",
+    hometown: "",
     occupation: "",
     workplace: "",
     cmndCccdIssueDate: "",
@@ -60,6 +68,8 @@ export default function AddNewArrival() {
     householdCode: "",
     permanentResidenceDate: "",
     relationshipToHead: "",
+    previousAddress: "",
+    note: "",
   });
   const [isLookupAddress, setIsLookupAddress] = useState(false);
   const [resolvedHouseholdId, setResolvedHouseholdId] = useState<string | null>(null);
@@ -166,11 +176,20 @@ export default function AddNewArrival() {
 
       // 2) Map form fields to backend payload
       const event_type = formData.arrivalType === "newborn" ? "birth" : "moved_in";
+      const genderPayload =
+        formData.gender === "Nam"
+          ? "male"
+          : formData.gender === "Nữ"
+          ? "female"
+          : formData.gender;
       const personPayload: any = {
         event_type,
         full_name: formData.fullName,
-        gender: formData.gender,
+        gender: genderPayload,
         dob: formData.dateOfBirth,
+        alias: formData.alias || undefined,
+        birthplace: formData.birthplace || undefined,
+        hometown: formData.hometown || undefined,
         ethnicity: formData.nationality,
         occupation: formData.occupation,
         workplace: formData.workplace,
@@ -183,7 +202,11 @@ export default function AddNewArrival() {
         is_head: formData.relationshipToHead?.trim() === "Chủ hộ",
         membership_type: "family_member",
         start_date: formData.permanentResidenceDate,
-        previous_address: undefined,
+        previous_address:
+          formData.arrivalType === "arrival" && formData.previousAddress
+            ? formData.previousAddress
+            : undefined,
+        note: formData.note || undefined,
       };
 
       // 3) Call API to add person to household
@@ -282,6 +305,12 @@ export default function AddNewArrival() {
               placeholder="Nhập họ và tên"
             />
             <FormField
+              label="Tên khác (bí danh)"
+              value={formData.alias}
+              onChange={(v) => handleInputChange("alias", v)}
+              placeholder="Nhập bí danh nếu có"
+            />
+            <FormField
               label="Ngày sinh"
               required
               type="date"
@@ -312,6 +341,18 @@ export default function AddNewArrival() {
               onChange={(v) => handleInputChange("nationality", v)}
               error={errors.nationality}
               placeholder="Nhập quốc tịch/dân tộc"
+            />
+            <FormField
+              label="Nơi sinh"
+              value={formData.birthplace}
+              onChange={(v) => handleInputChange("birthplace", v)}
+              placeholder="Nhập nơi sinh"
+            />
+            <FormField
+              label="Quê quán"
+              value={formData.hometown}
+              onChange={(v) => handleInputChange("hometown", v)}
+              placeholder="Nhập quê quán"
             />
             <fieldset className="space-y-2">
             <legend className="block text-sm font-medium text-first dark:text-darkmodetext">
@@ -460,6 +501,27 @@ export default function AddNewArrival() {
               placeholder="VD: Chủ hộ, Vợ, Chồng, Con"
             />
           </div>
+
+          {formData.arrivalType === "arrival" && (
+            <FormField
+              label="Địa chỉ trước đây (chỉ áp dụng cho nhân khẩu mới đến)"
+              type="textarea"
+              rows={3}
+              value={formData.previousAddress}
+              onChange={(v) => handleInputChange("previousAddress", v)}
+              placeholder="Nhập địa chỉ nơi cư trú trước đây"
+              helperText="Giúp ghi nhận nguồn gốc di chuyển"
+            />
+          )}
+
+          <FormField
+            label="Ghi chú"
+            type="textarea"
+            rows={2}
+            value={formData.note}
+            onChange={(v) => handleInputChange("note", v)}
+            placeholder="Thông tin bổ sung nếu có"
+          />
         </div>
 
         {/* Actions */}
