@@ -76,6 +76,7 @@ export default function CitizenListControls({
           <option value="name">Sắp xếp theo tên</option>
           <option value="age">Sắp xếp theo tuổi</option>
           <option value="status">Sắp xếp theo trạng thái</option>
+          <option value="date">Sắp xếp theo thời gian thêm vào hệ thống</option>
         </select>
 
         <select

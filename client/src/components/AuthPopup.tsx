@@ -22,8 +22,11 @@ export default function AuthPopup({
 
   const handleClose = () => {
     if (onClose) onClose();
-    else if (redirectPath) navigate(redirectPath, { replace: true });
-    else navigate(-1);
+    if (redirectPath) {
+      navigate(redirectPath, { replace: true });
+    } else if (!onClose) {
+      navigate(-1);
+    }
   };
 
   return (

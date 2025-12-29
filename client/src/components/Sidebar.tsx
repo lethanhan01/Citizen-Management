@@ -56,6 +56,7 @@ const menuItems: MenuItem[] = [
     submenu: [
       { label: "Tách hộ", href: "/services/household/split" },
       { label: "Thay đổi chủ hộ", href: "/services/household/change-owner" },
+      { label: "Thay đổi địa chỉ hộ", href: "/services/household/change-address" },
       { label: "Lịch sử hộ", href: "/services/household/history" },
     ],
   },

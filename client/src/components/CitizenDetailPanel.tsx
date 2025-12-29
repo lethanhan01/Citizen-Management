@@ -1,9 +1,10 @@
 "use client";
 
-import { X, Eye } from "lucide-react";
+import { X, Eye, Copy } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import type { Citizen } from "@/types/citizen";
 import { useTheme } from "@/context/ThemeProvider";
+import { toast } from "react-hot-toast";
 
 interface CitizenDetailPanelProps {
   citizen: Citizen | null;
@@ -22,7 +23,17 @@ export default function CitizenDetailPanel({
   if (!citizen) return null;
 
   const handleEdit = () => {
-    navigate(`/services/update-person?citizenId=${citizen.id}&search=${encodeURIComponent(citizen.fullName)}`);
+    navigate("/services/update-person");
+  };
+
+  const handleCopyName = async () => {
+    try {
+      await navigator.clipboard.writeText(citizen.fullName);
+      toast.success("Đã copy tên công dân!");
+    } catch (err) {
+      console.error("Failed to copy:", err);
+      toast.error("Không thể copy tên");
+    }
   };
 
   return (
@@ -173,13 +184,30 @@ export default function CitizenDetailPanel({
               onClick={handleEdit}
               className="
                 w-full px-4 py-2 rounded-lg
-                transition flex items-center justify-center gap-2 hover:opacity-90
+                transition-all flex items-center justify-center gap-2
                 font-medium text-sm
                 border border-border text-foreground
+                hover:bg-blue-50 dark:hover:bg-blue-900/20
+                hover:border-blue-300 dark:hover:border-blue-700
               "
             >
               <Eye className="w-4 h-4" />
-              Chỉnh sửa thông tin
+              Chỉnh sửa chi tiết công dân
+            </button>
+
+            <button
+              onClick={handleCopyName}
+              className="
+                w-full px-4 py-2 rounded-lg
+                transition-all flex items-center justify-center gap-2
+                font-medium text-sm
+                border border-border text-foreground
+                hover:bg-blue-50 dark:hover:bg-blue-900/20
+                hover:border-blue-300 dark:hover:border-blue-700
+              "
+            >
+              <Copy className="w-4 h-4" />
+              Copy tên công dân
             </button>
           </div>
 

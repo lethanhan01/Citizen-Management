@@ -57,7 +57,8 @@ function mapStatusToView(s: string | null | undefined): Status {
   if (val === "permanent") return "Thường trú";
   if (val === "temporary") return "Tạm trú";
   if (val === "temporary_resident") return "Tạm trú";
-  if (val === "temporary_absence") return "Tạm vắng";
+  // Backend trả về "temporary_absent" (không có "e"), cần check cả 2 trường hợp
+  if (val === "temporary_absence" || val === "temporary_absent") return "Tạm vắng";
   if (val === "moved_out" || val === "deceased") return "Đã chuyển đi";
   
   // Log warning nếu value không match
@@ -102,7 +103,8 @@ function mapStatusToServer(s: Status, isDeceased?: boolean): string {
   if (isDeceased) return "deceased";
   if (s === "Thường trú") return "permanent";
   if (s === "Tạm trú") return "temporary_resident";
-  if (s === "Tạm vắng") return "temporary_absence";
+  // Backend dùng "temporary_absent" (không có "e")
+  if (s === "Tạm vắng") return "temporary_absent";
   return "moved_out";
 }
 function toUpdatePayload(form: CitizenItem) {
@@ -136,7 +138,7 @@ export default function UpdatePerson() {
   const [deceasedLoading, setDeceasedLoading] = useState<boolean>(false);
 
   // Use same data source + server-side pagination as CitizenList
-  const LIMIT = 200;
+  const LIMIT = 10; // Limited page size like ViewCitizen
   const [page, setPage] = useState(1);
   const { data, loading: listLoading, error: listError, pagination, fetchPersons } = usePersonStore();
   const params = useCitizenListParams({
@@ -160,6 +162,11 @@ export default function UpdatePerson() {
       setSearch(searchQuery);
     }
   }, [params, fetchPersons]);
+
+  // Reset page to 1 when search changes
+  useEffect(() => {
+    setPage(1);
+  }, [search]);
 
   // Auto-select citizen if citizenId provided
   useEffect(() => {
@@ -335,7 +342,7 @@ export default function UpdatePerson() {
     <div className="space-y-6">
       
       {/* Search */}
-      <div className="space-y-4 mb-6">
+      <div className="mb-6">
         {/* Search Bar */}
         <div className="relative">
           <input
@@ -354,90 +361,96 @@ export default function UpdatePerson() {
           />
           <Search className="w-5 h-5 absolute left-3 top-2.5 text-second dark:text-darkmodetext/60" />
         </div>
-        {/* Pagination, matching CitizenList */}
-        {pagination && (
-          <PaginationBar
-            currentPage={pagination.currentPage ?? page}
-            totalPages={pagination.totalPages ?? 1}
-            totalItems={pagination.totalItems ?? 0}
-            startIdx={((pagination.currentPage ?? page) - 1) * (pagination.itemsPerPage ?? LIMIT)}
-            pageSize={pagination.itemsPerPage ?? LIMIT}
-            currentCount={citizens.length}
-            onPageChange={(p) => setPage(p)}
-          />
-        )}
       </div>
 
-      {/* Table */}
-      <div className="bg-card text-card-foreground border border-border rounded-xl p-6 shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-sm">
-            <thead>
-              <tr className="text-left text-second dark:text-darkmodetext/70 border-b border-second/20 dark:border-second/30">
-                <th className="py-3 px-2">Họ tên</th>
-                <th className="py-3 px-2">CCCD</th>
-                <th className="py-3 px-2">Mã hộ</th>
-                <th className="py-3 px-2">Địa chỉ</th>
-                <th className="py-3 px-2">Trạng thái</th>
-                <th className="py-3 px-2 text-center">Sửa</th>
-              </tr>
-            </thead>
-            <tbody>
-              {listLoading && (
-                <tr>
-                  <td className="py-4 text-center" colSpan={6}>Đang tải dữ liệu…</td>
-                </tr>
-              )}
-              {listError && !listLoading && (
-                <tr>
-                  <td className="py-4 text-center text-red-500" colSpan={6}>{listError}</td>
-                </tr>
-              )}
-              {!listLoading && !listError && citizens.map((c) => (
-                <tr
-                  key={c.id}
-                  className="border-b border-second/10 dark:border-second/20 hover:bg-second/10 dark:hover:bg-second/20 transition"
-                >
-                  <td className="py-3 px-2 font-medium text-first dark:text-darkmodetext">
-                    {c.fullName}
-                  </td>
-                  <td className="py-3 px-2 text-first dark:text-darkmodetext">{c.cccd}</td>
-                  <td className="py-3 px-2 text-first dark:text-darkmodetext">{c.householdCode}</td>
-                  <td className="py-3 px-2 text-first dark:text-darkmodetext">{c.address}</td>
-                  <td className="py-3 px-2">
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                        c.status === "Thường trú"
-                          ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                          : c.status === "Tạm trú"
-                          ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
-                          : "bg-gray-200 text-gray-700 dark:bg-gray-800/60 dark:text-gray-300"
-                      }`}
+      {/* Table Container */}
+      <div className="bg-card text-card-foreground border border-border rounded-xl shadow-sm overflow-hidden flex flex-col">
+        {listLoading ? (
+          <div className="flex-1 flex items-center justify-center py-12">
+            <div className="flex items-center gap-2">
+              <Loader className="w-5 h-5 animate-spin" />
+              <span className="text-first dark:text-darkmodetext">Đang tải dữ liệu…</span>
+            </div>
+          </div>
+        ) : listError ? (
+          <div className="flex-1 flex items-center justify-center py-12">
+            <div className="text-center text-red-500">{listError}</div>
+          </div>
+        ) : citizens.length === 0 ? (
+          <div className="flex-1 flex items-center justify-center py-12">
+            <div className="text-center text-second dark:text-darkmodetext/70">
+              Không tìm thấy kết quả
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Table */}
+            <div className="overflow-x-auto flex-1">
+              <table className="min-w-full text-sm">
+                <thead>
+                  <tr className="text-left text-second dark:text-darkmodetext/70 border-b border-second/20 dark:border-second/30 bg-second/5 dark:bg-second/10">
+                    <th className="py-3 px-4">Họ tên</th>
+                    <th className="py-3 px-4">CCCD</th>
+                    <th className="py-3 px-4">Mã hộ</th>
+                    <th className="py-3 px-4">Địa chỉ</th>
+                    <th className="py-3 px-4">Trạng thái</th>
+                    <th className="py-3 px-4 text-center">Sửa</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {citizens.map((c) => (
+                    <tr
+                      key={c.id}
+                      className="border-b border-second/10 dark:border-second/20 hover:bg-second/5 dark:hover:bg-second/10 transition"
                     >
-                      {c.status}
-                    </span>
-                  </td>
-                  <td className="py-3 px-2 text-center">
-                    <button
-                      onClick={() => startEdit(c)}
-                      className="p-2 rounded-lg border border-second/30 hover:bg-second/20 dark:hover:bg-second/30 text-first dark:text-darkmodetext"
-                      aria-label="Chỉnh sửa"
-                    >
-                      <Pencil className="w-4 h-4" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-              {!listLoading && !listError && citizens.length === 0 && (
-                <tr>
-                  <td className="py-4 text-center text-second dark:text-darkmodetext/70" colSpan={6}>
-                    Không tìm thấy kết quả
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+                      <td className="py-3 px-4 font-medium text-first dark:text-darkmodetext">
+                        {c.fullName}
+                      </td>
+                      <td className="py-3 px-4 text-first dark:text-darkmodetext">{c.cccd}</td>
+                      <td className="py-3 px-4 text-first dark:text-darkmodetext">{c.householdCode}</td>
+                      <td className="py-3 px-4 text-first dark:text-darkmodetext">{c.address}</td>
+                      <td className="py-3 px-4">
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                            c.status === "Thường trú"
+                              ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                              : c.status === "Tạm trú"
+                              ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
+                              : "bg-gray-200 text-gray-700 dark:bg-gray-800/60 dark:text-gray-300"
+                          }`}
+                        >
+                          {c.status}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        <button
+                          onClick={() => startEdit(c)}
+                          className="p-2 rounded-lg border border-second/30 hover:bg-second/20 dark:hover:bg-second/30 text-first dark:text-darkmodetext"
+                          aria-label="Chỉnh sửa"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination at bottom */}
+            {pagination && (
+              <PaginationBar
+                currentPage={pagination.currentPage ?? page}
+                totalPages={pagination.totalPages ?? 1}
+                totalItems={pagination.totalItems ?? 0}
+                startIdx={((pagination.currentPage ?? page) - 1) * (pagination.itemsPerPage ?? LIMIT)}
+                pageSize={pagination.itemsPerPage ?? LIMIT}
+                currentCount={citizens.length}
+                onPageChange={(p) => setPage(p)}
+              />
+            )}
+          </>
+        )}
       </div>
 
       {/* Drawer */}
