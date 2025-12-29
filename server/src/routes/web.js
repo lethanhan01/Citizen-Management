@@ -213,47 +213,47 @@ let initWebRoutes = (app) => {
     getPersonDetail
   );
 
-  // QUẢN LÝ KHOẢN THU (Admin/Accountant)
+  // QUẢN LÝ KHOẢN THU (Admin/staff)
   router.post(
     "/api/v1/khoan-thu",
     verifyToken,
-    checkRole(["admin", "accountant"]),
+    checkRole(["admin", "staff"]),
     feeController.handleCreateFee
   );
   router.get(
     "/api/v1/khoan-thu/danh-sach",
     verifyToken,
-    checkRole(["admin", "accountant"]),
+    checkRole(["admin", "staff"]),
     feeController.handleGetAllFees
   );
   // Xóa khoản thu (Dùng để xóa rác khi test API)
   router.delete(
     "/api/v1/khoan-thu/:id",
     verifyToken,
-    checkRole(["admin", "accountant"]),
+    checkRole(["admin", "staff"]),
     feeController.handleDeleteFee
   );
   // API Tìm kiếm/Lọc danh sách đóng tiền
   router.get(
     "/api/v1/khoan-thu/tim-kiem",
     verifyToken,
-    checkRole(["admin", "accountant"]),
+    checkRole(["admin", "staff"]),
     feeController.handleGetPayments
   );
   // POST: GHI NHẬN NỘP TIỀN
   router.post(
     "/api/v1/khoan-thu/xac-nhan",
     verifyToken,
-    checkRole(["admin", "accountant"]),
+    checkRole(["admin", "staff"]),
     feeController.handleConfirmPayment
   );
 
   // --- Tìm kiếm linh hoạt ---
-  // GET: Admin hay Accountant đều dùng được
+  // GET: Admin hay staff đều dùng được
   router.get(
     "/api/v1/search",
     verifyToken,
-    checkRole(["admin", "accountant"]),
+    checkRole(["admin", "staff"]),
     searchController.handleSearch
   );
 
@@ -298,42 +298,42 @@ let initWebRoutes = (app) => {
   router.post(
     "/api/v1/chien-dich",
     verifyToken,
-    checkRole(["admin", "accountant"]),
+    checkRole(["admin", "staff"]),
     campaignController.handleCreate
   );
   // Xem danh sách
   router.get(
     "/api/v1/chien-dich",
     verifyToken,
-    checkRole(["admin", "accountant"]),
+    checkRole(["admin", "staff"]),
     campaignController.handleIndex
   );
   // Xem chi tiết
   router.get(
     "/api/v1/chien-dich/chi-tiet/:id",
     verifyToken,
-    checkRole(["admin", "accountant"]),
+    checkRole(["admin", "staff"]),
     campaignController.handleShow
   );
   // Cập nhật
   router.put(
     "/api/v1/chien-dich/:id",
     verifyToken,
-    checkRole(["admin", "accountant"]),
+    checkRole(["admin", "staff"]),
     campaignController.handleUpdate
   );
   // Xóa
   router.delete(
     "/api/v1/chien-dich/:id",
     verifyToken,
-    checkRole(["admin", "accountant"]),
+    checkRole(["admin", "staff"]),
     campaignController.handleDelete
   );
   // GHI NHẬN ĐÓNG GÓP TỰ NGUYỆN
   router.post(
     "/api/v1/chien-dich/dong-gop",
     verifyToken,
-    checkRole(["admin", "accountant"]),
+    checkRole(["admin", "staff"]),
     campaignController.handleContribute
   );
 
@@ -341,7 +341,7 @@ let initWebRoutes = (app) => {
   router.get(
     "/api/v1/so-lieu/tong-quan",
     verifyToken,
-    checkRole(["admin", "accountant"]),
+    checkRole(["admin", "staff"]),
     statisticController.getDashboard
   );
 
@@ -349,7 +349,7 @@ let initWebRoutes = (app) => {
   router.get(
     "/api/v1/so-lieu/thu-phi/:id",
     verifyToken,
-    checkRole(["admin", "accountant"]),
+    checkRole(["admin", "staff"]),
     statisticController.getFeeReport
   );
 
@@ -357,7 +357,7 @@ let initWebRoutes = (app) => {
   router.get(
     "/api/v1/so-lieu/dong-gop/:id",
     verifyToken,
-    checkRole(["admin", "accountant"]),
+    checkRole(["admin", "staff"]),
     statisticController.getDonationReport
   );
 
@@ -366,7 +366,7 @@ let initWebRoutes = (app) => {
   router.get(
     "/api/v1/export/thu-phi/ton-dong/:id",
     verifyToken,
-    checkRole(["admin", "accountant"]),
+    checkRole(["admin", "staff"]),
     exportController.exportFeeReport
   );
 
@@ -374,7 +374,7 @@ let initWebRoutes = (app) => {
   router.get(
     "/api/v1/export/dong-gop/:id",
     verifyToken,
-    checkRole(["admin", "accountant"]),
+    checkRole(["admin", "staff"]),
     exportController.exportDonationReport
   );
 
@@ -382,7 +382,7 @@ let initWebRoutes = (app) => {
   router.get(
     "/api/v1/export/thu-phi/tong-hop/:id",
     verifyToken,
-    checkRole(["admin", "accountant"]),
+    checkRole(["admin", "staff"]),
     exportController.exportFullFeeReport
   );
 
@@ -390,7 +390,7 @@ let initWebRoutes = (app) => {
   router.get(
     "/api/v1/export/thu-phi/phieu-thu/:id",
     verifyToken,
-    checkRole(["admin", "accountant"]),
+    checkRole(["admin", "staff"]),
     exportController.exportReceipts
   );
 
@@ -398,7 +398,7 @@ let initWebRoutes = (app) => {
   router.get(
     "/api/v1/export/thu-phi/hoa-don/:paymentId",
     verifyToken,
-    checkRole(["admin", "accountant"]),
+    checkRole(["admin", "staff"]),
     exportController.exportOneReceipt
   );
 
