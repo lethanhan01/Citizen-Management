@@ -52,7 +52,7 @@ export default (sequelize, DataTypes) => {
             event_type: {
                 type: DataTypes.ENUM(
                     "birth",
-                    "moved_in",
+                    "move_in",
                     "move_out",
                     "death",
                     "head_change",

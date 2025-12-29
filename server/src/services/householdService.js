@@ -233,12 +233,12 @@ let addPersonToHousehold = async (
         // 4. Ghi log lịch sử biến động
         const eventTypeMapping = {
             birth: "birth",
-            moved_in: "moved_in",
+            move_in: "move_in",
         };
 
         const eventNoteMapping = {
             birth: `Thêm nhân khẩu mới sinh: ${full_name}`,
-            moved_in: `Thêm nhân khẩu chuyển đến: ${full_name}`,
+            move_in: `Thêm nhân khẩu chuyển đến: ${full_name}`,
         };
 
         await householdHistoryService.logMemberAdded(
