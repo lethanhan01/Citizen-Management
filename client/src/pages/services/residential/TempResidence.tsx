@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Loader } from "lucide-react";
+import { createTempResidence as apiCreateTempResidence } from "@/api/tempResidence.api";
 
 interface FormData {
   // Section 1: Thông tin người khai báo
@@ -35,9 +36,12 @@ const REQUIRED_FIELDS = [
 
 export default function TempResidence() {
   const navigate = useNavigate();
+  const topRef = useRef<HTMLDivElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
-  const [formData, setFormData] = useState<FormData>({
+  const [formKey, setFormKey] = useState(0);
+  const createInitialFormData = (): FormData => ({
     fullName: "",
     dateOfBirth: "",
     cccd: "",
@@ -48,6 +52,7 @@ export default function TempResidence() {
     tempToDate: "",
     reason: "",
   });
+  const [formData, setFormData] = useState<FormData>(createInitialFormData());
 
   // Calculate progress
   const filledRequiredFields = useMemo(() => {
@@ -117,9 +122,29 @@ export default function TempResidence() {
 
     setIsLoading(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      // Show success and redirect
+      // Build payload according to backend service requirements
+      const payload = {
+        full_name: formData.fullName.trim(),
+        gender:
+          formData.gender === "Nam"
+            ? "male"
+            : formData.gender === "Nữ"
+            ? "female"
+            : formData.gender,
+        dob: formData.dateOfBirth,
+        citizen_id: formData.cccd.trim(),
+        // tempAddress stores household_no (mã hộ khẩu tạm trú)
+        household_no: formData.tempAddress.trim(),
+        relation_to_head: "Tạm trú",
+        membership_type: "family_member",
+        from_date: formData.tempFromDate,
+        to_date: formData.tempToDate || null,
+        status: "ACTIVE",
+        note: formData.reason || null,
+      };
+
+      await apiCreateTempResidence(payload);
+      // Redirect to temp residence list/service page
       navigate("/services/temp-residence");
     } catch (error) {
       console.error("Error submitting form:", error);
@@ -128,12 +153,43 @@ export default function TempResidence() {
     }
   };
 
-  const handleCancel = () => {
-    navigate(-1);
+  const resetForm = () => {
+    setFormData(createInitialFormData());
+    setErrors({});
+    try {
+      formRef.current?.reset();
+    } catch {}
+    // Force remount to clear any persistent UI state
+    setFormKey((k) => k + 1);
+  };
+
+  const handleCancel = (e?: React.MouseEvent<HTMLButtonElement>) => {
+    try {
+      e?.preventDefault();
+      e?.stopPropagation();
+    } catch {}
+    if (isLoading) return;
+    const ok = window.confirm("Bạn có chắc muốn xóa toàn bộ dữ liệu đã nhập?");
+    if (!ok) return;
+    resetForm();
+    const scrollToTop = () => {
+      try {
+        topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+        if (typeof window !== "undefined") {
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+        const se = (document.scrollingElement || document.documentElement) as any;
+        se?.scrollTo?.({ top: 0, behavior: "smooth" });
+        if (se) se.scrollTop = 0;
+      } catch {
+        // no-op
+      }
+    };
+    window.requestAnimationFrame(scrollToTop);
   };
 
   return (
-    <div className="space-y-6">
+    <div ref={topRef} className="space-y-6">
       {/* Progress Bar */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
@@ -157,6 +213,8 @@ export default function TempResidence() {
 
       {/* Form Card */}
       <form
+        key={formKey}
+        ref={formRef}
         onSubmit={handleSubmit}
         className="bg-card text-card-foreground border border-border rounded-xl p-6 shadow-sm space-y-6"
       >
@@ -320,7 +378,15 @@ export default function TempResidence() {
         <div className="border-t border-second/20 dark:border-second/30 pt-6 flex gap-4 justify-end">
           <button
             type="button"
-            onClick={handleCancel}
+            onClick={(e) => handleCancel(e)}
+            onClickCapture={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+            onMouseDown={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
             disabled={isLoading}
             className="
               px-6 py-2.5 rounded-lg font-medium
@@ -412,6 +478,7 @@ function FormField({
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           rows={rows}
+          autoComplete="off"
           className={baseClasses}
         />
       ) : (
@@ -420,6 +487,7 @@ function FormField({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
+          autoComplete="off"
           className={baseClasses}
         />
       )}
