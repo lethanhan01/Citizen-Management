@@ -1,13 +1,16 @@
-"use client";
+'use client';
 
-import { useState, useMemo, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Loader, Search } from "lucide-react";
-import { useAuthStore } from "@/stores/auth.store";
-import { usePersonStore } from "@/stores/person.store";
-import { useCitizenListParams } from "@/hooks/useCitizenListParams";
-import PaginationBar from "@/components/PaginationBar";
-import { mapPersonToCitizen } from "@/mappers/person.mapper";
+import { useState, useMemo, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Loader, Search } from 'lucide-react';
+import { useAuthStore } from '@/stores/auth.store';
+import { usePersonStore } from '@/stores/person.store';
+import { useCitizenListParams } from '@/hooks/useCitizenListParams';
+import PaginationBar from '@/components/PaginationBar';
+import { mapPersonToCitizen } from '@/mappers/person.mapper';
+import { toast, Toaster } from 'react-hot-toast';
+
+import { useTempResidenceStore } from '@/stores/tempResidence.store';
 
 interface Citizen {
   id: string;
@@ -36,45 +39,59 @@ interface FormErrors {
 }
 
 const REQUIRED_FIELDS = [
-  "fullName",
-  "dateOfBirth",
-  "cccd",
-  "gender",
-  "permanentHouseholdCode",
-  "destination",
-  "tempAbsenceFromDate",
-  "tempAbsenceToDate",
+  'fullName',
+  'dateOfBirth',
+  'cccd',
+  'gender',
+  'permanentHouseholdCode',
+  'destination',
+  'tempAbsenceFromDate',
+  'tempAbsenceToDate',
 ];
 
 export default function TempAbsence() {
   const navigate = useNavigate();
   const token = useAuthStore((s) => s.token);
-  const persistedToken = useMemo(() => token || localStorage.getItem("token"), [token]);
+  const persistedToken = useMemo(
+    () => token || localStorage.getItem('token'),
+    [token],
+  );
+
+  const {
+    createTempAbsence,
+    loading: isSubmitting,
+    error: submitError,
+  } = useTempResidenceStore();
 
   // Shared data source + server pagination
   const LIMIT = 200;
   const [page, setPage] = useState(1);
-  const { data, loading: listLoading, pagination, fetchPersons } = usePersonStore();
+  const {
+    data,
+    loading: listLoading,
+    pagination,
+    fetchPersons,
+  } = usePersonStore();
 
   // Search & list
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState('');
   const [] = useState<Citizen[]>([]);
   const [] = useState(false);
   const [selectedCitizen, setSelectedCitizen] = useState<Citizen | null>(null);
 
   // Form
-  const [isLoading, setIsLoading] = useState(false);
+  // const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
   const [formData, setFormData] = useState<FormData>({
-    fullName: "",
-    dateOfBirth: "",
-    cccd: "",
-    gender: "",
-    permanentHouseholdCode: "",
-    destination: "",
-    tempAbsenceFromDate: "",
-    tempAbsenceToDate: "",
-    reason: "",
+    fullName: '',
+    dateOfBirth: '',
+    cccd: '',
+    gender: '',
+    permanentHouseholdCode: '',
+    destination: '',
+    tempAbsenceFromDate: '',
+    tempAbsenceToDate: '',
+    reason: '',
   });
 
   // Fetch citizens via store (shared with CitizenList)
@@ -82,15 +99,15 @@ export default function TempAbsence() {
     page,
     limit: LIMIT,
     searchQuery: search,
-    sortBy: "name",
-    filterGender: "all",
-    filterStatus: "all",
+    sortBy: 'name',
+    filterGender: 'all',
+    filterStatus: 'all',
   });
 
   useEffect(() => {
     if (!persistedToken) return;
     fetchPersons(params);
-  }, [persistedToken, params, fetchPersons]);
+  }, [persistedToken, params, fetchPersons, search]);
 
   // Use store data; only show list when search has value
   const showList = useMemo(() => search.trim().length > 0, [search]);
@@ -117,10 +134,10 @@ export default function TempAbsence() {
       cccd: citizen.cccd,
       gender: citizen.gender,
       permanentHouseholdCode: citizen.householdCode,
-      destination: "",
-      tempAbsenceFromDate: "",
-      tempAbsenceToDate: "",
-      reason: "",
+      destination: '',
+      tempAbsenceFromDate: '',
+      tempAbsenceToDate: '',
+      reason: '',
     });
     setErrors({});
   };
@@ -129,12 +146,12 @@ export default function TempAbsence() {
   const filledRequiredFields = useMemo(() => {
     return REQUIRED_FIELDS.filter((field) => {
       const value = formData[field as keyof FormData];
-      return value && value.trim() !== "";
+      return value && value.trim() !== '';
     }).length;
   }, [formData]);
 
   const progressPercentage = Math.round(
-    (filledRequiredFields / REQUIRED_FIELDS.length) * 100
+    (filledRequiredFields / REQUIRED_FIELDS.length) * 100,
   );
 
   const handleInputChange = (field: keyof FormData, value: string) => {
@@ -156,8 +173,8 @@ export default function TempAbsence() {
 
     REQUIRED_FIELDS.forEach((field) => {
       const value = formData[field as keyof FormData];
-      if (!value || value.trim() === "") {
-        newErrors[field] = "Trường này là bắt buộc";
+      if (!value || value.trim() === '') {
+        newErrors[field] = 'Trường này là bắt buộc';
       }
     });
 
@@ -165,12 +182,12 @@ export default function TempAbsence() {
       const fromDate = new Date(formData.tempAbsenceFromDate);
       const toDate = new Date(formData.tempAbsenceToDate);
       if (fromDate >= toDate) {
-        newErrors.tempAbsenceToDate = "Ngày kết thúc phải sau ngày bắt đầu";
+        newErrors.tempAbsenceToDate = 'Ngày kết thúc phải sau ngày bắt đầu';
       }
     }
 
     if (formData.cccd && formData.cccd.length < 9) {
-      newErrors.cccd = "CCCD phải có ít nhất 9 chữ số";
+      newErrors.cccd = 'CCCD phải có ít nhất 9 chữ số';
     }
 
     setErrors(newErrors);
@@ -181,17 +198,28 @@ export default function TempAbsence() {
     e.preventDefault();
 
     if (!validateForm()) {
+      toast.error('Vui lòng kiểm tra lại các trường bắt buộc!');
       return;
     }
 
-    setIsLoading(true);
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      navigate("/services/temp-absence");
-    } catch (error) {
-      console.error("Error submitting form:", error);
-    } finally {
-      setIsLoading(false);
+    const payload = {
+      household_no: formData.permanentHouseholdCode,
+      citizen_id: formData.cccd,
+      from_date: formData.tempAbsenceFromDate,
+      to_date: formData.tempAbsenceToDate,
+      note: `Nơi đến: ${formData.destination}. Lý do: ${formData.reason || 'Không có'}`,
+    };
+
+    const success = await createTempAbsence(payload);
+
+    if (success) {
+      toast.success('Đăng ký tạm vắng thành công!');
+      setTimeout(() => {
+        navigate('/services/temp-absence');
+      }, 1000);
+    } else {
+      const currentError = useTempResidenceStore.getState().error;
+      toast.error(currentError || 'Đăng ký thất bại. Vui lòng thử lại!');
     }
   };
 
@@ -201,6 +229,19 @@ export default function TempAbsence() {
 
   return (
     <div className="space-y-6">
+      {/* --- TOASTER --- */}
+      <Toaster
+        position="top-right"
+        reverseOrder={false}
+        toastOptions={{
+          className: '',
+          style: {
+            border: '1px solid #713200',
+            padding: '16px',
+            color: '#713200',
+          },
+        }}
+      />
       {/* Search & List */}
       <div className="bg-card text-card-foreground border border-border rounded-xl p-6 shadow-sm">
         <h3 className="text-lg font-semibold text-first dark:text-darkmodetext mb-4">
@@ -218,8 +259,8 @@ export default function TempAbsence() {
           <Search className="w-5 h-5 absolute left-3 top-3 text-second dark:text-darkmodetext/50" />
         </div>
 
-        {showList && (
-          listLoading ? (
+        {showList &&
+          (listLoading ? (
             <div className="flex items-center gap-2 text-second">
               <Loader className="w-4 h-4 animate-spin" />
               Đang tải...
@@ -238,12 +279,14 @@ export default function TempAbsence() {
                       onClick={() => handleSelectCitizen(citizen)}
                       className={`w-full p-3 rounded-lg border text-left transition ${
                         selectedCitizen?.id === citizen.id
-                          ? "bg-slate-200 dark:bg-slate-600 border-slate-300 dark:border-slate-500 text-first dark:text-white"
-                          : "bg-white dark:bg-transparent border-second/20 dark:border-slate-600 text-first dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700"
+                          ? 'bg-slate-200 dark:bg-slate-600 border-slate-300 dark:border-slate-500 text-first dark:text-white'
+                          : 'bg-white dark:bg-transparent border-second/20 dark:border-slate-600 text-first dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700'
                       }`}
                     >
                       <div className="font-medium">{citizen.fullName}</div>
-                      <div className="text-sm opacity-70">CCCD: {citizen.cccd}</div>
+                      <div className="text-sm opacity-70">
+                        CCCD: {citizen.cccd}
+                      </div>
                     </button>
                   ))
                 )}
@@ -254,7 +297,10 @@ export default function TempAbsence() {
                     currentPage={pagination.currentPage ?? page}
                     totalPages={pagination.totalPages ?? 1}
                     totalItems={pagination.totalItems ?? 0}
-                    startIdx={((pagination.currentPage ?? page) - 1) * (pagination.itemsPerPage ?? LIMIT)}
+                    startIdx={
+                      ((pagination.currentPage ?? page) - 1) *
+                      (pagination.itemsPerPage ?? LIMIT)
+                    }
                     pageSize={pagination.itemsPerPage ?? LIMIT}
                     currentCount={filteredCitizens.length}
                     onPageChange={(p) => setPage(p)}
@@ -262,8 +308,7 @@ export default function TempAbsence() {
                 </div>
               )}
             </>
-          )
-        )}
+          ))}
       </div>
 
       {/* Progress Bar */}
@@ -277,7 +322,7 @@ export default function TempAbsence() {
           <div className="w-full h-2 bg-second/20 dark:bg-second/30 rounded-full overflow-hidden">
             <div
               className={`h-full transition-all duration-300 ${
-                progressPercentage === 100 ? "bg-green-500" : "bg-blue-500"
+                progressPercentage === 100 ? 'bg-green-500' : 'bg-blue-500'
               }`}
               style={{ width: `${progressPercentage}%` }}
             />
@@ -296,9 +341,21 @@ export default function TempAbsence() {
               Biểu mẫu Đăng kí tạm vắng
             </h2>
             <p className="text-sm text-second dark:text-darkmodetext/70">
-              Các mục có dấu <span className="text-red-500">*</span> là bắt buộc.
+              Các mục có dấu <span className="text-red-500">*</span> là bắt
+              buộc.
             </p>
           </div>
+
+          {/* Hiển thị lỗi từ API nếu có */}
+          {submitError && (
+            <div
+              className="p-3 bg-red-100 border border-red-400 text-red-700 rounded relative"
+              role="alert"
+            >
+              <strong className="font-bold">Lỗi! </strong>
+              <span className="block sm:inline">{submitError}</span>
+            </div>
+          )}
 
           {/* Section 1: Thông tin người khai báo (read-only) */}
           <div className="space-y-4 border-t border-second/20 dark:border-second/30 pt-6">
@@ -312,7 +369,7 @@ export default function TempAbsence() {
                 required
                 type="text"
                 value={formData.fullName}
-                onChange={(v) => handleInputChange("fullName", v)}
+                onChange={(v) => handleInputChange('fullName', v)}
                 error={errors.fullName}
                 placeholder="Họ và tên"
               />
@@ -321,7 +378,7 @@ export default function TempAbsence() {
                 required
                 type="date"
                 value={formData.dateOfBirth}
-                onChange={(v) => handleInputChange("dateOfBirth", v)}
+                onChange={(v) => handleInputChange('dateOfBirth', v)}
                 error={errors.dateOfBirth}
               />
               <FormField
@@ -329,7 +386,7 @@ export default function TempAbsence() {
                 required
                 type="text"
                 value={formData.cccd}
-                onChange={(v) => handleInputChange("cccd", v)}
+                onChange={(v) => handleInputChange('cccd', v)}
                 error={errors.cccd}
               />
               <div>
@@ -338,7 +395,7 @@ export default function TempAbsence() {
                 </label>
                 <select
                   value={formData.gender}
-                  onChange={(e) => handleInputChange("gender", e.target.value)}
+                  onChange={(e) => handleInputChange('gender', e.target.value)}
                   className="w-full px-4 py-2.5 rounded-lg border border-second/40 dark:border-second/30 bg-white dark:bg-transparent text-first dark:text-darkmodetext"
                 >
                   <option value="">-- Chọn --</option>
@@ -353,7 +410,7 @@ export default function TempAbsence() {
               required
               type="text"
               value={formData.permanentHouseholdCode}
-              onChange={(v) => handleInputChange("permanentHouseholdCode", v)}
+              onChange={(v) => handleInputChange('permanentHouseholdCode', v)}
               error={errors.permanentHouseholdCode}
               placeholder="Số hộ khẩu"
             />
@@ -370,7 +427,7 @@ export default function TempAbsence() {
               required
               type="textarea"
               value={formData.destination}
-              onChange={(v) => handleInputChange("destination", v)}
+              onChange={(v) => handleInputChange('destination', v)}
               error={errors.destination}
               placeholder="Nhập địa chỉ/nơi đi"
               rows={3}
@@ -386,7 +443,7 @@ export default function TempAbsence() {
                   required
                   type="date"
                   value={formData.tempAbsenceFromDate}
-                  onChange={(v) => handleInputChange("tempAbsenceFromDate", v)}
+                  onChange={(v) => handleInputChange('tempAbsenceFromDate', v)}
                   error={errors.tempAbsenceFromDate}
                   hideLabel
                 />
@@ -395,7 +452,7 @@ export default function TempAbsence() {
                   required
                   type="date"
                   value={formData.tempAbsenceToDate}
-                  onChange={(v) => handleInputChange("tempAbsenceToDate", v)}
+                  onChange={(v) => handleInputChange('tempAbsenceToDate', v)}
                   error={errors.tempAbsenceToDate}
                   hideLabel
                 />
@@ -407,7 +464,7 @@ export default function TempAbsence() {
               required={false}
               type="textarea"
               value={formData.reason}
-              onChange={(v) => handleInputChange("reason", v)}
+              onChange={(v) => handleInputChange('reason', v)}
               placeholder="Nhập lý do (không bắt buộc)"
               rows={3}
             />
@@ -418,23 +475,23 @@ export default function TempAbsence() {
             <button
               type="button"
               onClick={handleCancel}
-              disabled={isLoading}
+              disabled={isSubmitting}
               className="px-6 py-2.5 rounded-lg font-medium border border-second/40 dark:border-second/30 text-first dark:text-darkmodetext hover:bg-second/10 dark:hover:bg-second/30 disabled:opacity-50"
             >
               Huỷ bỏ
             </button>
             <button
               type="submit"
-              disabled={isLoading || progressPercentage < 100}
+              disabled={isSubmitting || progressPercentage < 100}
               className="px-6 py-2.5 rounded-lg font-medium bg-third text-first hover:bg-emerald-400 dark:hover:bg-emerald-500 disabled:opacity-50 flex items-center gap-2"
             >
-              {isLoading ? (
+              {isSubmitting ? (
                 <>
                   <Loader className="w-4 h-4 animate-spin" />
                   Đang lưu...
                 </>
               ) : (
-                "Lưu"
+                'Lưu'
               )}
             </button>
           </div>
@@ -447,7 +504,7 @@ export default function TempAbsence() {
 interface FormFieldProps {
   label: string;
   required?: boolean;
-  type: "text" | "date" | "textarea";
+  type: 'text' | 'date' | 'textarea';
   value: string;
   onChange: (value: string) => void;
   error?: string;
@@ -470,7 +527,7 @@ function FormField({
   const baseClasses = `
     w-full px-4 py-2.5 rounded-lg
     bg-white dark:bg-transparent dark:border
-    border ${error ? "border-red-500" : "border-second/40 dark:border-second/30"}
+    border ${error ? 'border-red-500' : 'border-second/40 dark:border-second/30'}
     text-first dark:text-darkmodetext
     placeholder:text-second dark:placeholder:text-darkmodetext/40
     focus:outline-none focus:ring-1 focus:ring-selectring transition
@@ -484,7 +541,7 @@ function FormField({
           {required && <span className="text-red-500"> *</span>}
         </label>
       )}
-      {type === "textarea" ? (
+      {type === 'textarea' ? (
         <textarea
           value={value}
           onChange={(e) => onChange(e.target.value)}

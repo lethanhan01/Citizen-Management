@@ -19,3 +19,17 @@ export async function deleteTempResidence(id: string) {
   const resp = await apiClient.delete(`/api/v1/tam-tru-vang/${id}`);
   return resp.data?.data ?? null;
 }
+
+export type TempAbsencePayload = {
+  household_no: string;
+  citizen_id: string;
+  from_date: string;
+  to_date: string;
+  note?: string;
+  registered_by_person_id?: number;
+};
+
+export async function createTempAbsence(payload: TempAbsencePayload) {
+  const resp = await apiClient.post("/api/v1/tam-vang", payload);
+  return resp.data?.tempResidence ?? null;
+}
