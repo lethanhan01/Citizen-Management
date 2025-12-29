@@ -104,7 +104,7 @@ const logDeathEvent = async (personId, deathData, userId) => {
 const logMoveEvent = async (personId, moveData, userId) => {
     return await createPersonEvent({
         person_id: personId,
-        event_type: moveData.old_household_id ? "moved_out" : "moved_in",
+        event_type: moveData.old_household_id ? "move_out" : "move_in",
         event_date: moveData.move_date || new Date(),
         place_or_destination: moveData.destination,
         old_household_id: moveData.old_household_id,
