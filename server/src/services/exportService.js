@@ -6,6 +6,7 @@ import db from "../models/index.js";
 const Payment = db.Payment;
 const Household = db.Household;
 const FeeRate = db.FeeRate;
+const Person = db.Person;
 
 // Hàm hỗ trợ format tiền tệ VNĐ
 const formatCurrency = (amount) => {
@@ -310,7 +311,17 @@ const exportSingleReceipt = async (paymentId) => {
   // A. Lấy dữ liệu
   const payment = await Payment.findByPk(paymentId, {
     include: [
-      { model: Household, as: "household" },
+      {
+        model: Household,
+        as: "household",
+        include: [
+          {
+            model: Person,
+            as: "headPerson", // Đảm bảo alias này khớp với định nghĩa trong model Household
+            attributes: ["full_name"],
+          },
+        ],
+      },
       { model: FeeRate, as: "feeRate" },
     ],
   });
@@ -321,7 +332,7 @@ const exportSingleReceipt = async (paymentId) => {
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet("Phieu_Thu");
 
-  // Cấu hình trang in
+  /// Cấu hình trang in
   worksheet.pageSetup.paperSize = 9; // A4
   worksheet.pageSetup.margins = {
     left: 0.7,
@@ -334,21 +345,18 @@ const exportSingleReceipt = async (paymentId) => {
   let currentRow = 1;
 
   // 1. Header Đơn vị & Mẫu số
-  // worksheet.mergeCells(`A${currentRow}:C${currentRow}`);
   const cellA1 = worksheet.getCell(`A${currentRow}`);
-  cellA1.value = "Đơn vị: Tổ Dân Phố (Demo)";
+  cellA1.value = "Đơn vị: Tổ Dân Phố";
   cellA1.font = { bold: true, name: "Times New Roman", size: 11 };
 
-  // worksheet.mergeCells(`E${currentRow}:F${currentRow}`);
   const cellE1 = worksheet.getCell(`G${currentRow}`);
   cellE1.value = "Mẫu số 06 - TT";
   cellE1.font = { bold: true, name: "Times New Roman", size: 11 };
-  cellE1.alignment = { horizontal: "right" }; // Căn phải cho mẫu số
+  cellE1.alignment = { horizontal: "right" };
 
   currentRow += 2; // Cách dòng
 
   // 2. Tiêu đề Phiếu
-  // worksheet.mergeCells(`A${currentRow}:F${currentRow}`);
   const titleCell = worksheet.getCell(`D${currentRow}`);
   titleCell.value = "PHIẾU THU TIỀN";
   titleCell.font = { size: 16, bold: true, name: "Times New Roman" };
@@ -379,10 +387,16 @@ const exportSingleReceipt = async (paymentId) => {
     currentRow++;
   };
 
-  writeLine(
-    "Họ và tên người nộp:",
-    `${payment.household.household_no} (Chủ hộ)`
-  );
+  // Lấy tên chủ hộ an toàn
+  const headName = payment.household.headPerson
+    ? payment.household.headPerson.full_name
+    : "Chưa cập nhật chủ hộ";
+
+  // Dòng 1: Chủ hộ
+  writeLine("Chủ hộ:", headName);
+
+  // Dòng 2: Mã hộ (xuống dòng dưới chủ hộ)
+  writeLine("Mã hộ:", payment.household.household_no);
   writeLine("Địa chỉ:", payment.household.address);
   writeLine("Lý do nộp:", `Đóng khoản thu: ${payment.feeRate.item_type}`);
 
