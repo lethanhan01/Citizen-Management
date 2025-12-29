@@ -379,14 +379,6 @@ export default function TempResidence() {
           <button
             type="button"
             onClick={(e) => handleCancel(e)}
-            onClickCapture={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-            }}
-            onMouseDown={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-            }}
             disabled={isLoading}
             className="
               px-6 py-2.5 rounded-lg font-medium

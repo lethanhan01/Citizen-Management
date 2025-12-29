@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Loader, Search } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
@@ -51,6 +51,7 @@ const REQUIRED_FIELDS = [
 
 export default function TempAbsence() {
   const navigate = useNavigate();
+  const topRef = useRef<HTMLDivElement>(null);
   const token = useAuthStore((s) => s.token);
   const persistedToken = useMemo(
     () => token || localStorage.getItem('token'),
@@ -82,7 +83,7 @@ export default function TempAbsence() {
   // Form
   // const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
-  const [formData, setFormData] = useState<FormData>({
+  const createInitialFormData = (): FormData => ({
     fullName: '',
     dateOfBirth: '',
     cccd: '',
@@ -93,6 +94,7 @@ export default function TempAbsence() {
     tempAbsenceToDate: '',
     reason: '',
   });
+  const [formData, setFormData] = useState<FormData>(createInitialFormData());
 
   // Fetch citizens via store (shared with CitizenList)
   const params = useCitizenListParams({
@@ -223,12 +225,34 @@ export default function TempAbsence() {
     }
   };
 
+  const resetForm = () => {
+    setFormData(createInitialFormData());
+    setErrors({});
+    setSelectedCitizen(null);
+  };
+
   const handleCancel = () => {
-    navigate(-1);
+    // Confirm before clearing all inputs and states
+    const ok = window.confirm("Bạn có chắc muốn xóa toàn bộ dữ liệu đã nhập?");
+    if (!ok) return;
+    resetForm();
+    const scrollToTop = () => {
+      // Prefer scrolling the container that owns this page
+      topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      // Fallbacks for various scroll containers
+      if (typeof window !== "undefined") {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+      const se = (document.scrollingElement || document.documentElement) as any;
+      se?.scrollTo?.({ top: 0, behavior: "smooth" });
+      if (se) se.scrollTop = 0;
+    };
+    // Wait for DOM to settle after reset, then scroll
+    window.requestAnimationFrame(scrollToTop);
   };
 
   return (
-    <div className="space-y-6">
+    <div ref={topRef} className="space-y-6">
       {/* --- TOASTER --- */}
       <Toaster
         position="top-right"
