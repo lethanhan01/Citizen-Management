@@ -16,6 +16,10 @@ export interface Citizen {
   householdCode: string;
   address: string;
   status: ResidencyStatus;
+  start_date: string;
+  end_date: string;
+  ethnicity: string;
+  hometown: string;
 
   nationality?: string;
   occupation?: string;

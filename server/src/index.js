@@ -6,6 +6,7 @@ import db from "./models/index.js";
 import initWebRoutes from "./routes/web.js";
 import errorHandler from "./middleware/errorHandler.js";
 import "dotenv/config";
+import { initScheduledJobs } from "./services/schedulerService.js";
 
 const app = express();
 const pool = getPool();
@@ -58,6 +59,8 @@ initWebRoutes(app);
 
 // Global error handler (must be after routes)
 app.use(errorHandler);
+
+initScheduledJobs();
 
 const PORT = process.env.PORT || 5000;
 
