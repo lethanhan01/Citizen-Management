@@ -12,7 +12,7 @@ type Props = {
   filterStatus: "paid" | "pending" | "all"; // Nghiệp vụ thu phí
   setFilterStatus: (v: "paid" | "pending" | "all") => void;
 
-  resetPage: () => void; // Hàm reset về trang 1 khi filter
+  resetPage: () => void; 
 };
 
 export default function FeeFilterBar({
@@ -34,8 +34,6 @@ export default function FeeFilterBar({
           value={searchQuery}
           onChange={(e) => {
             setSearchQuery(e.target.value);
-            // Lưu ý: Logic debounce nằm ở parent (FixedFees), 
-            // ở đây ta chỉ update state input để gõ cho mượt
           }}
           className="
             w-full pl-10 pr-4 py-2.5 rounded-lg
@@ -49,7 +47,7 @@ export default function FeeFilterBar({
         <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-second dark:text-darkmodetext/60" />
       </div>
 
-      {/* 2. Filter Buttons (Giống design cũ nhưng code gọn hơn) */}
+      {/* 2. Filter Buttons */}
       <div className="flex gap-2 border border-second/40 dark:border-second/30 rounded-lg p-1 bg-white dark:bg-transparent">
         <button
           onClick={() => { setFilterStatus("all"); resetPage(); }}
@@ -76,7 +74,6 @@ export default function FeeFilterBar({
         value={sortBy}
         onChange={(e) => {
           setSortBy(e.target.value as any);
-          // Sort client-side không cần reset page, hoặc tùy logic của bạn
         }}
         className="
           px-4 py-2 rounded-lg text-sm font-medium
