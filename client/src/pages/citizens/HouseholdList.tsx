@@ -66,16 +66,43 @@ export default function HouseholdList() {
   const [selectedHousehold, setSelectedHousehold] = useState<Household | null>(
     null
   );
-  const { data, loading, error, fetchHouseholds } = useHouseholdStore();
+  const { data, loading, error } = useHouseholdStore();
+  const [allData, setAllData] = useState<any[]>([]);
+  const [allLoading, setAllLoading] = useState(false);
+  const [allError, setAllError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchHouseholds({ page: 1, limit: 500 });
-  }, [fetchHouseholds]);
+    const fetchAll = async () => {
+      setAllLoading(true);
+      setAllError(null);
+      try {
+        const limit = 500;
+        let page = 1;
+        const acc: any[] = [];
+        // Loop pages until fewer than limit results are returned
+        while (true) {
+          const resp = await HouseholdAPI.getHouseholds({ page, limit });
+          const arr = Array.isArray(resp) ? resp : Array.isArray(resp?.rows) ? resp.rows : [];
+          acc.push(...arr);
+          if (arr.length < limit) break;
+          page += 1;
+          // Safety stop to avoid infinite loops if backend misreports
+          if (page > 1000) break;
+        }
+        setAllData(acc);
+      } catch (e: any) {
+        setAllError(e?.message || "Không tải được toàn bộ hộ khẩu");
+      } finally {
+        setAllLoading(false);
+      }
+    };
+    fetchAll();
+  }, []);
 
   const sourceHouseholds: Household[] = useMemo(() => {
-    const arr = Array.isArray(data) ? data : [];
+    const arr = Array.isArray(allData) && allData.length > 0 ? allData : Array.isArray(data) ? data : [];
     return arr.map(toHousehold);
-  }, [data]);
+  }, [allData, data]);
 
   // Filter & Sort
   const filteredHouseholds = useMemo(() => {
@@ -205,15 +232,15 @@ export default function HouseholdList() {
 
         {/* Table Container */}
         <div className="flex-1 bg-card text-card-foreground border border-border rounded-xl shadow-sm overflow-hidden flex flex-col">
-          {loading ? (
+          {(allLoading || loading) ? (
             <div className="flex-1 flex items-center justify-center">
               <Loader className="w-8 h-8 text-third animate-spin" />
             </div>
-          ) : error ? (
+          ) : (allError || error) ? (
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center">
                 <p className="text-danger font-semibold">Đã xảy ra lỗi</p>
-                <p className="text-second dark:text-darkmodetext/70 mt-1">{error}</p>
+                <p className="text-second dark:text-darkmodetext/70 mt-1">{allError || error}</p>
               </div>
             </div>
           ) : paginatedHouseholds.length === 0 ? (

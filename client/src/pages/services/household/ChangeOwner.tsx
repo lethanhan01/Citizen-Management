@@ -77,15 +77,43 @@ export default function ChangeOwner() {
   const [isLoading, setIsLoading] = useState(false);
   const [detailLoading, setDetailLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [allData, setAllData] = useState<any[]>([]);
+  const [allLoading, setAllLoading] = useState(false);
+  const [allError, setAllError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Keep store fetch as fallback
     fetchHouseholds({ page: 1, limit: 500 });
+    // Fetch all pages locally
+    const fetchAll = async () => {
+      setAllLoading(true);
+      setAllError(null);
+      try {
+        const limit = 500;
+        let page = 1;
+        const acc: any[] = [];
+        while (true) {
+          const resp = await HouseholdAPI.getHouseholds({ page, limit });
+          const arr = Array.isArray(resp) ? resp : Array.isArray((resp as any)?.rows) ? (resp as any).rows : [];
+          acc.push(...arr);
+          if (arr.length < limit) break;
+          page += 1;
+          if (page > 1000) break; // safety stop
+        }
+        setAllData(acc);
+      } catch (e: any) {
+        setAllError(e?.message || "Không tải được toàn bộ hộ khẩu");
+      } finally {
+        setAllLoading(false);
+      }
+    };
+    fetchAll();
   }, [fetchHouseholds]);
 
   const sourceHouseholds: HouseholdItem[] = useMemo(() => {
-    const arr = Array.isArray(data) ? data : [];
+    const arr = Array.isArray(allData) && allData.length > 0 ? allData : Array.isArray(data) ? data : [];
     return arr.map(toHouseholdItem);
-  }, [data]);
+  }, [allData, data]);
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -193,7 +221,7 @@ export default function ChangeOwner() {
               </tr>
             </thead>
             <tbody>
-              {loading ? (
+              {(allLoading || loading) ? (
                 <tr>
                   <td className="py-4 text-center" colSpan={5}>
                     <span className="inline-flex items-center gap-2 text-second">
@@ -201,10 +229,10 @@ export default function ChangeOwner() {
                     </span>
                   </td>
                 </tr>
-              ) : error ? (
+              ) : (allError || error) ? (
                 <tr>
                   <td className="py-4 text-center text-red-500" colSpan={5}>
-                    {error}
+                    {allError || error}
                   </td>
                 </tr>
               ) : paginatedHouseholds.map((h) => (

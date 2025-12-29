@@ -19,7 +19,7 @@ type HistoryRow = {
 
 export default function HouseholdHistory() {
   const [params] = useSearchParams();
-  const initialId = params.get("id") || "";
+  const initialId = params.get("id") || params.get("household_no") || params.get("code") || "";
   const [householdId, setHouseholdId] = useState(initialId);
   const [rows, setRows] = useState<HistoryRow[]>([]);
   const [loading, setLoading] = useState(false);
@@ -54,10 +54,25 @@ export default function HouseholdHistory() {
       let idForQuery = raw.trim();
       const isNumeric = /^\d+$/.test(idForQuery);
       if (!isNumeric) {
-        // Treat input as household code, resolve to ID
-        const list = await HouseholdAPI.getHouseholds({ page: 1, limit: 500 });
-        const arr = Array.isArray(list) ? list : [];
-        const found = arr.find((h: any) => String(h?.household_no ?? h?.code ?? "").toLowerCase() === idForQuery.toLowerCase());
+        // Treat input as household code, resolve to ID across all pages
+        const limit = 500;
+        let page = 1;
+        const acc: any[] = [];
+        while (true) {
+          const resp = await HouseholdAPI.getHouseholds({ page, limit });
+          const arr = Array.isArray(resp)
+            ? resp
+            : Array.isArray((resp as any)?.rows)
+            ? (resp as any).rows
+            : [];
+          acc.push(...arr);
+          if (arr.length < limit) break;
+          page += 1;
+          if (page > 1000) break; // safety stop
+        }
+        const found = acc.find(
+          (h: any) => String(h?.household_no ?? h?.code ?? "").toLowerCase() === idForQuery.toLowerCase()
+        );
         if (!found) {
           throw new Error(`Không tìm thấy hộ khẩu với mã: ${idForQuery}`);
         }
