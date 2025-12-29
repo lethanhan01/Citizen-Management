@@ -91,7 +91,7 @@ export default function FixedFees() {
     }
   }, [fees, selectedRateId]);
 
-  // 3. FETCH DATA (QUAN TRỌNG: Lấy hết dữ liệu về 1 lần)
+  // 3. FETCH DATA (Lấy hết dữ liệu về 1 lần)
   useEffect(() => {
     if (selectedRateId) {
       fetchPayments({
@@ -140,7 +140,6 @@ export default function FixedFees() {
       if (statusFilter === 'paid') {
         data = data.filter((h) => h.status === 'paid');
       } else {
-        // "pending" ở UI tương ứng với chưa thu (pending, partial, unpaid)
         data = data.filter((h) => h.status !== 'paid');
       }
     }
@@ -319,7 +318,7 @@ export default function FixedFees() {
               <ChevronRight className="w-5 h-5" />
             )}
 
-            {/* ✅ Dropdown chọn khoản thu */}
+            {/* Dropdown chọn khoản thu */}
             <select
               value={selectedRateId ?? ""}
               onClick={(e) => e.stopPropagation()}
@@ -386,113 +385,6 @@ export default function FixedFees() {
                 setFilterStatus={setStatusFilter}
                 resetPage={() => setCurrentPage(1)}
               />
-
-              {/* TABLE */}
-              {/* <div className="overflow-x-auto border border-border rounded-t-lg min-h-[300px]">
-                <table className="min-w-full text-sm">
-                  <thead className="bg-muted/10">
-                    <tr className="text-left">
-                      <th className="py-2 px-3 text-foreground">Mã hộ</th>
-                      <th className="py-2 px-3 text-foreground">CCCD chủ hộ</th>
-                      <th className="py-2 px-3 text-foreground">Chủ hộ</th>
-                      <th className="py-2 px-3 text-foreground">Địa chỉ</th>
-                      <th className="py-2 px-3 text-foreground">Số người</th>
-                      <th className="py-2 px-3 text-foreground">Cần thu</th>
-                      <th className="py-2 px-3 text-foreground">Trạng thái</th>
-                      <th className="py-2 px-3 text-foreground">Ngày thu</th>
-                      <th className="py-2 px-3 text-foreground">Hành động</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {loading ? (
-                      <tr>
-                        <td colSpan={9} className="py-12 text-center">
-                          <div className="flex justify-center items-center gap-2">
-                            <Loader className="animate-spin w-5 h-5" /> Đang tải
-                            dữ liệu...
-                          </div>
-                        </td>
-                      </tr>
-                    ) : paginatedHouseholds.length > 0 ? (
-                      paginatedHouseholds.map((h) => (
-                        <tr
-                          key={h.paymentId}
-                          className="border-t border-border hover:bg-muted/5"
-                        >
-                          <td className="py-2 px-3 text-foreground">
-                            {h.householdCode}
-                          </td>
-                          <td className="py-2 px-3 text-foreground">
-                            {h.headCCCD}
-                          </td>
-                          <td className="py-2 px-3 text-foreground">
-                            {h.headName}
-                          </td>
-                          <td className="py-2 px-3 text-foreground">
-                            {h.address}
-                          </td>
-                          <td className="py-2 px-3 text-foreground">
-                            {h.memberCount}
-                          </td>
-                          <td className="py-2 px-3 text-foreground font-semibold">
-                            {h.totalAmount.toLocaleString()} VND
-                          </td>
-                          <td className="py-2 px-3">
-                            {h.status === 'paid' && (
-                              <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                                Đã thu
-                              </span>
-                            )}
-                            {(h.status === 'pending' ||
-                              h.status === ('unpaid' as any)) && (
-                              <span className="px-2 py-1 text-xs rounded-full bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
-                                Chưa thu
-                              </span>
-                            )}
-                            {h.status === 'partial' && (
-                              <span className="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
-                                Nộp thiếu
-                              </span>
-                            )}
-                          </td>
-                          <td className="py-2 px-3 text-foreground">
-                            {h.paidDate || '-'}
-                          </td>
-                          <td className="py-2 px-3">
-                            {h.status === 'paid' ? (
-                              <button
-                                onClick={() => handlePrint(h)}
-                                className="p-2 rounded-lg border border-input hover:bg-muted/10"
-                              >
-                                <Printer className="w-4 h-4" />
-                              </button>
-                            ) : (
-                              <button
-                                onClick={() => handleAddPayment(h)}
-                                className="p-2 rounded-lg border border-input hover:bg-emerald-400 dark:hover:bg-emerald-500 hover:border-emerald-300 dark:hover:border-emerald-400"
-                              >
-                                <Plus className="w-4 h-4" />
-                              </button>
-                            )}
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td
-                          colSpan={9}
-                          className="py-12 text-center text-muted-foreground"
-                        >
-                          {searchQuery
-                            ? 'Không tìm thấy kết quả phù hợp'
-                            : 'Danh sách trống'}
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div> */}
               {/* Table */}
               <div className="overflow-x-auto border border-border rounded-t-lg min-h-[300px]">
                 <table className="min-w-full text-sm">
@@ -503,7 +395,6 @@ export default function FixedFees() {
                       <th className="py-2 px-3 text-foreground">Chủ hộ</th>
                       <th className="py-2 px-3 text-foreground">Địa chỉ</th>
                       <th className="py-2 px-3 text-foreground">Số người</th>
-                      {/* SỬA TIÊU ĐỀ CỘT TIỀN */}
                       <th className="py-2 px-3 text-foreground">Cần thu</th>
                       <th className="py-2 px-3 text-foreground">Trạng thái</th>
                       <th className="py-2 px-3 text-foreground">Ngày thu</th>
@@ -744,75 +635,6 @@ export default function FixedFees() {
         </div>
       )}
 
-
-      {/* {showPaymentModal && selectedHousehold && currentCategory && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-          onClick={() => setShowPaymentModal(false)}
-        >
-          <div
-            className="bg-card text-card-foreground rounded-xl shadow-2xl p-6 w-full max-w-md"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">Xác nhận thu tiền</h3>
-              <button onClick={() => setShowPaymentModal(false)}>
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="space-y-4">
-              <div className="p-3 bg-muted/20 rounded-lg space-y-1">
-                <p className="text-sm opacity-70">
-                  Mã hộ: {selectedHousehold.householdCode}
-                </p>
-                <p className="font-semibold">{selectedHousehold.headName}</p>
-                <p className="text-sm opacity-70">
-                  Số người: {selectedHousehold.memberCount}
-                </p>
-              </div>
-              <div className="p-4 bg-primary/10 rounded-lg">
-                <div className="flex justify-between mb-1">
-                  <span className="text-sm opacity-70">Mức thu:</span>
-                  <span>
-                    {Number(currentCategory.amount).toLocaleString()} VND
-                  </span>
-                </div>
-                <div className="flex justify-between mb-2">
-                  <span className="text-sm opacity-70">Nhân khẩu:</span>
-                  <span>× {selectedHousehold.memberCount}</span>
-                </div>
-                <div className="flex justify-between pt-2 border-t border-primary/20">
-                  <span className="font-semibold">Tổng tiền:</span>
-                  <span className="text-lg font-bold text-primary">
-                    {selectedHousehold.totalAmount.toLocaleString()} VND
-                  </span>
-                </div>
-              </div>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setShowPaymentModal(false)}
-                  className="flex-1 px-4 py-2 border rounded-lg hover:bg-muted/10"
-                >
-                  Hủy
-                </button>
-                <button
-                  onClick={handleSavePayment}
-                  disabled={isProcessing}
-                  className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg flex justify-center gap-2 items-center"
-                >
-                  {isProcessing ? (
-                    <Loader className="animate-spin w-4 h-4" />
-                  ) : (
-                    <DollarSign className="w-4 h-4" />
-                  )}{' '}
-                  Xác nhận
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )} */}
-
       {/* PAYMENT MODAL */}
       {showPaymentModal && selectedHousehold && currentCategory && (
         <div
@@ -861,26 +683,6 @@ export default function FixedFees() {
                   onChange={(e) => setPaymentAmount(Number(e.target.value))}
                   className="w-full px-3 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition font-semibold text-lg"
                 />
-
-                {/* Gợi ý trạng thái dựa trên số tiền nhập */}
-                {/* <div className="mt-2 text-sm">
-                  {paymentAmount >= selectedHousehold.totalAmount ? (
-                    <span className="text-green-600 flex items-center gap-1">
-                      ✓ Đủ tiền (Hoàn tất)
-                    </span>
-                  ) : (
-                    <span className="text-yellow-600 flex items-center gap-1">
-                      ⚠ Còn thiếu:{' '}
-                      <b>
-                        {(
-                          selectedHousehold.totalAmount - paymentAmount
-                        ).toLocaleString()}{' '}
-                        VND
-                      </b>{' '}
-                      (Nộp 1 phần)
-                    </span>
-                  )}
-                </div> */}
                 {/* Gợi ý tính toán */}
                 <div className="mt-2 text-xs">
                   {(() => {
