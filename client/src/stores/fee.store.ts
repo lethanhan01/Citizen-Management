@@ -77,11 +77,13 @@ interface FeeState {
   fetchAllFees: () => Promise<void>;
   createFeeWave: (payload: {
     item_type: string;
-    unit_type: string;
+    unit_type: 'per_person' | 'per_household';
     amount: number;
     effective_from: string;
+    effective_to?: string | null;
     note?: string;
   }) => Promise<boolean>;
+
   deleteFeeWave: (id: string | number) => Promise<boolean>;
 
   fetchPayments: (params?: PaymentSearchParams) => Promise<void>;

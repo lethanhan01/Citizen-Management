@@ -4,10 +4,9 @@ import { useState, useEffect, useMemo } from 'react';
 import {
   ChevronDown,
   ChevronRight,
-  Edit,
+  //Edit,
   Plus,
   X,
-  Save,
   Loader,
   DollarSign,
   Printer,
@@ -43,21 +42,32 @@ export default function FixedFees() {
     fetchAllFees,
     fetchPayments,
     confirmPayment,
+    createFeeWave,
   } = useFeeStore();
+
 
   // --- LOCAL STATE ---
   const [isExpanded, setIsExpanded] = useState(true);
-  const [showRateModal, setShowRateModal] = useState(false);
+  //const [showRateModal, setShowRateModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   const [paymentAmount, setPaymentAmount] = useState<number>(0); // Số tiền thực nộp
   const [paymentNote, setPaymentNote] = useState<string>('');
 
   const [selectedRateId, setSelectedRateId] = useState<number | null>(null);
-  const [editingRate, setEditingRate] = useState(0);
+  //const [editingRate, setEditingRate] = useState(0);
   const [selectedHousehold, setSelectedHousehold] =
     useState<HouseholdFeeUI | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showCreateFeeModal, setShowCreateFeeModal] = useState(false);
+
+  const [newItemType, setNewItemType] = useState('');
+  const [newUnitType, setNewUnitType] =
+    useState<'per_person' | 'per_household'>('per_person');
+  const [newAmount, setNewAmount] = useState<number>(0);
+  const [newEffectiveFrom, setNewEffectiveFrom] = useState('');
+  const [newEffectiveTo, setNewEffectiveTo] = useState<string>('');
+  const [newNote, setNewNote] = useState('');
 
   // --- CLIENT-SIDE FILTER STATE ---
   const [searchQuery, setSearchQuery] = useState('');
@@ -77,7 +87,7 @@ export default function FixedFees() {
     if (fees.length > 0 && !selectedRateId) {
       const newestFee = fees[0];
       setSelectedRateId(newestFee.rate_id);
-      setEditingRate(newestFee.amount);
+      //setEditingRate(newestFee.amount);
     }
   }, [fees, selectedRateId]);
 
@@ -186,16 +196,56 @@ export default function FixedFees() {
   }, [rawHouseholds]);
 
   // --- HANDLERS ---
-  const handleSaveRate = async () => {
+  // const handleSaveRate = async () => {
+  //   setIsProcessing(true);
+  //   try {
+  //     await new Promise((r) => setTimeout(r, 1000));
+  //     toast.success('Cập nhật mức thu thành công (Demo)');
+  //     setShowRateModal(false);
+  //   } finally {
+  //     setIsProcessing(false);
+  //   }
+  // };
+  // tạo khoản thu mới
+  async function handleCreateFeeWave() {
+    if (!newItemType.trim() || !newEffectiveFrom || !newAmount) {
+      toast.error('Vui lòng nhập Tên khoản thu, Ngày bắt đầu và Số tiền');
+      return;
+    }
+
     setIsProcessing(true);
     try {
-      await new Promise((r) => setTimeout(r, 1000));
-      toast.success('Cập nhật mức thu thành công (Demo)');
-      setShowRateModal(false);
+      const ok = await createFeeWave({
+        item_type: newItemType.trim(),
+        unit_type: newUnitType,
+        amount: Number(newAmount),
+        effective_from: newEffectiveFrom,
+        effective_to: newEffectiveTo ? newEffectiveTo : null,
+        note: newNote.trim() ? newNote.trim() : undefined,
+      });
+
+      if (ok) {
+        toast.success('Tạo khoản thu thành công!');
+        setShowCreateFeeModal(false);
+
+        // reset form
+        setNewItemType('');
+        setNewUnitType('per_person');
+        setNewAmount(0);
+        setNewEffectiveFrom('');
+        setNewEffectiveTo('');
+        setNewNote('');
+
+        // refresh list & chọn khoản mới nhất
+        await fetchAllFees();
+        const newest = useFeeStore.getState().fees?.[0];
+        if (newest?.rate_id) setSelectedRateId(newest.rate_id);
+      }
     } finally {
       setIsProcessing(false);
     }
-  };
+  }
+
 
   const handleAddPayment = (household: HouseholdFeeUI) => {
     setSelectedHousehold(household);
@@ -247,6 +297,13 @@ export default function FixedFees() {
       <h2 className="text-2xl font-bold text-foreground">
         Danh sách khoản thu phí cố định
       </h2>
+      <button
+        onClick={() => setShowCreateFeeModal(true)}
+        className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary text-primary-foreground"
+      >
+        <Plus className="w-4 h-4" />
+        Thêm khoản thu
+      </button>
 
       {/* Accordion */}
       <div className="bg-card text-card-foreground border border-border rounded-xl shadow-sm overflow-hidden">
@@ -286,19 +343,6 @@ export default function FixedFees() {
             </select>
 
           </div>
-
-          {currentCategory && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setEditingRate(currentCategory?.amount || 0);
-                setShowRateModal(true);
-              }}
-              className="p-2 rounded-lg border border-input hover:bg-muted/10"
-            >
-              <Edit className="w-4 h-4 text-first dark:text-darkmodetext" />
-            </button>
-          )}
         </div>
 
         {/* Content */}
@@ -597,57 +641,109 @@ export default function FixedFees() {
       </div>
 
       {/* MODALS */}
-      {showRateModal && currentCategory && (
+      {showCreateFeeModal && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-          onClick={() => setShowRateModal(false)}
+          onClick={() => setShowCreateFeeModal(false)}
         >
           <div
-            className="bg-card text-card-foreground rounded-xl shadow-2xl p-6 w-full max-w-md"
+            className="bg-card w-full max-w-lg rounded-2xl p-6"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">Điều chỉnh mức thu</h3>
-              <button onClick={() => setShowRateModal(false)}>
+              <h3 className="text-lg font-semibold">Tạo khoản thu mới</h3>
+              <button onClick={() => setShowCreateFeeModal(false)}>
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <div className="space-y-4">
+
+            <div className="space-y-3">
               <div>
-                <label className="block text-sm font-medium mb-2">
-                  Mức thu (VND / tháng / người)
-                </label>
+                <label className="text-sm">Tên khoản thu</label>
                 <input
-                  type="number"
-                  value={editingRate}
-                  onChange={(e) => setEditingRate(Number(e.target.value))}
-                  className="w-full px-3 py-2 rounded-lg border bg-card"
+                  value={newItemType}
+                  onChange={(e) => setNewItemType(e.target.value)}
+                  className="w-full mt-1 px-3 py-2 rounded-lg border bg-background"
+                  placeholder="Ví dụ: Phí vệ sinh 2027"
                 />
               </div>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setShowRateModal(false)}
-                  className="flex-1 px-4 py-2 border rounded-lg hover:bg-muted/10"
+
+              <div>
+                <label className="text-sm">Đơn vị tính</label>
+                <select
+                  value={newUnitType}
+                  onChange={(e) =>
+                    setNewUnitType(e.target.value as 'per_person' | 'per_household')
+                  }
+                  className="w-full mt-1 px-3 py-2 rounded-lg border bg-background"
                 >
-                  Hủy
-                </button>
-                <button
-                  onClick={handleSaveRate}
-                  disabled={isProcessing}
-                  className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg flex justify-center gap-2 items-center"
-                >
-                  {isProcessing ? (
-                    <Loader className="animate-spin w-4 h-4" />
-                  ) : (
-                    <Save className="w-4 h-4" />
-                  )}{' '}
-                  Lưu
-                </button>
+                  <option value="per_person">Theo đầu người (per_person)</option>
+                  <option value="per_household">Theo hộ (per_household)</option>
+                </select>
               </div>
+
+              <div>
+                <label className="text-sm">Đơn giá</label>
+                <input
+                  type="number"
+                  value={newAmount}
+                  onChange={(e) => setNewAmount(Number(e.target.value))}
+                  className="w-full mt-1 px-3 py-2 rounded-lg border bg-background"
+                  placeholder="6000"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-sm">Hiệu lực từ</label>
+                  <input
+                    type="date"
+                    value={newEffectiveFrom}
+                    onChange={(e) => setNewEffectiveFrom(e.target.value)}
+                    className="w-full mt-1 px-3 py-2 rounded-lg border bg-background"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm">Hiệu lực đến (tuỳ chọn)</label>
+                  <input
+                    type="date"
+                    value={newEffectiveTo}
+                    onChange={(e) => setNewEffectiveTo(e.target.value)}
+                    className="w-full mt-1 px-3 py-2 rounded-lg border bg-background"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-sm">Ghi chú</label>
+                <input
+                  value={newNote}
+                  onChange={(e) => setNewNote(e.target.value)}
+                  className="w-full mt-1 px-3 py-2 rounded-lg border bg-background"
+                  placeholder="Thu theo nghị quyết tổ dân phố"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-2 mt-6">
+              <button
+                onClick={() => setShowCreateFeeModal(false)}
+                className="flex-1 px-4 py-2 rounded-lg border"
+              >
+                Huỷ
+              </button>
+              <button
+                onClick={handleCreateFeeWave}
+                disabled={isProcessing}
+                className="flex-1 px-4 py-2 rounded-lg bg-primary text-primary-foreground"
+              >
+                {isProcessing ? 'Đang tạo...' : 'Tạo'}
+              </button>
             </div>
           </div>
         </div>
       )}
+
 
       {/* {showPaymentModal && selectedHousehold && currentCategory && (
         <div
