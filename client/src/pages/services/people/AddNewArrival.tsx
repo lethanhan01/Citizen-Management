@@ -37,10 +37,8 @@ const REQUIRED_FIELDS: (keyof FormData)[] = [
   "dateOfBirth",
   "gender",
   "nationality",
-  "occupation",
-  "workplace",
-  "cmndCccdIssueDate",
-  "cmndCccdIssuePlace",
+  "birthplace",
+  "hometown",
   "address",
   "permanentResidenceDate",
   "relationshipToHead",
@@ -175,7 +173,7 @@ export default function AddNewArrival() {
       }
 
       // 2) Map form fields to backend payload
-      const event_type = formData.arrivalType === "newborn" ? "birth" : "moved_in";
+      const event_type = formData.arrivalType === "newborn" ? "birth" : "move_in";
       const genderPayload =
         formData.gender === "Nam"
           ? "male"
@@ -344,12 +342,14 @@ export default function AddNewArrival() {
             />
             <FormField
               label="Nơi sinh"
+              required
               value={formData.birthplace}
               onChange={(v) => handleInputChange("birthplace", v)}
               placeholder="Nhập nơi sinh"
             />
             <FormField
               label="Quê quán"
+              required
               value={formData.hometown}
               onChange={(v) => handleInputChange("hometown", v)}
               placeholder="Nhập quê quán"
@@ -415,7 +415,6 @@ export default function AddNewArrival() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
               label="Nghề nghiệp"
-              required
               value={formData.occupation}
               onChange={(v) => handleInputChange("occupation", v)}
               error={errors.occupation}
@@ -423,7 +422,6 @@ export default function AddNewArrival() {
             />
             <FormField
               label="Nơi làm việc"
-              required
               value={formData.workplace}
               onChange={(v) => handleInputChange("workplace", v)}
               error={errors.workplace}
@@ -438,7 +436,6 @@ export default function AddNewArrival() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
               label="Ngày cấp CCCD/CMND"
-              required
               type="date"
               value={formData.cmndCccdIssueDate}
               onChange={(v) => handleInputChange("cmndCccdIssueDate", v)}
@@ -446,7 +443,6 @@ export default function AddNewArrival() {
             />
             <FormField
               label="Nơi cấp"
-              required
               value={formData.cmndCccdIssuePlace}
               onChange={(v) => handleInputChange("cmndCccdIssuePlace", v)}
               error={errors.cmndCccdIssuePlace}
