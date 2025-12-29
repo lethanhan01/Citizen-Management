@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
-import { Search, Loader, X } from "lucide-react";
-import { useHouseholdStore } from "@/stores/household.store";
+import { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
+import { Loader, X, RefreshCw } from "lucide-react";
 import * as HouseholdAPI from "@/api/household.api";
 import { toast } from "react-hot-toast";
 
@@ -37,9 +37,11 @@ function toHouseholdItem(h: any): HouseholdItem {
 }
 
 export default function ChangeAddress() {
-  const [search, setSearch] = useState("");
-  const [households, setHouseholds] = useState<HouseholdItem[]>([]);
-  const [listLoading, setListLoading] = useState(false);
+  const [params] = useSearchParams();
+  const initialId = params.get("id") || params.get("household_no") || params.get("code") || "";
+  const [householdId, setHouseholdId] = useState(initialId);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [selectedHousehold, setSelectedHousehold] = useState<HouseholdItem | null>(null);
   const [formData, setFormData] = useState<FormData>({
     oldAddress: "",
@@ -49,52 +51,78 @@ export default function ChangeAddress() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const formRef = useRef<HTMLDivElement>(null);
 
-  // Load households from backend
-  useEffect(() => {
-    const loadHouseholds = async () => {
-      setListLoading(true);
-      try {
-        const list = await HouseholdAPI.getHouseholds({ page: 1, limit: 500 });
-        const arr = Array.isArray(list) ? list : Array.isArray(list?.rows) ? list.rows : [];
-        const mapped: HouseholdItem[] = arr.map(toHouseholdItem);
-        setHouseholds(mapped);
-      } catch (e: any) {
-        console.error("Error loading households:", e);
-        toast.error("Không tải được danh sách hộ khẩu");
-      } finally {
-        setListLoading(false);
+  // Fetch household by ID or code
+  const fetchHousehold = async (raw: string) => {
+    if (!raw.trim()) {
+      setError(null);
+      setSelectedHousehold(null);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    try {
+      let idForQuery = raw.trim();
+      const isNumeric = /^\d+$/.test(idForQuery);
+      
+      if (!isNumeric) {
+        // Treat input as household code, resolve to ID across all pages
+        const limit = 500;
+        let page = 1;
+        const acc: any[] = [];
+        while (true) {
+          const resp = await HouseholdAPI.getHouseholds({ page, limit });
+          const arr = Array.isArray(resp)
+            ? resp
+            : Array.isArray((resp as any)?.rows)
+            ? (resp as any).rows
+            : [];
+          acc.push(...arr);
+          if (arr.length < limit) break;
+          page += 1;
+          if (page > 1000) break; // safety stop
+        }
+        const found = acc.find(
+          (h: any) => String(h?.household_no ?? h?.code ?? "").toLowerCase() === idForQuery.toLowerCase()
+        );
+        if (!found) {
+          throw new Error(`Không tìm thấy hộ khẩu với mã: ${idForQuery}`);
+        }
+        idForQuery = String(found?.household_id ?? found?.id);
       }
-    };
-    loadHouseholds();
-  }, []);
 
-  // Filter households by search query (mã hộ, tên chủ hộ, CCCD chủ hộ)
-  const filteredHouseholds = useMemo(() => {
-    const term = search.trim().toLowerCase();
-    if (!term) return [];
-    return households.filter((h) =>
-      h.code.toLowerCase().includes(term) ||
-      h.headName.toLowerCase().includes(term) ||
-      h.headCCCD.toLowerCase().includes(term)
-    );
-  }, [search, households]);
+      // Fetch household detail
+      const detail = await HouseholdAPI.getHouseholdById(idForQuery);
+      if (!detail) {
+        throw new Error("Không tìm thấy thông tin hộ khẩu");
+      }
 
-  // Show list only when search has value
-  const showList = search.trim().length > 0;
-
-  // Handle select household
-  const handleSelectHousehold = (household: HouseholdItem) => {
-    setSelectedHousehold(household);
-    setFormData({
-      oldAddress: household.address,
-      newAddress: "",
-    });
-    setErrors({});
-    // Scroll to form
-    setTimeout(() => {
-      formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 100);
+      const household = toHouseholdItem(detail);
+      setSelectedHousehold(household);
+      setFormData({
+        oldAddress: household.address,
+        newAddress: "",
+      });
+      setErrors({});
+      
+      // Scroll to form
+      setTimeout(() => {
+        formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 100);
+    } catch (e: any) {
+      setError(e?.message || "Không tìm thấy hộ khẩu");
+      setSelectedHousehold(null);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  useEffect(() => {
+    if (initialId) {
+      fetchHousehold(initialId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialId]);
 
   // Handle input change
   const handleInputChange = (field: keyof FormData, value: string) => {
@@ -141,15 +169,9 @@ export default function ChangeAddress() {
         address: formData.newAddress.trim(),
       });
       toast.success("Thay đổi địa chỉ thành công!");
-      
-      // Refresh households list
-      const list = await HouseholdAPI.getHouseholds({ page: 1, limit: 500 });
-      const arr = Array.isArray(list) ? list : Array.isArray(list?.rows) ? list.rows : [];
-      const mapped: HouseholdItem[] = arr.map(toHouseholdItem);
-      setHouseholds(mapped);
 
-      // Reset form
-      handleCancel();
+      // Refresh household data
+      await fetchHousehold(selectedHousehold.id);
     } catch (e: any) {
       console.error("Error updating address:", e);
       toast.error(e?.message || "Có lỗi xảy ra khi thay đổi địa chỉ");
@@ -166,65 +188,52 @@ export default function ChangeAddress() {
       newAddress: "",
     });
     setErrors({});
-    setSearch("");
+    setHouseholdId("");
+    setError(null);
     // Scroll to top
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   return (
     <div className="space-y-6">
-      {/* Search & List */}
+      {/* Search */}
       <div className="bg-card text-card-foreground border border-border rounded-xl p-6 shadow-sm">
-        <h3 className="text-lg font-semibold text-first dark:text-darkmodetext mb-4">
-          Tìm kiếm hộ khẩu
-        </h3>
-
-        <div className="relative mb-4">
-          <input
-            type="text"
-            placeholder="Tìm theo mã hộ, tên chủ hộ, CCCD chủ hộ..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-second/40 dark:border-second/30 bg-white dark:bg-transparent text-first dark:text-darkmodetext focus:outline-none focus:ring-1 focus:ring-selectring dark:placeholder:text-darkmodetext/50"
-          />
-          <Search className="w-5 h-5 absolute left-3 top-3 text-second dark:text-darkmodetext/50" />
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-first dark:text-darkmodetext">
+            Thay đổi địa chỉ hộ
+          </h3>
         </div>
 
-        {showList && (
-          listLoading ? (
-            <div className="flex items-center gap-2 text-second dark:text-darkmodetext/70">
-              <Loader className="w-4 h-4 animate-spin" />
-              Đang tải...
-            </div>
-          ) : (
-            <>
-              <div className="space-y-2 max-h-96 overflow-y-auto">
-                {filteredHouseholds.length === 0 ? (
-                  <p className="text-second dark:text-darkmodetext/60 text-sm">
-                    Không tìm thấy hộ khẩu
-                  </p>
-                ) : (
-                  filteredHouseholds.map((household) => (
-                    <button
-                      key={household.id}
-                      onClick={() => handleSelectHousehold(household)}
-                      className={`w-full p-3 rounded-lg border text-left transition ${
-                        selectedHousehold?.id === household.id
-                          ? "bg-slate-200 dark:bg-slate-600 border-slate-300 dark:border-slate-500 text-first dark:text-white"
-                          : "bg-white dark:bg-transparent border-second/20 dark:border-slate-600 text-first dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700"
-                      }`}
-                    >
-                      <div className="font-medium">{household.code}</div>
-                      <div className="text-sm opacity-70">
-                        Chủ hộ: {household.headName || "—"} | CCCD: {household.headCCCD || "—"}
-                      </div>
-                      <div className="text-sm opacity-70">Địa chỉ: {household.address}</div>
-                    </button>
-                  ))
-                )}
-              </div>
-            </>
-          )
+        <div className="flex flex-wrap items-center gap-3 mb-4">
+          <input
+            type="text"
+            placeholder="Nhập mã hộ (HK...) hoặc ID..."
+            value={householdId}
+            onChange={(e) => setHouseholdId(e.target.value)}
+            className="px-3 py-2 rounded-lg border border-input bg-card text-card-foreground focus:outline-none focus:ring-1 focus:ring-selectring"
+          />
+          <button
+            onClick={() => fetchHousehold(householdId)}
+            disabled={loading || !householdId}
+            className="px-4 py-2 rounded-lg bg-third text-first hover:bg-third/90 disabled:opacity-50 inline-flex items-center gap-2"
+          >
+            {loading ? (
+              <>
+                <Loader className="w-4 h-4 animate-spin" /> Đang tải...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="w-4 h-4" /> Tìm hộ khẩu
+              </>
+            )}
+          </button>
+          {error && <p className="text-sm text-red-500">{error}</p>}
+        </div>
+
+        {loading && !selectedHousehold && (
+          <div className="flex items-center gap-2 text-second dark:text-darkmodetext/70">
+            <Loader className="w-4 h-4 animate-spin" /> Đang tải thông tin hộ khẩu...
+          </div>
         )}
       </div>
 
