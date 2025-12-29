@@ -40,10 +40,20 @@ export async function exportFullFeeReport(id: string): Promise<ExportResult> {
   return { blob: resp.data as Blob, filename };
 }
 
-export async function exportReceipts(id: string): Promise<ExportResult> {
+export async function exportReceiptsForPrinting(id: string): Promise<ExportResult> {
   const resp = await apiClient.get(`/api/v1/export/thu-phi/phieu-thu/${id}`, {
     responseType: 'blob',
   });
   const filename = extractFilename((resp as any).headers?.['content-disposition']);
+  return { blob: resp.data as Blob, filename };
+}
+
+export async function exportSingleReceipt(paymentId: string | number): Promise<ExportResult> {
+  const resp = await apiClient.get(`/api/v1/export/thu-phi/hoa-don/${paymentId}`, {
+    responseType: 'blob',
+  });
+  
+  const filename = extractFilename((resp as any).headers?.['content-disposition']);
+  
   return { blob: resp.data as Blob, filename };
 }

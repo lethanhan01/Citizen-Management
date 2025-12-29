@@ -16,6 +16,7 @@ import { toast } from 'react-hot-toast';
 
 import PaginationBar from '@/components/PaginationBar';
 import FeeFilterBar from '@/components/FeeFilterBar';
+import { useExportStore } from '@/stores/export.store';
 
 // Interface cho UI
 interface HouseholdFeeUI {
@@ -45,7 +46,6 @@ export default function FixedFees() {
     createFeeWave,
   } = useFeeStore();
 
-
   // --- LOCAL STATE ---
   const [isExpanded, setIsExpanded] = useState(true);
   //const [showRateModal, setShowRateModal] = useState(false);
@@ -62,8 +62,9 @@ export default function FixedFees() {
   const [showCreateFeeModal, setShowCreateFeeModal] = useState(false);
 
   const [newItemType, setNewItemType] = useState('');
-  const [newUnitType, setNewUnitType] =
-    useState<'per_person' | 'per_household'>('per_person');
+  const [newUnitType, setNewUnitType] = useState<
+    'per_person' | 'per_household'
+  >('per_person');
   const [newAmount, setNewAmount] = useState<number>(0);
   const [newEffectiveFrom, setNewEffectiveFrom] = useState('');
   const [newEffectiveTo, setNewEffectiveTo] = useState<string>('');
@@ -76,6 +77,11 @@ export default function FixedFees() {
     'all',
   );
   const [currentPage, setCurrentPage] = useState(1);
+
+  const { exportReceipt } = useExportStore();
+  const [printingPaymentId, setPrintingPaymentId] = useState<number | null>(
+    null,
+  );
 
   // 1. Fetch danh sách khoản thu
   useEffect(() => {
@@ -245,7 +251,6 @@ export default function FixedFees() {
     }
   }
 
-
   const handleAddPayment = (household: HouseholdFeeUI) => {
     setSelectedHousehold(household);
     const remaining = household.totalAmount - household.paidAmount;
@@ -287,8 +292,17 @@ export default function FixedFees() {
     }
   };
 
-  const handlePrint = (household: HouseholdFeeUI) => {
-    toast.success(`Đang in hóa đơn cho hộ ${household.householdCode}`);
+  const handlePrint = async (household: HouseholdFeeUI) => {
+    if (printingPaymentId === household.paymentId) return;
+
+    try {
+      setPrintingPaymentId(household.paymentId);
+
+      await exportReceipt(household.paymentId);
+    } catch (error) {
+    } finally {
+      setPrintingPaymentId(null);
+    }
   };
 
   return (
@@ -320,15 +334,15 @@ export default function FixedFees() {
 
             {/* Dropdown chọn khoản thu */}
             <select
-              value={selectedRateId ?? ""}
+              value={selectedRateId ?? ''}
               onClick={(e) => e.stopPropagation()}
               onMouseDown={(e) => e.stopPropagation()}
               onChange={(e) => {
                 e.stopPropagation();
                 setCurrentPage(1);
-                setSearchQuery("");
-                setStatusFilter("all");
-                setSortBy("status");
+                setSearchQuery('');
+                setStatusFilter('all');
+                setSortBy('status');
                 setSelectedRateId(Number(e.target.value));
               }}
               className="px-2 py-1 rounded-md border border-input bg-card text-foreground"
@@ -338,9 +352,7 @@ export default function FixedFees() {
                   {f.item_type}
                 </option>
               ))}
-
             </select>
-
           </div>
         </div>
 
@@ -481,9 +493,16 @@ export default function FixedFees() {
                               {h.status === 'paid' ? (
                                 <button
                                   onClick={() => handlePrint(h)}
-                                  className="p-2 rounded-lg border border-input hover:bg-muted/10"
+                                  disabled={printingPaymentId === h.paymentId}
+                                  className="p-2 rounded-lg border border-input hover:bg-muted/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                                  title="In phiếu thu"
                                 >
-                                  <Printer className="w-4 h-4" />
+                                  {/* Nếu đang in dòng này thì hiện Loader, không thì hiện Printer */}
+                                  {printingPaymentId === h.paymentId ? (
+                                    <Loader className="w-4 h-4 animate-spin text-primary" />
+                                  ) : (
+                                    <Printer className="w-4 h-4" />
+                                  )}
                                 </button>
                               ) : (
                                 <button
@@ -564,11 +583,15 @@ export default function FixedFees() {
                 <select
                   value={newUnitType}
                   onChange={(e) =>
-                    setNewUnitType(e.target.value as 'per_person' | 'per_household')
+                    setNewUnitType(
+                      e.target.value as 'per_person' | 'per_household',
+                    )
                   }
                   className="w-full mt-1 px-3 py-2 rounded-lg border bg-background"
                 >
-                  <option value="per_person">Theo đầu người (per_person)</option>
+                  <option value="per_person">
+                    Theo đầu người (per_person)
+                  </option>
                   <option value="per_household">Theo hộ (per_household)</option>
                 </select>
               </div>
