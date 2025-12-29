@@ -7,6 +7,124 @@ const Household = db.Household;
 const HouseholdMembership = db.HouseholdMembership;
 const HouseholdHistory = db.HouseholdHistory;
 const PersonEvent = db.PersonEvent;
+const TempResidence = db.TempResidence;
+
+// const getAllNhanKhau = async ({
+//   page = 1,
+//   limit = 20,
+//   search,
+//   gender,
+//   residency_status,
+//   minAge,
+//   maxAge,
+//   sortBy = "created_at",
+//   sortOrder = "DESC",
+// }) => {
+//   const offset = (page - 1) * limit;
+
+//   const whereConditions = {};
+
+//   if (search) {
+//     whereConditions[Op.or] = [
+//       { full_name: { [Op.iLike]: `%${search}%` } },
+//       { alias: { [Op.iLike]: `%${search}%` } },
+//       { citizen_id_num: { [Op.iLike]: `%${search}%` } },
+//     ];
+//   }
+
+//   if (gender) {
+//     whereConditions.gender = gender;
+//   }
+//   if (residency_status) {
+//     whereConditions.residency_status = residency_status;
+//   }
+
+//   if (minAge !== undefined || maxAge !== undefined) {
+//     const currentYear = new Date().getFullYear();
+
+//     if (minAge !== undefined && maxAge !== undefined) {
+//       const maxBirthYear = currentYear - minAge;
+//       const minBirthYear = currentYear - maxAge;
+//       whereConditions.dob = {
+//         [Op.between]: [
+//           new Date(`${minBirthYear}-01-01`),
+//           new Date(`${maxBirthYear}-12-31`),
+//         ],
+//       };
+//     } else if (minAge !== undefined) {
+//       const maxBirthYear = currentYear - minAge;
+//       whereConditions.dob = {
+//         [Op.lte]: new Date(`${maxBirthYear}-12-31`),
+//       };
+//     } else if (maxAge !== undefined) {
+//       const minBirthYear = currentYear - maxAge;
+//       whereConditions.dob = {
+//         [Op.gte]: new Date(`${minBirthYear}-01-01`),
+//       };
+//     }
+//   }
+
+//   const { count, rows } = await Person.findAndCountAll({
+//     where: whereConditions,
+//     limit,
+//     offset,
+//     order: [[sortBy, sortOrder]],
+//     attributes: [
+//       "person_id",
+//       "full_name",
+//       "alias",
+//       "gender",
+//       "residency_status",
+//       "dob",
+//       "birthplace",
+//       "ethnicity",
+//       "hometown",
+//       "occupation",
+//       "workplace",
+//       "citizen_id_num",
+//       "citizen_id_issued_date",
+//       "citizen_id_issued_place",
+//       "residency_status",
+//       "residence_registered_date",
+//       "previous_address",
+//       "created_at",
+//     ],
+//     include: [
+//       {
+//         model: HouseholdMembership,
+//         as: "householdMemberships",
+//         attributes: ["relation_to_head"],
+//       },
+//       {
+//         model: Household,
+//         as: "households",
+//         attributes: ["household_id", "household_no", "address"],
+//         through: {
+//           attributes: ["start_date", "end_date", "relation_to_head", "is_head"],
+//         },
+//       },
+//     ],
+//   });
+
+//   const dataWithAge = rows.map((person) => {
+//     const personData = person.toJSON();
+//     if (personData.dob) {
+//       const birthYear = new Date(personData.dob).getFullYear();
+//       personData.age = new Date().getFullYear() - birthYear;
+//     } else {
+//       personData.age = null;
+//     }
+//     return personData;
+//   });
+
+//   return {
+//     data: dataWithAge,
+//     currentPage: page,
+//     totalPages: Math.ceil(count / limit),
+//     totalItems: count,
+//     itemsPerPage: limit,
+//   };
+// };
 
 const getAllNhanKhau = async ({
   page = 1,
@@ -20,9 +138,9 @@ const getAllNhanKhau = async ({
   sortOrder = "DESC",
 }) => {
   const offset = (page - 1) * limit;
-
   const whereConditions = {};
 
+  // --- 1. Xây dựng điều kiện lọc ---
   if (search) {
     whereConditions[Op.or] = [
       { full_name: { [Op.iLike]: `%${search}%` } },
@@ -31,16 +149,11 @@ const getAllNhanKhau = async ({
     ];
   }
 
-  if (gender) {
-    whereConditions.gender = gender;
-  }
-  if (residency_status) {
-    whereConditions.residency_status = residency_status;
-  }
+  if (gender) whereConditions.gender = gender;
+  if (residency_status) whereConditions.residency_status = residency_status;
 
   if (minAge !== undefined || maxAge !== undefined) {
     const currentYear = new Date().getFullYear();
-
     if (minAge !== undefined && maxAge !== undefined) {
       const maxBirthYear = currentYear - minAge;
       const minBirthYear = currentYear - maxAge;
@@ -52,17 +165,14 @@ const getAllNhanKhau = async ({
       };
     } else if (minAge !== undefined) {
       const maxBirthYear = currentYear - minAge;
-      whereConditions.dob = {
-        [Op.lte]: new Date(`${maxBirthYear}-12-31`),
-      };
+      whereConditions.dob = { [Op.lte]: new Date(`${maxBirthYear}-12-31`) };
     } else if (maxAge !== undefined) {
       const minBirthYear = currentYear - maxAge;
-      whereConditions.dob = {
-        [Op.gte]: new Date(`${minBirthYear}-01-01`),
-      };
+      whereConditions.dob = { [Op.gte]: new Date(`${minBirthYear}-01-01`) };
     }
   }
 
+  // --- 2. Query chính lấy danh sách người ---
   const { count, rows } = await Person.findAndCountAll({
     where: whereConditions,
     limit,
@@ -103,21 +213,76 @@ const getAllNhanKhau = async ({
         },
       },
     ],
+    distinct: true, 
   });
 
-  const dataWithAge = rows.map((person) => {
+  // --- 3. KỸ THUẬT BATCH QUERY (Lấy info Tạm trú/Tạm vắng) ---
+  // A. Lọc ra danh sách ID của những người có trạng thái tạm thời
+  const tempStatusPersonIds = rows
+    .filter((p) =>
+      ["temporary_resident", "temporary_absent"].includes(p.residency_status)
+    )
+    .map((p) => p.person_id);
+
+  // B. Query bảng TempResidence 1 lần duy nhất (Status ACTIVE)
+  let tempResidenceMap = {}; 
+
+  if (tempStatusPersonIds.length > 0) {
+    const tempRecords = await TempResidence.findAll({
+      where: {
+        person_id: { [Op.in]: tempStatusPersonIds },
+        status: "ACTIVE", 
+      },
+      attributes: ["person_id", "from_date", "to_date", "type"],
+    });
+
+    // Chuyển array thành object map: { [person_id]: record }
+    tempRecords.forEach((record) => {
+      tempResidenceMap[record.person_id] = record;
+    });
+  }
+
+  // --- 4. Map dữ liệu trả về ---
+  const dataProcessed = rows.map((person) => {
     const personData = person.toJSON();
+
+    // A. Tính tuổi
     if (personData.dob) {
       const birthYear = new Date(personData.dob).getFullYear();
       personData.age = new Date().getFullYear() - birthYear;
     } else {
       personData.age = null;
     }
+
+    // B. Gán start_date / end_date
+    personData.start_date = null;
+    personData.end_date = null;
+
+    if (
+      ["temporary_resident", "temporary_absent"].includes(
+        personData.residency_status
+      )
+    ) {
+      // Lấy từ Map đã query ở bước 3
+      const tempInfo = tempResidenceMap[personData.person_id];
+      if (tempInfo) {
+        personData.start_date = tempInfo.from_date;
+        personData.end_date = tempInfo.to_date;
+      }
+    } else if (personData.residency_status === "permanent") {
+      if (personData.households && personData.households.length > 0) {
+        const membership = personData.households[0].HouseholdMembership;
+        if (membership) {
+          personData.start_date = membership.start_date;
+        }
+      }
+    }
+
     return personData;
   });
 
   return {
-    data: dataWithAge,
+    data: dataProcessed,
     currentPage: page,
     totalPages: Math.ceil(count / limit),
     totalItems: count,
@@ -479,13 +644,71 @@ let handlePersonEvent = async (
   }
 };
 
+// const getPersonDetail = async (personId) => {
+//   const person = await Person.findByPk(personId, {
+//     // include: [{ model: Household, as: 'household', attributes: ['household_no', 'address'] }],
+//   });
+
+//   if(!person) {
+//     return null;
+//   }
+
+//   return person;
+// };
+
 const getPersonDetail = async (personId) => {
-  const person = await Person.findByPk(personId, {
-    // include: [{ model: Household, as: 'household', attributes: ['household_no', 'address'] }],
+  // 1. Lấy thông tin cơ bản của Person kèm theo Hộ khẩu (để lấy địa chỉ, mã hộ)
+  const personInstance = await Person.findByPk(personId, {
+    include: [
+      {
+        model: Household,
+        as: "households", // Alias phải khớp với định nghĩa trong model/index (thường là 'households')
+        through: {
+          model: HouseholdMembership,
+          where: { end_date: null },
+          required: false,
+          attributes: ["is_head", "relation_to_head", "start_date"],
+        },
+        attributes: ["household_no", "address", "household_id"],
+      },
+    ],
   });
 
-  if(!person) {
+  if (!personInstance) {
     return null;
+  }
+
+  // 2. Chuyển sang JSON object thuần để có thể gán thêm thuộc tính start_date/end_date
+  const person = personInstance.toJSON();
+
+  // Mặc định start_date/end_date rỗng
+  person.start_date = null;
+  person.end_date = null;
+
+  // 3. Xử lý Logic cho Tạm trú / Tạm vắng
+  if (
+    person.residency_status === "temporary_resident" ||
+    person.residency_status === "temporary_absent"
+  ) {
+    const tempRecord = await TempResidence.findOne({
+      where: {
+        person_id: personId,
+        status: "ACTIVE",
+      },
+      order: [["registered_at", "DESC"]],
+    });
+
+    if (tempRecord) {
+      person.start_date = tempRecord.from_date;
+      person.end_date = tempRecord.to_date;
+    }
+  } else if (person.residency_status === "permanent") {
+    if (person.households && person.households.length > 0) {
+      const membership = person.households[0].HouseholdMembership;
+      if (membership) {
+        person.start_date = membership.start_date;
+      }
+    }
   }
 
   return person;
@@ -497,5 +720,5 @@ export default {
   updateNhanKhau,
   getPersonEvents,
   handlePersonEvent,
-  getPersonDetail
+  getPersonDetail,
 };

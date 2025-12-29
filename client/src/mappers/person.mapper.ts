@@ -16,6 +16,11 @@ export function mapPersonToCitizen(p: any): Citizen {
     dateOfBirth: String(p?.dob ?? ""),
     gender: (p?.gender ?? "unknown") as any,
     status: (p?.residency_status ?? "permanent") as any,
+    start_date: (p?.start_date ?? ""),
+    end_date: (p?.end_date ?? ""),
+
+    ethnicity: p?.ethnicity ?? undefined,
+    hometown: p?.hometown ?? undefined,
 
     householdCode: String(firstHousehold?.household_no ?? ""),
     address: String(firstHousehold?.address ?? p?.previous_address ?? ""),
