@@ -1,13 +1,16 @@
-import { useEffect } from "react";
-import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/stores/auth.store";
 import { isStaffAllowed } from "@/auth/roleAccess";
+import AuthPopup from "@/components/AuthPopup";
 
 export default function RequireAuth() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { token, user, fetchMe } = useAuthStore();
   const tokenInStorage =
     typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  const [showAuthPopup, setShowAuthPopup] = useState(false);
 
   // Nếu chưa có user nhưng có token → lấy thông tin user
   useEffect(() => {
@@ -15,6 +18,15 @@ export default function RequireAuth() {
       fetchMe();
     }
   }, [token, user, fetchMe]);
+
+  // Kiểm tra và hiển thị popup khi staff truy cập trang không được phép
+  useEffect(() => {
+    if (user?.role === "staff" && !isStaffAllowed(location.pathname)) {
+      setShowAuthPopup(true);
+    } else {
+      setShowAuthPopup(false);
+    }
+  }, [user?.role, location.pathname]);
 
   // Chưa đăng nhập (không có token ở store và cũng không có trong storage)
   if (!token && !tokenInStorage) {
@@ -35,7 +47,22 @@ export default function RequireAuth() {
   // ====== CHẶN ROLE STAFF Ở ĐÂY ======
   // staff chỉ được vào dashboard + tất cả trang /fees
   if (user?.role === "staff" && !isStaffAllowed(location.pathname)) {
-    return <Navigate to="/dashboard" replace />;
+    return (
+      <>
+        {showAuthPopup && (
+          <AuthPopup
+            title="Không có quyền truy cập"
+            message="Bạn không có quyền truy cập trang này. Vui lòng liên hệ quản trị viên nếu bạn cần thêm quyền."
+            actionLabel="Quay lại Dashboard"
+            redirectPath="/dashboard"
+            onClose={() => {
+              setShowAuthPopup(false);
+              navigate("/dashboard", { replace: true });
+            }}
+          />
+        )}
+      </>
+    );
   }
 
   // Đã đăng nhập + hợp lệ quyền

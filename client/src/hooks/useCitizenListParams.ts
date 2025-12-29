@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 
-export type CitizenSort = "name" | "age" | "status";
+export type CitizenSort = "name" | "age" | "status" | "date";
 export type CitizenGender = "all" | "male" | "female" | "other" | "unknown";
 export type CitizenStatus = | "all" | "permanent" | "temporary_resident" | "temporary_absent" | "moved_out" | "deceased";
 
@@ -32,6 +32,9 @@ export function useCitizenListParams(opts: {
     } else if (sortBy === "status") {
       params.sortBy = "residency_status";
       params.sortOrder = "ASC";
+    } else if (sortBy === "date") {
+      params.sortBy = "created_at";
+      params.sortOrder = "DESC";
     }
 
     return params;
