@@ -128,14 +128,14 @@ let addPersonToHousehold = async (req, res) => {
         }
 
         // Validate event_type (loại biến động)
-        const validEventTypes = ["birth", "moved_in"];
+        const validEventTypes = ["birth", "move_in"];
         if (
             personData.event_type &&
             !validEventTypes.includes(personData.event_type)
         ) {
             return res.status(400).json({
                 success: false,
-                message: `event_type phải là 'birth' hoặc 'moved_in'`,
+                message: `event_type phải là 'birth' hoặc 'move_in'`,
             });
         }
 
