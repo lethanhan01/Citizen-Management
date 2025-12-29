@@ -1,7 +1,7 @@
 "use client";
 
 import { Loader } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { search as searchApi } from "@/api/search.api";
 import { createHousehold, addPersonToHousehold } from "@/api/household.api";
@@ -32,6 +32,29 @@ interface FormErrors {
   [key: string]: string;
 }
 
+// Helper to generate a fresh initial form state
+const createInitialFormData = (): FormData => ({
+  fullName: "",
+  alias: "",
+  dateOfBirth: "",
+  gender: "",
+  cccd: "",
+  nationality: "",
+  birthplace: "",
+  hometown: "",
+  occupation: "",
+  workplace: "",
+  cmndCccdIssueDate: "",
+  cmndCccdIssuePlace: "",
+  address: "",
+  householdCode: "",
+  permanentResidenceDate: "",
+  relationshipToHead: "",
+  previousAddress: "",
+  note: "",
+  // arrivalType intentionally left undefined until user selects
+});
+
 const REQUIRED_FIELDS: (keyof FormData)[] = [
   "fullName",
   "dateOfBirth",
@@ -49,28 +72,10 @@ export default function AddNewArrival() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
-  const [formData, setFormData] = useState<FormData>({
-    fullName: "",
-    alias: "",
-    dateOfBirth: "",
-    gender: "",
-    cccd: "",
-    nationality: "",
-    birthplace: "",
-    hometown: "",
-    occupation: "",
-    workplace: "",
-    cmndCccdIssueDate: "",
-    cmndCccdIssuePlace: "",
-    address: "",
-    householdCode: "",
-    permanentResidenceDate: "",
-    relationshipToHead: "",
-    previousAddress: "",
-    note: "",
-  });
+  const [formData, setFormData] = useState<FormData>(createInitialFormData());
   const [isLookupAddress, setIsLookupAddress] = useState(false);
   const [resolvedHouseholdId, setResolvedHouseholdId] = useState<string | null>(null);
+  const topRef = useRef<HTMLDivElement>(null);
 
   const filledRequiredFields = useMemo(() => {
     return REQUIRED_FIELDS.filter((field) => {
@@ -225,7 +230,32 @@ export default function AddNewArrival() {
     }
   };
 
-  const handleCancel = () => navigate(-1);
+  const resetForm = () => {
+    setFormData(createInitialFormData());
+    setErrors({});
+    setResolvedHouseholdId(null);
+    setIsLookupAddress(false);
+  };
+
+  const handleCancel = () => {
+    // Confirm before clearing all inputs and states
+    const ok = window.confirm("Bạn có chắc muốn xóa toàn bộ dữ liệu đã nhập?");
+    if (!ok) return;
+    resetForm();
+    const scrollToTop = () => {
+      // Prefer scrolling the container that owns this page
+      topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      // Fallbacks for various scroll containers
+      if (typeof window !== "undefined") {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+      const se = (document.scrollingElement || document.documentElement) as any;
+      se?.scrollTo?.({ top: 0, behavior: "smooth" });
+      if (se) se.scrollTop = 0;
+    };
+    // Wait for DOM to settle after reset, then scroll
+    window.requestAnimationFrame(scrollToTop);
+  };
 
   const handleLookupHouseholdAddress = async () => {
     const code = formData.householdCode?.trim();
@@ -259,7 +289,7 @@ export default function AddNewArrival() {
   };
 
   return (
-    <div className="space-y-6">
+    <div ref={topRef} className="space-y-6">
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-first dark:text-darkmodetext">
