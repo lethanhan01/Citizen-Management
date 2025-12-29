@@ -296,13 +296,33 @@ export default function FixedFees() {
       <h2 className="text-2xl font-bold text-foreground">
         Danh sách khoản thu phí cố định
       </h2>
-      <button
-        onClick={() => setShowCreateFeeModal(true)}
-        className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary text-primary-foreground"
-      >
-        <Plus className="w-4 h-4" />
-        Thêm khoản thu
-      </button>
+      <div className="flex items-center gap-3">
+        <button
+          onClick={() => setShowCreateFeeModal(true)}
+          className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary text-primary-foreground"
+        >
+          <Plus className="w-4 h-4" />
+          Thêm khoản thu
+        </button>
+        {/* Dropdown chọn khoản thu */}
+        <select
+          value={selectedRateId ?? ""}
+          onChange={(e) => {
+            setCurrentPage(1);
+            setSearchQuery("");
+            setStatusFilter("all");
+            setSortBy("status");
+            setSelectedRateId(Number(e.target.value));
+          }}
+          className="px-2 py-1 rounded-md border border-input bg-card text-foreground"
+        >
+          {fees.map((f) => (
+            <option key={f.rate_id} value={f.rate_id}>
+              {f.item_type}
+            </option>
+          ))}
+        </select>
+      </div>
 
       {/* Accordion */}
       <div className="bg-card text-card-foreground border border-border rounded-xl shadow-sm overflow-hidden">
@@ -318,28 +338,7 @@ export default function FixedFees() {
               <ChevronRight className="w-5 h-5" />
             )}
 
-            {/* Dropdown chọn khoản thu */}
-            <select
-              value={selectedRateId ?? ""}
-              onClick={(e) => e.stopPropagation()}
-              onMouseDown={(e) => e.stopPropagation()}
-              onChange={(e) => {
-                e.stopPropagation();
-                setCurrentPage(1);
-                setSearchQuery("");
-                setStatusFilter("all");
-                setSortBy("status");
-                setSelectedRateId(Number(e.target.value));
-              }}
-              className="px-2 py-1 rounded-md border border-input bg-card text-foreground"
-            >
-              {fees.map((f) => (
-                <option key={f.rate_id} value={f.rate_id}>
-                  {f.item_type}
-                </option>
-              ))}
-
-            </select>
+            <span className="text-foreground">Chi tiết khoản thu</span>
 
           </div>
         </div>

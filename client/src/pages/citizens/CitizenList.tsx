@@ -22,7 +22,7 @@ export default function CitizenList() {
   const [page, setPage] = useState(1);
 
   // ✅ Hướng A: FE gửi CODE lên BE
-  const [sortBy, setSortBy] = useState<"name" | "age" | "status">("name");
+  const [sortBy, setSortBy] = useState<"name" | "age" | "status" | "date">("name");
 
   const [filterStatus, setFilterStatus] = useState<
     "all" | "permanent" | "temporary_resident" | "temporary_absent" | "moved_out" | "deceased"

@@ -61,7 +61,7 @@ function toHousehold(h: any): Household {
 
 export default function HouseholdList() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState<"headName" | "memberCount">("headName");
+  const [sortBy, setSortBy] = useState<"headName" | "memberCount" | "date" | "codeAsc" | "codeDesc">("headName");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedHousehold, setSelectedHousehold] = useState<Household | null>(
     null
@@ -93,6 +93,28 @@ export default function HouseholdList() {
       result.sort((a, b) => a.headName.localeCompare(b.headName));
     } else if (sortBy === "memberCount") {
       result.sort((a, b) => b.memberCount - a.memberCount);
+    } else if (sortBy === "date") {
+      // Sort by created_at (registrationDate) descending - newest first
+      result.sort((a, b) => {
+        const dateA = a.registrationDate ? new Date(a.registrationDate).getTime() : 0;
+        const dateB = b.registrationDate ? new Date(b.registrationDate).getTime() : 0;
+        return dateB - dateA; // Descending order
+      });
+    } else if (sortBy === "codeAsc") {
+      // Sort by household code ascending
+      result.sort((a, b) => {
+        // Extract numeric part if exists for better sorting
+        const codeA = a.code.toLowerCase();
+        const codeB = b.code.toLowerCase();
+        return codeA.localeCompare(codeB, undefined, { numeric: true, sensitivity: 'base' });
+      });
+    } else if (sortBy === "codeDesc") {
+      // Sort by household code descending
+      result.sort((a, b) => {
+        const codeA = a.code.toLowerCase();
+        const codeB = b.code.toLowerCase();
+        return codeB.localeCompare(codeA, undefined, { numeric: true, sensitivity: 'base' });
+      });
     }
 
     return result;
@@ -160,9 +182,10 @@ export default function HouseholdList() {
           <div className="flex flex-wrap gap-3">
             <select
               value={sortBy}
-              onChange={(e) =>
-                setSortBy(e.target.value as "headName" | "memberCount")
-              }
+              onChange={(e) => {
+                setSortBy(e.target.value as "headName" | "memberCount" | "date" | "codeAsc" | "codeDesc");
+                setCurrentPage(1);
+              }}
               className="
                 px-4 py-2 rounded-lg text-sm font-medium
                 bg-white dark:bg-transparent dark:border
@@ -173,6 +196,9 @@ export default function HouseholdList() {
             >
               <option value="headName">Sắp xếp theo tên chủ hộ</option>
               <option value="memberCount">Sắp xếp theo số thành viên</option>
+              <option value="date">Sắp xếp theo thời gian thêm vào hệ thống</option>
+              <option value="codeAsc">Sắp xếp theo mã hộ tăng dần</option>
+              <option value="codeDesc">Sắp xếp theo mã hộ giảm dần</option>
             </select>
           </div>
         </div>
@@ -229,8 +255,7 @@ export default function HouseholdList() {
                     {paginatedHouseholds.map((household) => (
                       <tr
                         key={household.id}
-                        className="border-b border-second/20 dark:border-second/20 hover:bg-second/5 dark:hover:bg-second/10 transition cursor-pointer"
-                        onClick={() => handleViewHousehold(household)}
+                        className="border-b border-second/20 dark:border-second/20 hover:bg-second/5 dark:hover:bg-second/10 transition"
                       >
                         <td className="px-4 py-3 text-first dark:text-darkmodetext font-medium">
                           {household.code}
@@ -251,10 +276,7 @@ export default function HouseholdList() {
                         </td>
                         <td className="px-4 py-3 text-center">
                           <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleViewHousehold(household);
-                            }}
+                            onClick={() => handleViewHousehold(household)}
                             className="p-1.5 hover:bg-second/20 dark:hover:bg-second/30 rounded-md transition"
                             title="Xem chi tiết"
                           >

@@ -58,6 +58,7 @@ export default function TopBar({
       "/services/update-person": "Thay đổi nhân khẩu",
       "/services/household/split": "Tách hộ khẩu",
       "/services/household/change-owner": "Thay đổi chủ hộ",
+      "/services/household/change-address": "Thay đổi địa chỉ hộ",
       "/services/household/history": "Lịch sử hộ khẩu",
       "/fees/fixed": "Khoản thu cố định",
       "/fees/donations": "Chiến dịch quyên góp",
