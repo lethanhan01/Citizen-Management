@@ -39,7 +39,7 @@ const createFeeWave = async (data) => {
           // Chỉ đếm những người đang thường trú/tạm trú (tuỳ nghiệp vụ, ở đây mình đếm hết)
           attributes: ["person_id", "residency_status"],
           where: {
-            residency_status: { [Op.notIn]: ["move_out", "deceased"] },
+            residency_status: { [Op.notIn]: ["moved_out", "deceased"] },
           },
           required: false,
         },
