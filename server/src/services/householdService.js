@@ -21,7 +21,7 @@ let getAllHouseholds = async ({ page = 1, limit = 20 }) => {
                 [
                     db.Sequelize.literal(`(
                         SELECT COUNT(*) FROM core.household_membership hm
-                        WHERE hm.household_id = "Household"."household_id" AND hm.end_date < CURRENT_DATE
+                        WHERE hm.household_id = "Household"."household_id" AND (hm.end_date > CURRENT_DATE OR hm.end_date IS NULL)
                     )`),
                     "members_count",
                 ],
@@ -45,7 +45,7 @@ let getHouseholdById = async (id) => {
                 [
                     db.Sequelize.literal(`(
                         SELECT COUNT(*) FROM core.household_membership hm
-                        WHERE hm.household_id = "Household"."household_id" AND hm.end_date > CURRENT_DATE OR hm.end_date IS NULL 
+                        WHERE hm.household_id = "Household"."household_id" AND (hm.end_date > CURRENT_DATE OR hm.end_date IS NULL)
                     )`),
                     "members_count",
                 ],
