@@ -2,7 +2,7 @@
 
 import { Loader } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+// Navigation not needed; we stay on page after save
 import { search as searchApi } from "@/api/search.api";
 import { createHousehold, addPersonToHousehold } from "@/api/household.api";
 
@@ -69,13 +69,28 @@ const REQUIRED_FIELDS: (keyof FormData)[] = [
 ];
 
 export default function AddNewArrival() {
-  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
   const [formData, setFormData] = useState<FormData>(createInitialFormData());
   const [isLookupAddress, setIsLookupAddress] = useState(false);
   const [resolvedHouseholdId, setResolvedHouseholdId] = useState<string | null>(null);
   const topRef = useRef<HTMLDivElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+  const [formKey, setFormKey] = useState(0);
+
+  const scrollToTop = () => {
+    try {
+      topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      if (typeof window !== "undefined") {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+      const se = (document.scrollingElement || document.documentElement) as any;
+      se?.scrollTo?.({ top: 0, behavior: "smooth" });
+      if (se) se.scrollTop = 0;
+    } catch {
+      // no-op
+    }
+  };
 
   const filledRequiredFields = useMemo(() => {
     return REQUIRED_FIELDS.filter((field) => {
@@ -215,9 +230,10 @@ export default function AddNewArrival() {
       // 3) Call API to add person to household
       const result = await addPersonToHousehold(householdId, personPayload);
 
-      // Navigate on success
+      // After successful save: reset for next entry and scroll to top
       if (result) {
-        navigate("/citizens");
+        resetForm();
+        window.requestAnimationFrame(scrollToTop);
       }
     } catch (err) {
       console.error("Error submitting form", err);
@@ -235,6 +251,10 @@ export default function AddNewArrival() {
     setErrors({});
     setResolvedHouseholdId(null);
     setIsLookupAddress(false);
+    try {
+      formRef.current?.reset();
+    } catch {}
+    setFormKey((k) => k + 1);
   };
 
   const handleCancel = () => {
@@ -242,17 +262,6 @@ export default function AddNewArrival() {
     const ok = window.confirm("Bạn có chắc muốn xóa toàn bộ dữ liệu đã nhập?");
     if (!ok) return;
     resetForm();
-    const scrollToTop = () => {
-      // Prefer scrolling the container that owns this page
-      topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-      // Fallbacks for various scroll containers
-      if (typeof window !== "undefined") {
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      }
-      const se = (document.scrollingElement || document.documentElement) as any;
-      se?.scrollTo?.({ top: 0, behavior: "smooth" });
-      if (se) se.scrollTop = 0;
-    };
     // Wait for DOM to settle after reset, then scroll
     window.requestAnimationFrame(scrollToTop);
   };
@@ -311,6 +320,8 @@ export default function AddNewArrival() {
       </div>
 
       <form
+        key={formKey}
+        ref={formRef}
         onSubmit={handleSubmit}
         className="bg-card text-card-foreground border border-border rounded-xl p-6 shadow-sm space-y-8"
       >
