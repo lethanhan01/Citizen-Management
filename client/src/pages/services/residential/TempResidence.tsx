@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+// Removed useNavigate as we stay on page after save
 import { Loader } from "lucide-react";
 import { createTempResidence as apiCreateTempResidence } from "@/api/tempResidence.api";
 
@@ -35,7 +35,6 @@ const REQUIRED_FIELDS = [
 ];
 
 export default function TempResidence() {
-  const navigate = useNavigate();
   const topRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -53,6 +52,20 @@ export default function TempResidence() {
     reason: "",
   });
   const [formData, setFormData] = useState<FormData>(createInitialFormData());
+
+  const scrollToTop = () => {
+    try {
+      topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      if (typeof window !== "undefined") {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+      const se = (document.scrollingElement || document.documentElement) as any;
+      se?.scrollTo?.({ top: 0, behavior: "smooth" });
+      if (se) se.scrollTop = 0;
+    } catch {
+      // no-op
+    }
+  };
 
   // Calculate progress
   const filledRequiredFields = useMemo(() => {
@@ -144,8 +157,9 @@ export default function TempResidence() {
       };
 
       await apiCreateTempResidence(payload);
-      // Redirect to temp residence list/service page
-      navigate("/services/temp-residence");
+      // After successful save: reset form and scroll to top for next entry
+      resetForm();
+      scrollToTop();
     } catch (error) {
       console.error("Error submitting form:", error);
     } finally {
@@ -172,19 +186,6 @@ export default function TempResidence() {
     const ok = window.confirm("Bạn có chắc muốn xóa toàn bộ dữ liệu đã nhập?");
     if (!ok) return;
     resetForm();
-    const scrollToTop = () => {
-      try {
-        topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-        if (typeof window !== "undefined") {
-          window.scrollTo({ top: 0, behavior: "smooth" });
-        }
-        const se = (document.scrollingElement || document.documentElement) as any;
-        se?.scrollTo?.({ top: 0, behavior: "smooth" });
-        if (se) se.scrollTop = 0;
-      } catch {
-        // no-op
-      }
-    };
     window.requestAnimationFrame(scrollToTop);
   };
 
