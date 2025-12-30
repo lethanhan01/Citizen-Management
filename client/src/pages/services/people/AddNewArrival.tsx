@@ -2,6 +2,7 @@
 
 import { Loader } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
+import { toast, Toaster } from "react-hot-toast";
 // Navigation not needed; we stay on page after save
 import { search as searchApi } from "@/api/search.api";
 import { createHousehold, addPersonToHousehold } from "@/api/household.api";
@@ -154,7 +155,10 @@ export default function AddNewArrival() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateForm()) return;
+    if (!validateForm()) {
+      toast.error("Vui lòng kiểm tra lại các trường bắt buộc!");
+      return;
+    }
 
     setIsLoading(true);
     try {
@@ -232,6 +236,7 @@ export default function AddNewArrival() {
 
       // After successful save: reset for next entry and scroll to top
       if (result) {
+        toast.success("Thêm nhân khẩu thành công!");
         resetForm();
         window.requestAnimationFrame(scrollToTop);
       }
@@ -241,6 +246,7 @@ export default function AddNewArrival() {
       const e: any = err as any;
       const message = e?.response?.data?.message || e?.message || "Có lỗi xảy ra khi lưu";
       setErrors((prev) => ({ ...prev, submit: message }));
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }
@@ -299,6 +305,19 @@ export default function AddNewArrival() {
 
   return (
     <div ref={topRef} className="space-y-6">
+      {/* --- TOASTER --- */}
+      <Toaster
+        position="top-right"
+        reverseOrder={false}
+        toastOptions={{
+          className: "",
+          style: {
+            border: "1px solid #713200",
+            padding: "16px",
+            color: "#713200",
+          },
+        }}
+      />
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-first dark:text-darkmodetext">

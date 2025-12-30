@@ -3,6 +3,7 @@
 import { useState, useMemo, useRef } from "react";
 // Removed useNavigate as we stay on page after save
 import { Loader } from "lucide-react";
+import { toast, Toaster } from "react-hot-toast";
 import { createTempResidence as apiCreateTempResidence } from "@/api/tempResidence.api";
 
 interface FormData {
@@ -130,6 +131,7 @@ export default function TempResidence() {
     e.preventDefault();
 
     if (!validateForm()) {
+      toast.error("Vui lòng kiểm tra lại các trường bắt buộc!");
       return;
     }
 
@@ -157,10 +159,17 @@ export default function TempResidence() {
       };
 
       await apiCreateTempResidence(payload);
+      toast.success("Đăng ký tạm trú thành công!");
       // After successful save: reset form and scroll to top for next entry
       resetForm();
       scrollToTop();
     } catch (error) {
+      const err: any = error as any;
+      const message =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Đăng ký tạm trú thất bại. Vui lòng thử lại!";
+      toast.error(message);
       console.error("Error submitting form:", error);
     } finally {
       setIsLoading(false);
@@ -191,6 +200,19 @@ export default function TempResidence() {
 
   return (
     <div ref={topRef} className="space-y-6">
+      {/* --- TOASTER --- */}
+      <Toaster
+        position="top-right"
+        reverseOrder={false}
+        toastOptions={{
+          className: "",
+          style: {
+            border: "1px solid #713200",
+            padding: "16px",
+            color: "#713200",
+          },
+        }}
+      />
       {/* Progress Bar */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
