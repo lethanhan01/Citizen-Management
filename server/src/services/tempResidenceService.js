@@ -30,6 +30,9 @@ let createTempResidence = async (data) => {
         const household = await db.Household.findOne({
             where: { household_no: data.household_no },
         });
+        if (!household) {
+            throw new Error("Không tìm thấy hộ khẩu với mã số cung cấp");
+        }
 
         await db.HouseholdMembership.create({
             person_id: person.person_id,
