@@ -1,6 +1,6 @@
 "use client";
 
-import { X } from "lucide-react";
+import { X, GitBranch, MapPin, UserCog } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import type { Household } from "@/types/household";
 import { useTheme } from "@/context/ThemeProvider";
@@ -34,7 +34,7 @@ export default function HouseholdDetailPanel({
       {/* Details Drawer */}
       <div
         className={`
-          fixed top-0 right-0 h-full w-full md:w-[40%] lg:w-[35%]
+          fixed top-0 right-0 h-full w-full md:w-[45%] lg:w-[35%]
           bg-card text-card-foreground
           shadow-2xl
           transform transition-transform duration-300 ease-in-out
@@ -114,26 +114,45 @@ export default function HouseholdDetailPanel({
 
           {/* Action Buttons */}
           <div className="pt-4 space-y-3 border-t border-border">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <button
                 onClick={() => navigate(`/services/household/split?household_no=${household.code}`)}
                 className="
-                  px-4 py-2 rounded-lg text-sm font-medium
-                  transition hover:opacity-90
-                  bg-primary text-white
+                  flex items-center justify-center gap-2 px-4 py-2
+                  rounded-lg border border-input bg-card text-foreground
+                  hover:bg-muted/10 transition shadow-sm text-sm font-medium
                 "
+                title="Tách hộ"
+                aria-label="Tách hộ"
               >
-                Tách hộ
+                <GitBranch className="w-4 h-4" />
+                <span>Tách hộ</span>
               </button>
               <button
                 onClick={() => navigate(`/services/household/change-address?household_no=${household.code}`)}
                 className="
-                  px-4 py-2 rounded-lg text-sm font-medium
-                  transition hover:opacity-90
-                  bg-primary text-white
+                  flex items-center justify-center gap-2 px-4 py-2
+                  rounded-lg border border-input bg-card text-foreground
+                  hover:bg-muted/10 transition shadow-sm text-sm font-medium
                 "
+                title="Thay đổi địa chỉ hộ"
+                aria-label="Thay đổi địa chỉ hộ"
               >
-                Thay đổi địa chỉ hộ
+                <MapPin className="w-4 h-4" />
+                <span>Thay đổi địa chỉ hộ</span>
+              </button>
+              <button
+                onClick={() => navigate(`/services/household/change-owner?household_no=${household.code}`)}
+                className="
+                  flex items-center justify-center gap-2 px-4 py-2
+                  rounded-lg border border-input bg-card text-foreground
+                  hover:bg-muted/10 transition shadow-sm text-sm font-medium
+                "
+                title="Thay đổi chủ hộ"
+                aria-label="Thay đổi chủ hộ"
+              >
+                <UserCog className="w-4 h-4" />
+                <span>Thay đổi chủ hộ</span>
               </button>
             </div>
 
