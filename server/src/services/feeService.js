@@ -8,322 +8,349 @@ const Person = db.Person;
 
 // 1. Tạo đợt thu phí mới (VD: Phí vệ sinh 2025)
 const createFeeWave = async (data) => {
-  // Dùng transaction để đảm bảo tính toàn vẹn dữ liệu
-  // Nếu tạo payment lỗi thì rollback luôn việc tạo FeeRate
-  const t = await db.sequelize.transaction();
+    // Dùng transaction để đảm bảo tính toàn vẹn dữ liệu
+    // Nếu tạo payment lỗi thì rollback luôn việc tạo FeeRate
+    const t = await db.sequelize.transaction();
 
-  try {
-    console.log("--- BẮT ĐẦU TẠO ĐỢT THU ---");
-    // A. Tạo bản ghi FeeRate (Đợt thu)
-    const newFee = await FeeRate.create(
-      {
-        item_type: data.item_type, // "Phí vệ sinh 2025"
-        unit_type: data.unit_type, // "per_person"
-        amount: data.amount, // 6000
-        effective_from: data.effective_from,
-        effective_to: data.effective_to,
-        note: data.note,
-      },
-      { transaction: t }
-    );
+    try {
+        console.log("--- BẮT ĐẦU TẠO ĐỢT THU ---");
+        // A. Tạo bản ghi FeeRate (Đợt thu)
+        const newFee = await FeeRate.create(
+            {
+                item_type: data.item_type, // "Phí vệ sinh 2025"
+                unit_type: data.unit_type, // "per_person"
+                amount: data.amount, // 6000
+                effective_from: data.effective_from,
+                effective_to: data.effective_to,
+                note: data.note,
+            },
+            { transaction: t }
+        );
 
-    console.log("1. Đã tạo FeeRate ID:", newFee.rate_id);
+        console.log("1. Đã tạo FeeRate ID:", newFee.rate_id);
 
-    // B. Lấy danh sách tất cả các hộ khẩu đang hoạt động
-    // Include Person để đếm số nhân khẩu
-    const allHouseholds = await Household.findAll({
-      include: [
-        {
-          model: Person,
-          as: "residents",
-          // Chỉ đếm những người đang thường trú/tạm trú (tuỳ nghiệp vụ, ở đây mình đếm hết)
-          attributes: ["person_id", "residency_status"],
-          where: {
-            residency_status: { [Op.notIn]: ["moved_out", "deceased"] },
-          },
-          required: false,
-        },
-      ],
-    });
+        // B. Lấy danh sách tất cả các hộ khẩu đang hoạt động
+        // Include Person để đếm số nhân khẩu
+        const allHouseholds = await Household.findAll({
+            include: [
+                {
+                    model: Person,
+                    as: "residents",
+                    // Chỉ đếm những người có residency_status hợp lệ
+                    // và có membership đang active (end_date NULL hoặc > CURRENT_DATE)
+                    attributes: ["person_id", "residency_status"],
+                    where: {
+                        residency_status: {
+                            [Op.notIn]: ["moved_out", "deceased"],
+                        },
+                    },
+                    through: {
+                        where: {
+                            [Op.or]: [
+                                { end_date: null },
+                                {
+                                    end_date: {
+                                        [Op.gt]:
+                                            db.sequelize.literal(
+                                                "CURRENT_DATE"
+                                            ),
+                                    },
+                                },
+                            ],
+                        },
+                        attributes: [],
+                    },
+                    required: false,
+                },
+            ],
+        });
 
-    if (allHouseholds.length === 0) {
-      console.log(
-        "CẢNH BÁO: Không tìm thấy hộ khẩu nào trong DB! Hãy kiểm tra lại bảng 'core.household'"
-      );
+        if (allHouseholds.length === 0) {
+            console.log(
+                "CẢNH BÁO: Không tìm thấy hộ khẩu nào trong DB! Hãy kiểm tra lại bảng 'core.household'"
+            );
+        }
+
+        // C. Chuẩn bị dữ liệu Payment cho từng hộ
+        const paymentRecords = allHouseholds.map((household) => {
+            let totalAmount = 0;
+            const memberCount = household.residents.length;
+
+            // Logic tính tiền
+            if (newFee.unit_type === "per_person") {
+                // Công thức: 6000 * 12 tháng * số người
+                // Ở đây giả sử amount nhập vào là 6000 (đơn giá tháng)
+                // Hoặc nếu amount là trọn gói năm thì bỏ * 12 đi.
+                // Theo mô tả: 6.000 / 1 tháng / 1 người => Phải nhân 12
+                totalAmount = parseFloat(newFee.amount) * 12 * memberCount;
+            } else {
+                // Tính theo hộ
+                totalAmount = parseFloat(newFee.amount);
+            }
+
+            return {
+                household_id: household.household_id,
+                rate_id: newFee.rate_id,
+                year: new Date(newFee.effective_from).getFullYear(),
+                payment_status: "pending",
+                total_amount: totalAmount,
+                date: new Date(),
+                note: `Thu phí vệ sinh cho ${memberCount} nhân khẩu của hộ gia đình`,
+            };
+        });
+
+        // D. Insert vào bảng Payment
+        if (paymentRecords.length > 0) {
+            await Payment.bulkCreate(paymentRecords, { transaction: t });
+        }
+
+        // Commit transaction (Lưu vào DB)
+        await t.commit();
+
+        return newFee;
+    } catch (error) {
+        console.error("LỖI TRONG TRANSACTION:", error);
+        // Nếu có lỗi, hoàn tác tất cả
+        await t.rollback();
+        throw error;
     }
-
-    // C. Chuẩn bị dữ liệu Payment cho từng hộ
-    const paymentRecords = allHouseholds.map((household) => {
-      let totalAmount = 0;
-      const memberCount = household.residents.length;
-
-      // Logic tính tiền
-      if (newFee.unit_type === "per_person") {
-        // Công thức: 6000 * 12 tháng * số người
-        // Ở đây giả sử amount nhập vào là 6000 (đơn giá tháng)
-        // Hoặc nếu amount là trọn gói năm thì bỏ * 12 đi.
-        // Theo mô tả: 6.000 / 1 tháng / 1 người => Phải nhân 12
-        totalAmount = parseFloat(newFee.amount) * 12 * memberCount;
-      } else {
-        // Tính theo hộ
-        totalAmount = parseFloat(newFee.amount);
-      }
-
-      return {
-        household_id: household.household_id,
-        rate_id: newFee.rate_id,
-        year: new Date(newFee.effective_from).getFullYear(),
-        payment_status: "pending",
-        total_amount: totalAmount,
-        date: new Date(),
-        note: `Thu phí vệ sinh cho ${memberCount} nhân khẩu của hộ gia đình`,
-      };
-    });
-
-    // D. Insert vào bảng Payment
-    if (paymentRecords.length > 0) {
-      await Payment.bulkCreate(paymentRecords, { transaction: t });
-    }
-
-    // Commit transaction (Lưu vào DB)
-    await t.commit();
-
-    return newFee;
-  } catch (error) {
-    console.error("LỖI TRONG TRANSACTION:", error);
-    // Nếu có lỗi, hoàn tác tất cả
-    await t.rollback();
-    throw error;
-  }
 };
 
 // 2. Lấy danh sách các khoản thu
 const getAllFeeWaves = async () => {
-  return await FeeRate.findAll({
-    order: [["effective_from", "DESC"]],
-  });
+    return await FeeRate.findAll({
+        order: [["effective_from", "DESC"]],
+    });
 };
 
 // 3. Xóa bản ghi
 const deleteFeeWave = async (rateId) => {
-  // Khởi tạo Transaction
-  const t = await db.sequelize.transaction();
-  try {
-    // 1. Tìm đợt thu xem có tồn tại không
-    const feeRate = await FeeRate.findByPk(rateId);
-    if (!feeRate) {
-      throw new Error("Khoản thu không tồn tại!");
+    // Khởi tạo Transaction
+    const t = await db.sequelize.transaction();
+    try {
+        // 1. Tìm đợt thu xem có tồn tại không
+        const feeRate = await FeeRate.findByPk(rateId);
+        if (!feeRate) {
+            throw new Error("Khoản thu không tồn tại!");
+        }
+
+        // 2. CẢNH BÁO (Optional): Kiểm tra xem có ai đóng tiền chưa?
+        // Nếu muốn chặt chẽ, bạn có thể chặn xóa nếu đã có người nộp tiền.
+        // Ở đây mình bỏ qua để bạn dễ dàng dọn rác test.
+
+        // 3. Xóa tất cả các phiếu thu (Payment) liên quan trước
+        // (Do DB cấu hình SET NULL nên ta phải xóa tay bước này)
+        await Payment.destroy({
+            where: { rate_id: rateId },
+            transaction: t,
+        });
+
+        // 4. Xóa đợt thu (FeeRate)
+        await feeRate.destroy({ transaction: t });
+
+        // 5. Xác nhận thành công
+        await t.commit();
+        return true;
+    } catch (error) {
+        // Nếu có lỗi, hoàn tác (không xóa gì cả)
+        await t.rollback();
+        throw error;
     }
-
-    // 2. CẢNH BÁO (Optional): Kiểm tra xem có ai đóng tiền chưa?
-    // Nếu muốn chặt chẽ, bạn có thể chặn xóa nếu đã có người nộp tiền.
-    // Ở đây mình bỏ qua để bạn dễ dàng dọn rác test.
-
-    // 3. Xóa tất cả các phiếu thu (Payment) liên quan trước
-    // (Do DB cấu hình SET NULL nên ta phải xóa tay bước này)
-    await Payment.destroy({
-      where: { rate_id: rateId },
-      transaction: t,
-    });
-
-    // 4. Xóa đợt thu (FeeRate)
-    await feeRate.destroy({ transaction: t });
-
-    // 5. Xác nhận thành công
-    await t.commit();
-    return true;
-  } catch (error) {
-    // Nếu có lỗi, hoàn tác (không xóa gì cả)
-    await t.rollback();
-    throw error;
-  }
 };
 
 const getPaymentList = async (queryParams) => {
-  const { rate_id, status, keyword, page = 1, limit = 10 } = queryParams;
+    const { rate_id, status, keyword, page = 1, limit = 10 } = queryParams;
 
-  const offset = (page - 1) * limit;
+    const offset = (page - 1) * limit;
 
-  // A. Xây dựng điều kiện lọc cho bảng Payment
-  let paymentWhere = {};
+    // A. Xây dựng điều kiện lọc cho bảng Payment
+    let paymentWhere = {};
 
-  if (rate_id) {
-    paymentWhere.rate_id = rate_id;
-  }
-
-  if (status) {
-    paymentWhere.payment_status = status;
-  }
-
-  // B. Xây dựng điều kiện lọc cho bảng Household (Tìm theo số hộ khẩu)
-  let householdWhere = {};
-  let headPersonWhere = {};
-
-  if (keyword && keyword.trim() !== "") {
-    const cleanKeyword = keyword.trim();
-    // Tìm trong bảng Household (Mã hộ)
-    const householdCondition = {
-      household_no: { [Op.iLike]: `%${cleanKeyword}%` },
-    };
-
-    // Tìm trong bảng Person (Tên hoặc CCCD)
-    const personCondition = {
-      [Op.or]: [
-        { full_name: { [Op.iLike]: `%${cleanKeyword}%` } },
-        { citizen_id_num: { [Op.iLike]: `%${cleanKeyword}%` } },
-      ],
-    };
-    if (cleanKeyword.toUpperCase().startsWith("HK")) {
-      householdWhere = householdCondition;
-    } else {
-      // paymentWhere.payer_name = { [Op.iLike]: `%${keyword}` };
-      headPersonWhere = personCondition;
+    if (rate_id) {
+        paymentWhere.rate_id = rate_id;
     }
-  }
 
-  // C. Query 1: Thực hiện truy vấn
-  const { count, rows } = await Payment.findAndCountAll({
-    where: paymentWhere,
-    include: [
-      {
-        model: Household,
-        as: "household",
-        attributes: ["household_no", "address", "head_person_id"],
-        where: Object.keys(householdWhere).length > 0 ? householdWhere : null,
-        required:
-          Object.keys(householdWhere).length > 0 ||
-          Object.keys(headPersonWhere).length > 0,
+    if (status) {
+        paymentWhere.payment_status = status;
+    }
+
+    // B. Xây dựng điều kiện lọc cho bảng Household (Tìm theo số hộ khẩu)
+    let householdWhere = {};
+    let headPersonWhere = {};
+
+    if (keyword && keyword.trim() !== "") {
+        const cleanKeyword = keyword.trim();
+        // Tìm trong bảng Household (Mã hộ)
+        const householdCondition = {
+            household_no: { [Op.iLike]: `%${cleanKeyword}%` },
+        };
+
+        // Tìm trong bảng Person (Tên hoặc CCCD)
+        const personCondition = {
+            [Op.or]: [
+                { full_name: { [Op.iLike]: `%${cleanKeyword}%` } },
+                { citizen_id_num: { [Op.iLike]: `%${cleanKeyword}%` } },
+            ],
+        };
+        if (cleanKeyword.toUpperCase().startsWith("HK")) {
+            householdWhere = householdCondition;
+        } else {
+            // paymentWhere.payer_name = { [Op.iLike]: `%${keyword}` };
+            headPersonWhere = personCondition;
+        }
+    }
+
+    // C. Query 1: Thực hiện truy vấn
+    const { count, rows } = await Payment.findAndCountAll({
+        where: paymentWhere,
         include: [
-          {
-            model: Person,
-            as: "headPerson",
-            attributes: ["full_name", "citizen_id_num"],
-            where:
-              Object.keys(headPersonWhere).length > 0 ? headPersonWhere : null,
-            required: Object.keys(headPersonWhere).length > 0,
-          },
+            {
+                model: Household,
+                as: "household",
+                attributes: ["household_no", "address", "head_person_id"],
+                where:
+                    Object.keys(householdWhere).length > 0
+                        ? householdWhere
+                        : null,
+                required:
+                    Object.keys(householdWhere).length > 0 ||
+                    Object.keys(headPersonWhere).length > 0,
+                include: [
+                    {
+                        model: Person,
+                        as: "headPerson",
+                        attributes: ["full_name", "citizen_id_num"],
+                        where:
+                            Object.keys(headPersonWhere).length > 0
+                                ? headPersonWhere
+                                : null,
+                        required: Object.keys(headPersonWhere).length > 0,
+                    },
+                ],
+            },
+            {
+                model: FeeRate,
+                as: "feeRate",
+                attributes: ["item_type", "amount"],
+            },
         ],
-      },
-      {
-        model: FeeRate,
-        as: "feeRate",
-        attributes: ["item_type", "amount"],
-      },
-    ],
-    order: [
-      ["payment_status", "ASC"],
-      ["household_id", "ASC"],
-    ],
-    limit: parseInt(limit),
-    offset: parseInt(offset),
-    distinct: true,
-  });
+        order: [
+            ["payment_status", "ASC"],
+            ["household_id", "ASC"],
+        ],
+        limit: parseInt(limit),
+        offset: parseInt(offset),
+        distinct: true,
+    });
 
-  const statsData = await Payment.findAll({
-    attributes: [
-      "payment_status",
-      [db.sequelize.fn("COUNT", db.sequelize.col("payment_id")), "count"],
-    ],
-    where: { rate_id: rate_id }, // Chỉ thống kê trong đợt thu này
-    group: ["payment_status"],
-    raw: true,
-  });
+    const statsData = await Payment.findAll({
+        attributes: [
+            "payment_status",
+            [db.sequelize.fn("COUNT", db.sequelize.col("payment_id")), "count"],
+        ],
+        where: { rate_id: rate_id }, // Chỉ thống kê trong đợt thu này
+        group: ["payment_status"],
+        raw: true,
+    });
 
-  // Format stats
-  let stats = { paid: 0, partial: 0, pending: 0 };
-  statsData.forEach((item) => {
-    if (item.payment_status === "paid") stats.paid = parseInt(item.count);
-    else if (item.payment_status === "partial")
-      stats.partial = parseInt(item.count);
-    else stats.pending += parseInt(item.count); // pending hoặc unpaid
-  });
+    // Format stats
+    let stats = { paid: 0, partial: 0, pending: 0 };
+    statsData.forEach((item) => {
+        if (item.payment_status === "paid") stats.paid = parseInt(item.count);
+        else if (item.payment_status === "partial")
+            stats.partial = parseInt(item.count);
+        else stats.pending += parseInt(item.count); // pending hoặc unpaid
+    });
 
-  // D. Query 2: Tính tổng tiền toàn bộ
-  // Hàm này sẽ bỏ qua limit/offset, tính tổng trên toàn bộ dữ liệu tìm thấy
-  const totalRevenue = await Payment.sum("total_amount", {
-    where: paymentWhere, // Vẫn giữ điều kiện lọc (ví dụ: chỉ tính tổng những người 'paid')
-    include: [
-      // Nếu điều kiện lọc nằm ở bảng Household (như tìm theo keyword HK...),
-      // ta bắt buộc phải include Household vào đây thì mới lọc đúng được.
-      {
-        model: Household,
-        as: "household",
-        where: Object.keys(householdWhere).length > 0 ? householdWhere : null,
-        required: Object.keys(householdWhere).length > 0,
-        attributes: [],
-      },
-    ],
-  });
+    // D. Query 2: Tính tổng tiền toàn bộ
+    // Hàm này sẽ bỏ qua limit/offset, tính tổng trên toàn bộ dữ liệu tìm thấy
+    const totalRevenue = await Payment.sum("total_amount", {
+        where: paymentWhere, // Vẫn giữ điều kiện lọc (ví dụ: chỉ tính tổng những người 'paid')
+        include: [
+            // Nếu điều kiện lọc nằm ở bảng Household (như tìm theo keyword HK...),
+            // ta bắt buộc phải include Household vào đây thì mới lọc đúng được.
+            {
+                model: Household,
+                as: "household",
+                where:
+                    Object.keys(householdWhere).length > 0
+                        ? householdWhere
+                        : null,
+                required: Object.keys(householdWhere).length > 0,
+                attributes: [],
+            },
+        ],
+    });
 
-  return {
-    totalRecords: count,
-    totalRevenue: totalRevenue || 0,
-    totalPages: Math.ceil(count / limit),
-    currentPage: parseInt(page),
-    data: rows,
-    stats: stats,
-  };
+    return {
+        totalRecords: count,
+        totalRevenue: totalRevenue || 0,
+        totalPages: Math.ceil(count / limit),
+        currentPage: parseInt(page),
+        data: rows,
+        stats: stats,
+    };
 };
 
 const markPaymentAsPaid = async (data) => {
-  const {
-    payment_id, // ID của phiếu thu (Bắt buộc)
-    amount, // Số tiền thực nộp (Có thể khác số tiền dự kiến nếu nộp thiếu/thừa)
-    payment_method, // 'Cash', 'Transfer'...
-    date, // Ngày nộp
-    note, // Ghi chú thêm
-  } = data;
+    const {
+        payment_id, // ID của phiếu thu (Bắt buộc)
+        amount, // Số tiền thực nộp (Có thể khác số tiền dự kiến nếu nộp thiếu/thừa)
+        payment_method, // 'Cash', 'Transfer'...
+        date, // Ngày nộp
+        note, // Ghi chú thêm
+    } = data;
 
-  // 1. Tìm bản ghi phiếu thu
-  const payment = await Payment.findByPk(payment_id);
+    // 1. Tìm bản ghi phiếu thu
+    const payment = await Payment.findByPk(payment_id);
 
-  if (!payment) {
-    throw new Error("Phiếu thu không tồn tại!");
-  }
+    if (!payment) {
+        throw new Error("Phiếu thu không tồn tại!");
+    }
 
-  // 2. Kiểm tra trạng thái hiện tại
-  if (payment.payment_status === "paid") {
-    throw new Error("Hộ này đã nộp khoản phí này rồi!");
-  }
+    // 2. Kiểm tra trạng thái hiện tại
+    if (payment.payment_status === "paid") {
+        throw new Error("Hộ này đã nộp khoản phí này rồi!");
+    }
 
-  // 3. Tính toán số tiền
-  const currentPaid = parseFloat(payment.paid_amount); // Tiền đã đóng trước đó (VD: 0)
-  const incomingAmount = parseFloat(amount); // Tiền mới đóng (VD: 100k)
-  const totalDebt = parseFloat(payment.total_amount); // Tổng phải đóng (VD: 360k)
+    // 3. Tính toán số tiền
+    const currentPaid = parseFloat(payment.paid_amount); // Tiền đã đóng trước đó (VD: 0)
+    const incomingAmount = parseFloat(amount); // Tiền mới đóng (VD: 100k)
+    const totalDebt = parseFloat(payment.total_amount); // Tổng phải đóng (VD: 360k)
 
-  // Tổng tiền sau khi đóng lần này
-  const newPaidAmount = currentPaid + incomingAmount;
+    // Tổng tiền sau khi đóng lần này
+    const newPaidAmount = currentPaid + incomingAmount;
 
-  // 4. Xác định trạng thái mới
-  let newStatus = payment.payment_status;
+    // 4. Xác định trạng thái mới
+    let newStatus = payment.payment_status;
 
-  if (newPaidAmount >= totalDebt) {
-    // Nếu đóng đủ hoặc thừa -> PAID
-    newStatus = "paid";
-  } else {
-    // Nếu vẫn còn thiếu -> PARTIAL
-    newStatus = "partial";
-  }
+    if (newPaidAmount >= totalDebt) {
+        // Nếu đóng đủ hoặc thừa -> PAID
+        newStatus = "paid";
+    } else {
+        // Nếu vẫn còn thiếu -> PARTIAL
+        newStatus = "partial";
+    }
 
-  // 5. Cập nhật vào DB
-  await payment.update({
-    payment_status: newStatus,
-    paid_amount: newPaidAmount, // Cập nhật tổng tiền đã đóng
-    payment_method: payment_method || "Cash",
-    date: date || new Date(), // Cập nhật ngày đóng gần nhất
-    note: note || payment.note, // Giữ note cũ hoặc ghi đè
-  });
+    // 5. Cập nhật vào DB
+    await payment.update({
+        payment_status: newStatus,
+        paid_amount: newPaidAmount, // Cập nhật tổng tiền đã đóng
+        payment_method: payment_method || "Cash",
+        date: date || new Date(), // Cập nhật ngày đóng gần nhất
+        note: note || payment.note, // Giữ note cũ hoặc ghi đè
+    });
 
-  return {
-    ...payment.toJSON(),
-    remaining_amount: totalDebt - newPaidAmount, // Trả về số tiền còn nợ để FE hiển thị
-  };
+    return {
+        ...payment.toJSON(),
+        remaining_amount: totalDebt - newPaidAmount, // Trả về số tiền còn nợ để FE hiển thị
+    };
 };
 
 export default {
-  createFeeWave,
-  getAllFeeWaves,
-  deleteFeeWave,
-  getPaymentList,
-  markPaymentAsPaid,
+    createFeeWave,
+    getAllFeeWaves,
+    deleteFeeWave,
+    getPaymentList,
+    markPaymentAsPaid,
 };
