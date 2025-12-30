@@ -1,36 +1,49 @@
-## 02_Design/architecture.md
+## Kiến trúc hệ thống
 
-### 🧩 Phân lớp hệ thống
+### 🧩 Phân lớp
 
 ```
-React (Client)
-   ↓ REST API
+React + Vite (Client)
+   ↓  REST API (Axios)
 Express (Server)
-   ↓
+   ↓  ORM
 PostgreSQL (Database)
 ```
 
-* Kiến trúc **3-tier** tách biệt UI, logic, và dữ liệu.
-* API RESTful, JWT Authentication, RBAC authorization.
+- Mô hình **3-tier** tách biệt UI, logic, dữ liệu.
+- API RESTful, **JWT** xác thực, **RBAC** phân quyền.
+- **CORS** kiểm soát origin từ FE (5173).
+- Tác vụ nền bằng **node-cron** (xử lý tạm trú/tạm vắng).
 
-### 🗃 Schema thiết kế trong PostgreSQL
+### 🗂 Frontend (React + TypeScript)
 
-* **core:** nhân khẩu, hộ khẩu, biến động, tạm trú.
-* **finance:** thu phí, đóng góp.
-* **security:** tài khoản, vai trò, quyền hạn.
-* **logging:** nhật ký hệ thống.
+- Modules: `api`, `auth`, `components`, `hooks`, `layouts`, `lib`, `mappers`, `pages`, `routes`, `stores`, `styles`, `types` (xem cấu trúc trong client).
+- **React Router v7** cho định tuyến, **React Query v5** cho caching/fetching.
+- **Zustand** quản lý state nhẹ; **Tailwind CSS** cho UI.
+- `axios` client dùng `VITE_API_URL` và interceptor token/lỗi.
+
+### 🧰 Backend (Express + Sequelize)
+
+- Entry: `server/src/index.js`; mount routes dưới `/api/v1`.
+- Controllers: `auth`, `campaign`, `export`, `fee`, `household`, `person`, `search`, `statistic`, `tempResidence`.
+- Middleware: `authMiddleware` (JWT), `roleMiddleware` (RBAC), `errorHandler`.
+- Config DB: `pg Pool` + `Sequelize` (SSL khi production/Supabase).
+- Scheduler: `services/schedulerService.js` chạy hàng ngày 00:01.
+
+### 🗃 Schema PostgreSQL
+
+- **core:** `person`, `household`, `household_membership`, `person_event`, `temp_permit`.
+- **finance:** `fee_rate`, `payment`, `campaign`, `campaign_payment`.
+- **security:** tài khoản, vai trò, quyền hạn.
+- **logging:** nhật ký hệ thống.
 
 ### 🧠 Business logic tiêu biểu
 
-* Trigger đảm bảo “chỉ có 1 chủ hộ duy nhất đang hoạt động”.
-* Trigger ngăn chặn 1 người ở 2 hộ cùng lúc.
-* View tính thống kê dân cư và trạng thái thu phí.
+- Ràng buộc “mỗi hộ chỉ có 1 chủ hộ hoạt động”.
+- Ngăn 1 người thuộc 2 hộ cùng lúc khi trạng thái đang ở.
+- View/thống kê: dân cư theo trạng thái, tiến độ thu phí.
 
----
-
-## 02_Design/database_design/explanation.md
-
-Tổng hợp các bảng chính trong **schema core** và **finance**:
+### 📑 Bảng chính (tóm tắt)
 
 | Schema  | Table                | Mục đích chính               |
 | ------- | -------------------- | ---------------------------- |
@@ -43,5 +56,3 @@ Tổng hợp các bảng chính trong **schema core** và **finance**:
 | finance | payment              | Ghi nhận thu phí vệ sinh     |
 | finance | campaign             | Đợt quyên góp                |
 | finance | campaign_payment     | Ghi nhận tiền đóng góp       |
-
----

@@ -9,16 +9,22 @@
 
 ### 2️⃣ Quản lý thu phí – đóng góp
 
-* Thu phí bắt buộc: **Phí vệ sinh 6.000đ/người/tháng × 12 tháng.**
+* Thu phí bắt buộc: **Phí vệ sinh 6.000đ/người/tháng × 12 tháng.** (có thống kê tiến độ)
 * Quản lý các đợt đóng góp tự nguyện (theo chiến dịch).
+* Xuất báo cáo Excel (thu phí/đóng góp).
 * Thống kê tổng thu, số hộ đã nộp, số hộ còn thiếu.
 
 ### 3️⃣ Quản lý người dùng – phân quyền
 
 * Phân vai: tổ trưởng, tổ phó, kế toán, cán bộ dân cư.
-* RBAC (Role-Based Access Control): truy cập theo chức năng.
+* RBAC (Role-Based Access Control): truy cập theo chức năng; xác thực JWT.
 
 ### 4️⃣ Báo cáo – thống kê
 
 * Theo giới tính, độ tuổi, tình trạng cư trú, thời gian.
-* Kết xuất PDF/Excel.
+* Kết xuất Excel (ưu tiên; PDF xem xét sau).
+
+### 5️⃣ Tìm kiếm – phân trang – lọc
+
+* Tìm kiếm theo họ tên, CMND/CCCD, địa chỉ.
+* Phân trang, lọc theo tham số URL; tối ưu truy vấn.

@@ -19,6 +19,13 @@ Phần mềm **Quản lý thông tin dân cư (Citizen Management System)** giú
 
 Hệ thống áp dụng mô hình **client–server**:
 
-* **Frontend (React):** giao diện web.
-* **Backend (NodeJS/Express):** API nghiệp vụ, xác thực.
-* **Database (PostgreSQL):** nhiều schema chuyên biệt (core, finance, security, logging).
+* **Frontend (React/Vite + TypeScript):** giao diện web, định tuyến v7, React Query v5, Zustand, Tailwind CSS.
+* **Backend (NodeJS/Express):** API nghiệp vụ, xác thực JWT, RBAC, cron scheduler.
+* **Database (PostgreSQL):** nhiều schema (core, finance, security, logging) với kết nối qua pg/Sequelize.
+
+### 📈 Trạng thái hiện tại
+
+- FE: modules `api`, `auth`, `components`, `hooks`, `layouts`, `lib`, `mappers`, `pages`, `routes`, `stores`, `styles`, `types` đã tổ chức.
+- BE: controllers `auth`, `campaign`, `export`, `fee`, `household`, `person`, `search`, `statistic`, `tempResidence` đã định nghĩa; routes mount dưới `/api/v1`.
+- Env: `client` dùng `VITE_API_URL`; `server` dùng `.env` (PORT, DB, JWT...).
+- Chạy dev: FE 5173, BE 5000; proxy cấu hình khi cần.
