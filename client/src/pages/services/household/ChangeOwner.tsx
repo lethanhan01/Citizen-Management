@@ -1,8 +1,8 @@
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
+import { toast, Toaster } from "react-hot-toast";
 import { Search, UserCheck, X, Save, Loader } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import { useHouseholdStore } from "@/stores/household.store";
 import * as HouseholdAPI from "@/api/household.api";
 import PaginationBar from "@/components/PaginationBar";
@@ -68,7 +68,6 @@ function toHouseholdItem(h: any): HouseholdItem {
 const ITEMS_PER_PAGE = 10;
 
 export default function ChangeOwner() {
-  const navigate = useNavigate();
   const { data, loading, error, fetchHouseholds } = useHouseholdStore();
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<HouseholdItem | null>(null);
@@ -162,7 +161,10 @@ export default function ChangeOwner() {
   };
 
   const handleSave = async () => {
-    if (!validate()) return;
+    if (!validate()) {
+      toast.error("Vui lòng kiểm tra lại các trường bắt buộc!");
+      return;
+    }
     setIsLoading(true);
     try {
       if (!selected) throw new Error("No household selected");
@@ -173,9 +175,14 @@ export default function ChangeOwner() {
       // Refresh list and close
       await fetchHouseholds({ page: 1, limit: 500 });
       closeForm();
-      navigate("/households");
+      // Show success toast, then navigate after a short delay
+      toast.success("Thay đổi chủ hộ thành công!", { duration: 3000 });
     } catch (err) {
       console.error(err);
+      const e: any = err as any;
+      const message =
+        e?.response?.data?.message || e?.message || "Thay đổi chủ hộ thất bại. Vui lòng thử lại!";
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }
@@ -183,6 +190,20 @@ export default function ChangeOwner() {
 
   return (
     <div className="space-y-6">
+      {/* --- TOASTER --- */}
+      <Toaster
+        position="top-right"
+        reverseOrder={false}
+        toastOptions={{
+          className: "",
+          style: {
+            border: "1px solid #713200",
+            padding: "16px",
+            color: "#713200",
+          },
+          duration: 3500,
+        }}
+      />
       {/* Search */}
       <div className="space-y-4 mb-6">
         <div className="relative">

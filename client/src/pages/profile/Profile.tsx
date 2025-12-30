@@ -117,8 +117,6 @@ export default function Profile() {
                 <InfoField label="Vai trò" value={(user?.role_name ?? user?.role ?? "—").toString()} />
                 <InfoField label="Tên đăng nhập" value={(user?.username ?? "—").toString()} />
                 <InfoField label="Mật khẩu" value={"••••••••"} />
-                <InfoField label="CCCD" value={(user?.cccd ?? user?.citizen_id ?? user?.citizen_id_num ?? "—").toString()} />
-                <InfoField label="Số điện thoại" value={(user?.phone ?? user?.phone_number ?? "—").toString()} />
               </>
             )}
           </div>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useCampaignStore } from "@/stores/campaign.store";
+import { toast, Toaster } from "react-hot-toast";
 
 import {
   ChevronDown,
@@ -94,8 +95,11 @@ const {
     });
 
     if (ok) {
+      toast.success(`Tạo chiến dịch "${newCampaignName.trim()}" thành công!`);
       setShowNewCampaignModal(false);
       setExpandedCampaigns([]); // optional
+    } else {
+      toast.error("Tạo chiến dịch thất bại");
     }
   };
 
@@ -117,12 +121,16 @@ const {
     });
 
     if (ok) {
+      const campaignName = campaigns.find((c) => c.campaign_id === selectedCampaignId)?.name || `#${selectedCampaignId}`;
+      toast.success(`Hộ ${hhId} đã đóng góp ${amount.toLocaleString()} VND vào chiến dịch "${campaignName}"!`);
       setShowDonationModal(false);
       setSelectedCampaignId(null);
       setHouseholdId("");
       setDonationAmount("");
       setContributionDate("");
       setNote("");
+    } else {
+      toast.error("Thêm đóng góp thất bại");
     }
   };
 
@@ -160,10 +168,14 @@ const {
     const yes = window.confirm("Xóa chiến dịch này và toàn bộ lịch sử đóng góp liên quan?");
     if (!yes) return;
 
+    const campaignName = campaigns.find((c) => c.campaign_id === campaignId)?.name || `#${campaignId}`;
     const ok = await deleteCampaign(campaignId);
     if (ok) {
+      toast.success(`Đã xóa chiến dịch "${campaignName}"!`);
       // đóng panel nếu đang mở
       setExpandedCampaigns((prev) => prev.filter((id) => id !== campaignId));
+    } else {
+      toast.error("Xóa chiến dịch thất bại");
     }
   };
 
@@ -172,6 +184,7 @@ const {
 
   return (
     <div className="space-y-6">
+      <Toaster position="top-right" />
       <div className="flex items-center justify-between">
         {loadingList && (
           <div className="text-sm text-second dark:text-darkmodetext/70 mt-2">
@@ -617,7 +630,7 @@ const {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-first dark:text-darkmodetext mb-2">
-                      Ngày kết thúc (có thể để trống)
+                      Ngày kết thúc
                     </label>
                     <input
                       type="date"

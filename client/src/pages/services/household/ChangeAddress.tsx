@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Loader, X, RefreshCw } from "lucide-react";
 import * as HouseholdAPI from "@/api/household.api";
-import { toast } from "react-hot-toast";
+import { toast, Toaster } from "react-hot-toast";
 
 interface HouseholdItem {
   id: string;
@@ -160,6 +160,7 @@ export default function ChangeAddress() {
     if (!selectedHousehold) return;
 
     if (!validateForm()) {
+      toast.error("Vui lòng kiểm tra lại các trường bắt buộc!");
       return;
     }
 
@@ -174,7 +175,8 @@ export default function ChangeAddress() {
       await fetchHousehold(selectedHousehold.id);
     } catch (e: any) {
       console.error("Error updating address:", e);
-      toast.error(e?.message || "Có lỗi xảy ra khi thay đổi địa chỉ");
+      const message = e?.response?.data?.message || e?.message || "Có lỗi xảy ra khi thay đổi địa chỉ";
+      toast.error(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -196,6 +198,20 @@ export default function ChangeAddress() {
 
   return (
     <div className="space-y-6">
+      {/* --- TOASTER --- */}
+      <Toaster
+        position="top-right"
+        reverseOrder={false}
+        toastOptions={{
+          className: "",
+          style: {
+            border: "1px solid #713200",
+            padding: "16px",
+            color: "#713200",
+          },
+          duration: 3500,
+        }}
+      />
       {/* Search */}
       <div className="bg-card text-card-foreground border border-border rounded-xl p-6 shadow-sm">
         <div className="flex items-center justify-between mb-4">

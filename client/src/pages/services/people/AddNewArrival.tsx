@@ -345,9 +345,7 @@ export default function AddNewArrival() {
         className="bg-card text-card-foreground border border-border rounded-xl p-6 shadow-sm space-y-8"
       >
         <p className="text-second dark:text-darkmodetext/70">
-          Nhập đầy đủ thông tin như trong trang chi tiết công dân. Mã hộ gia đình
-          chỉ điền khi thêm vào hộ sẵn có (ví dụ: kết hôn). Nếu bỏ trống, hệ
-          thống sẽ tự sinh mã hộ mới.
+            Vui lòng điền đầy đủ và chính xác các thông tin dưới đây. Các mục có dấu * là bắt buộc.
         </p>
 
         {/* Thông tin cơ bản */}

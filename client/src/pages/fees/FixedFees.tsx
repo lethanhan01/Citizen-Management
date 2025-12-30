@@ -13,7 +13,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { useFeeStore, type Fee } from '@/stores/fee.store';
-import { toast } from 'react-hot-toast';
+import { toast, Toaster } from 'react-hot-toast';
 
 import PaginationBar from '@/components/PaginationBar';
 import FeeFilterBar from '@/components/FeeFilterBar';
@@ -355,6 +355,7 @@ export default function FixedFees() {
 
   return (
     <div className="space-y-6">
+      <Toaster position="top-right" />
       {/* Header với title và button căn phải */}
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-foreground">

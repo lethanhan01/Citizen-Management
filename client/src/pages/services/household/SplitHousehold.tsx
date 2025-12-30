@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { toast, Toaster } from "react-hot-toast";
 import { Search, Users, X, Save, Loader } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import * as HouseholdAPI from "@/api/household.api";
@@ -236,7 +237,10 @@ export default function SplitHousehold() {
   };
 
   const handleSave = async () => {
-    if (!validate()) return;
+    if (!validate()) {
+      toast.error("Vui lòng kiểm tra lại các trường bắt buộc!");
+      return;
+    }
     setIsLoading(true);
     try {
       const payload = {
@@ -257,16 +261,22 @@ export default function SplitHousehold() {
       );
       closeForm();
       if (newHouseholdId) {
+        toast.success("Tách hộ thành công!", { duration: 3000 });
         navigate(`/households/${newHouseholdId}`);
       } else {
         // Fallback: inform user and go to list
         if (newHouseholdCodeRes) {
-          window.alert(`Tách hộ thành công. Mã hộ mới: ${newHouseholdCodeRes}`);
+          toast.success(`Tách hộ thành công. Mã hộ mới: ${newHouseholdCodeRes}`, { duration: 3000 });
+        } else {
+          toast.success("Tách hộ thành công!", { duration: 3000 });
         }
         navigate("/households");
       }
     } catch (err) {
       console.error(err);
+      const e: any = err as any;
+      const message = e?.response?.data?.message || e?.message || "Tách hộ thất bại. Vui lòng thử lại!";
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }
@@ -274,6 +284,20 @@ export default function SplitHousehold() {
 
   return (
     <div className="space-y-6">
+      {/* --- TOASTER --- */}
+      <Toaster
+        position="top-right"
+        reverseOrder={false}
+        toastOptions={{
+          className: "",
+          style: {
+            border: "1px solid #713200",
+            padding: "16px",
+            color: "#713200",
+          },
+          duration: 3500,
+        }}
+      />
       {/* Search & Filter Section */}
       <div className="space-y-4 mb-6">
         {/* Search Bar */}
