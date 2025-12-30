@@ -33,11 +33,25 @@ export default function Profile() {
   };
 
   const handleChangePassword = () => {
-    setOldPassword("");
-    setNewPassword("");
-    setConfirmPassword("");
-    setPasswordError("");
-    setShowPasswordModal(true);
+    // setOldPassword("");
+    // setNewPassword("");
+    // setConfirmPassword("");
+    // setPasswordError("");
+    // setShowPasswordModal(true);
+    const role = (user?.role_name ?? user?.role ?? "").toString().toLowerCase();
+
+      if (role === "admin") {
+        window.alert(
+          "Admin: Vui lòng vào Cài đặt → Danh sách tài khoản để đổi tên đăng nhập/mật khẩu."
+        );
+        // Nếu bạn có route đúng của trang Danh sách tài khoản thì có thể tự chuyển trang luôn:
+        // navigate("/settings/accounts");
+        return;
+      }
+
+      window.alert(
+        "Bạn không có quyền đổi tên đăng nhập/mật khẩu. Vui lòng liên hệ Admin."
+      );
   };
 
   const handleSavePassword = async () => {
@@ -117,7 +131,7 @@ export default function Profile() {
             className="flex items-center gap-2 px-4 py-2 rounded-lg border border-second/40 dark:border-second/30 text-first dark:text-darkmodetext hover:bg-second/10 dark:hover:bg-second/30 transition"
           >
             <Lock className="w-4 h-4" />
-            Đổi mật khẩu
+            Đổi tên đăng nhập / mật khẩu
           </button>
           <button
             onClick={handleLogout}
