@@ -21,7 +21,9 @@ let getAllHouseholds = async ({ page = 1, limit = 20 }) => {
                 [
                     db.Sequelize.literal(`(
                         SELECT COUNT(*) FROM core.household_membership hm
+                        JOIN core.person p ON hm.person_id = p.person_id
                         WHERE hm.household_id = "Household"."household_id" AND (hm.end_date > CURRENT_DATE OR hm.end_date IS NULL)
+                        AND p.residency_status NOT IN ('deseased', 'moved_out')
                     )`),
                     "members_count",
                 ],
@@ -45,7 +47,9 @@ let getHouseholdById = async (id) => {
                 [
                     db.Sequelize.literal(`(
                         SELECT COUNT(*) FROM core.household_membership hm
+                        JOIN core.person p ON hm.person_id = p.person_id
                         WHERE hm.household_id = "Household"."household_id" AND (hm.end_date > CURRENT_DATE OR hm.end_date IS NULL)
+                        AND p.residency_status NOT IN ('deseased', 'moved_out')
                     )`),
                     "members_count",
                 ],
@@ -668,6 +672,99 @@ let changeHouseholdHead = async (
     }
 };
 
+let cleanupExpiredMemberships = async () => {
+    const transaction = await db.sequelize.transaction();
+    try {
+        // 1. Tìm tất cả membership hết hạn
+        const expiredMemberships = await HouseholdMembership.findAll({
+            where: {
+                end_date: {
+                    [Op.lt]: db.sequelize.literal("CURRENT_DATE"),
+                },
+            },
+            transaction,
+        });
+
+        if (expiredMemberships.length === 0) {
+            await transaction.commit();
+            return {
+                success: true,
+                message: "Không có membership hết hạn để xóa",
+                deletedMembershipsCount: 0,
+                deletedPersonsCount: 0,
+            };
+        }
+
+        // 2. Lấy danh sách person_id từ membership hết hạn
+        const personIdsToCheck = expiredMemberships.map((m) => m.person_id);
+
+        // 3. Kiểm tra Person nào không còn membership active nào khác
+        const personsToDelete = await Person.findAll({
+            where: {
+                person_id: {
+                    [Op.in]: personIdsToCheck,
+                },
+            },
+            include: [
+                {
+                    model: HouseholdMembership,
+                    as: "householdMemberships",
+                    where: {
+                        end_date: {
+                            [Op.gt]: db.sequelize.literal("CURRENT_DATE"),
+                        },
+                    },
+                    required: false,
+                },
+            ],
+            transaction,
+        });
+
+        const personIdsToRemove = personsToDelete
+            .filter(
+                (p) =>
+                    !p.householdMemberships ||
+                    p.householdMemberships.length === 0
+            )
+            .map((p) => p.person_id);
+
+        // 4. Xóa HouseholdMembership hết hạn
+        const deletedMembershipsCount = await HouseholdMembership.destroy({
+            where: {
+                end_date: {
+                    [Op.lt]: db.sequelize.literal("CURRENT_DATE"),
+                },
+            },
+            transaction,
+        });
+
+        // 5. Xóa Person nếu không còn membership active nào
+        let deletedPersonsCount = 0;
+        if (personIdsToRemove.length > 0) {
+            deletedPersonsCount = await Person.destroy({
+                where: {
+                    person_id: {
+                        [Op.in]: personIdsToRemove,
+                    },
+                },
+                transaction,
+            });
+        }
+
+        await transaction.commit();
+
+        return {
+            success: true,
+            message: `Đã xóa ${deletedMembershipsCount} membership hết hạn và ${deletedPersonsCount} Person`,
+            deletedMembershipsCount,
+            deletedPersonsCount,
+        };
+    } catch (error) {
+        await transaction.rollback();
+        throw new Error(`Lỗi khi xóa membership hết hạn: ${error.message}`);
+    }
+};
+
 export default {
     createHousehold,
     getAllHouseholds,
@@ -678,4 +775,5 @@ export default {
     splitHousehold,
     getHouseholdHistory,
     changeHouseholdHead,
+    cleanupExpiredMemberships,
 };
