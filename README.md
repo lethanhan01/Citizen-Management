@@ -5,7 +5,6 @@
 ![React](https://img.shields.io/badge/Frontend-React-blue?logo=react)
 ![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL-blue?logo=postgresql)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
-![Status](https://img.shields.io/badge/Build-Passing-brightgreen)
 ![LastCommit](https://img.shields.io/github/last-commit/lethanhan01/Citizen-Management?logo=github)
 
 Ứng dụng web giúp Ban quản lý tổ dân phố quản lý **hộ khẩu, nhân khẩu, biến động, tạm trú – tạm vắng, thu phí và các khoản đóng góp** một cách **tập trung và hiệu quả**.
@@ -17,182 +16,18 @@
 **Frontend:**
 - React (Vite)
 - TypeScript
+- Tailwind CSS
 - Axios, React Router
+- State management (stores trong `client/src/stores`)
 
 **Backend:**
 - Node.js + Express
 - PostgreSQL
 - Sequelize (ORM)
 - CORS, dotenv, nodemon
+- JWT xác thực
 
----
 
-## 📁 Cấu trúc thư mục
-```
-├── .github
-│   ├── ISSUE_TEMPLATE
-│   │   ├── bug_report.md
-│   │   ├── feature_request.md
-│   │   └── technical_task.md
-│   └── workflows
-│       └── ci.yml
-├── client
-│   ├── .husky
-│   │   └── pre-commit
-│   ├── src
-│   │   ├── api
-│   │   │   ├── auth.api.ts
-│   │   │   ├── axios.ts
-│   │   │   ├── citizen.api.ts
-│   │   │   └── index.ts
-│   │   ├── assets
-│   │   ├── components
-│   │   │   ├── CitizenDetailPanel.tsx
-│   │   │   ├── ErrorFallback.tsx
-│   │   │   ├── HouseholdDetailPanel.tsx
-│   │   │   ├── RequireAuth.tsx
-│   │   │   ├── Sidebar.tsx
-│   │   │   ├── SpotlightCard.tsx
-│   │   │   ├── ThemeToggle.tsx
-│   │   │   ├── ThemeToggleButton.tsx
-│   │   │   └── TopBar.tsx
-│   │   ├── context
-│   │   │   └── ThemeProvider.tsx
-│   │   ├── layouts
-│   │   │   ├── AppLayout.tsx
-│   │   │   └── PublicLayout.tsx
-│   │   ├── lib
-│   │   │   ├── axios.ts
-│   │   │   └── utils.ts
-│   │   ├── pages
-│   │   │   ├── citizens
-│   │   │   │   ├── CitizenDetail.tsx
-│   │   │   │   ├── CitizenList.tsx
-│   │   │   │   ├── HouseholdDetail.tsx
-│   │   │   │   └── HouseholdList.tsx
-│   │   │   ├── fees
-│   │   │   │   ├── DonationCampaigns.tsx
-│   │   │   │   └── FixedFees.tsx
-│   │   │   ├── profile
-│   │   │   │   └── Profile.tsx
-│   │   │   ├── services
-│   │   │   │   ├── household
-│   │   │   │   │   ├── ChangeOwner.tsx
-│   │   │   │   │   ├── HouseholdHistory.tsx
-│   │   │   │   │   ├── MergeHousehold.tsx
-│   │   │   │   │   └── SplitHousehold.tsx
-│   │   │   │   ├── people
-│   │   │   │   │   ├── AddNewArrival.tsx
-│   │   │   │   │   ├── AddNewborn.tsx
-│   │   │   │   │   └── UpdatePerson.tsx
-│   │   │   │   └── residential
-│   │   │   │       ├── TempAbsence.tsx
-│   │   │   │       └── TempResidence.tsx
-│   │   │   ├── settings
-│   │   │   │   ├── AccountList.tsx
-│   │   │   │   └── AddAccount.tsx
-│   │   │   ├── Dashboard.tsx
-│   │   │   ├── Home.tsx
-│   │   │   ├── Login.tsx
-│   │   │   └── NotFound.tsx
-│   │   ├── routes
-│   │   │   └── index.tsx
-│   │   ├── styles
-│   │   │   └── globals.css
-│   │   ├── types
-│   │   │   ├── citizen.ts
-│   │   │   └── household.ts
-│   │   ├── App.css
-│   │   ├── App.tsx
-│   │   ├── index.css
-│   │   └── main.tsx
-│   ├── .gitignore
-│   ├── .prettierignore
-│   ├── .prettierrc.json
-│   ├── README.md
-│   ├── components.json
-│   ├── eslint.config.js
-│   ├── index.html
-│   ├── package-lock.json
-│   ├── package.json
-│   ├── postcss.config.cjs
-│   ├── served_index_css.txt
-│   ├── tailwind.config.cjs
-│   ├── tsconfig.app.json
-│   ├── tsconfig.json
-│   ├── tsconfig.node.json
-│   └── vite.config.ts
-├── docs
-│   ├── Design
-│   │   └── architect.md
-│   ├── Implementation
-│   │   └── setup_guide.md
-│   ├── Overview
-│   │   └── introduction.md
-│   └── Requirement
-│       ├── business_requirements.md
-│       └── user_stories.md
-├── server
-│   ├── src
-│   │   ├── config
-│   │   │   ├── config.js
-│   │   │   ├── db.js
-│   │   │   ├── sequelize.js
-│   │   │   └── supabase.js
-│   │   ├── controllers
-│   │   │   ├── authController.js
-│   │   │   ├── campaignController.js
-│   │   │   ├── exportController.js
-│   │   │   ├── feeController.js
-│   │   │   ├── householdController.js
-│   │   │   ├── personController.js
-│   │   │   ├── searchController.js
-│   │   │   ├── statisticController.js
-│   │   │   ├── tempResidenceController.js
-│   │   │   └── userController.js
-│   │   ├── middleware
-│   │   │   ├── authMiddleware.js
-│   │   │   ├── errorHandler.js
-│   │   │   └── roleMiddleware.js
-│   │   ├── models
-│   │   │   ├── campaign.js
-│   │   │   ├── campaignPayment.js
-│   │   │   ├── feeRate.js
-│   │   │   ├── householdHistory.js
-│   │   │   ├── householdMembership.js
-│   │   │   ├── households.js
-│   │   │   ├── index.js
-│   │   │   ├── payment.js
-│   │   │   ├── personEvent.js
-│   │   │   ├── persons.js
-│   │   │   ├── tempResidence.js
-│   │   │   └── user.js
-│   │   ├── routes
-│   │   │   └── web.js
-│   │   ├── services
-│   │   │   ├── authService.js
-│   │   │   ├── campaignService.js
-│   │   │   ├── exportService.js
-│   │   │   ├── feeService.js
-│   │   │   ├── householdHistoryService.js
-│   │   │   ├── householdService.js
-│   │   │   ├── personEventService.js
-│   │   │   ├── personService.js
-│   │   │   ├── searchService.js
-│   │   │   ├── statisticService.js
-│   │   │   ├── tempResidenceService.js
-│   │   │   └── userService.js
-│   │   ├── utils
-│   │   │   └── generateToken.js
-│   │   └── index.js
-│   ├── package-lock.json
-│   └── package.json
-├── .gitignore
-├── LICENSE
-└── README.md
-```
-
----
 
 ## ⚙️ Cài đặt và chạy dự án
 
@@ -205,14 +40,11 @@ cd Citizen-Management
 ### 2️⃣ Cài đặt dependencies
 
 ```bash
-# Cài ở thư mục gốc
-npm install
-
-# Cài backend
+# Backend
 cd server
 npm install
 
-# Cài frontend
+# Frontend
 cd ../client
 npm install
 ```
@@ -233,9 +65,17 @@ JWT_SECRET=super_secret_key
 
 ### 4️⃣ Chạy ứng dụng ở chế độ phát triển
 
-Tại thư mục gốc:
+Mở hai terminal:
 
 ```bash
+# Terminal 1: Backend
+cd server
+npm run dev
+```
+
+```bash
+# Terminal 2: Frontend
+cd client
 npm run dev
 ```
 
@@ -273,14 +113,16 @@ Deploy trên **Render**, **Railway**, hoặc **AWS EC2** (PostgreSQL dùng RDS h
 
 ---
 
-## 📜 Scripts có sẵn
+## 📜 Scripts
 
-| Lệnh                         | Mục đích                        |
-| ---------------------------- | ------------------------------- |
-| `npm run dev`                | Chạy client + server song song  |
-| `npm run start`              | Chạy server ở chế độ production |
-| `cd client && npm run build` | Build frontend React            |
-| `cd server && npm run dev`   | Chạy riêng backend              |
+### Frontend (client/package.json)
+- `npm run dev`: Chạy Vite dev server
+- `npm run build`: Build sản phẩm
+- `npm run preview`: Xem thử bản build
+
+### Backend (server/package.json)
+- `npm run dev`: Chạy server với nodemon
+- `npm run start`: Chạy server production
 
 ---
 
@@ -291,14 +133,20 @@ Deploy trên **Render**, **Railway**, hoặc **AWS EC2** (PostgreSQL dùng RDS h
   ```bash
   npx tsc --noEmit
   ```
-* **Cấu hình proxy** trong `client/vite.config.js` (nếu cần tránh CORS):
+* **Cấu hình proxy** trong `client/vite.config.ts` (nếu cần tránh CORS):
 
-  ```js
-  server: {
-    proxy: {
-      '/api': 'http://localhost:5000'
+  ```ts
+  import { defineConfig } from 'vite'
+  import react from '@vitejs/plugin-react'
+
+  export default defineConfig({
+    plugins: [react()],
+    server: {
+      proxy: {
+        '/api': 'http://localhost:5000'
+      }
     }
-  }
+  })
   ```
 * **Không commit file `.env`**, chỉ giữ `.env.example`.
 
@@ -306,18 +154,16 @@ Deploy trên **Render**, **Railway**, hoặc **AWS EC2** (PostgreSQL dùng RDS h
 
 ## 🚀 Chất lượng Code (Code Quality)
 
-Dự án này sử dụng **ESLint** và **Prettier** để đảm bảo code thống nhất và sạch sẽ.
+Dự án sử dụng **TypeScript**, **ESLint** và **Prettier** để đảm bảo code thống nhất và sạch sẽ.
 
-### Tự động hóa (Husky & lint-staged)
+Bạn có thể kiểm tra/lint/format tùy theo scripts được cấu hình trong từng package:
 
-Khi bạn thực hiện `git commit`, **Husky** và **lint-staged** sẽ tự động chạy `eslint --fix` và `prettier --write` trên các file bạn đã thay đổi (staged files). Điều này đảm bảo code lỗi hoặc chưa format sẽ không được commit vào repository.
-
-### Scripts thủ công
-
-Bạn cũng có thể chạy các lệnh sau thủ công bất cứ lúc nào:
-
-* `npm run lint`: Quét và tự động sửa lỗi ESLint cho toàn bộ thư mục `src`.
-* `npm run format`: Tự động format code bằng Prettier cho toàn bộ dự án.
+```bash
+# Ví dụ ở frontend
+cd client
+npm run lint
+npm run format
+```
 
 ## 👨‍💻 Tác giả
 

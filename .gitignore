@@ -61,13 +61,17 @@ vite.config.timestamp*
 vite-plugin-inspect/
 coverage/
 *.tsbuildinfo
+.nyc_output/
 
 # ------------------------------
 # Client (React/Vite)
 # ------------------------------
 client/node_modules/
 client/dist/
+client/dist-ssr/
 client/.vite/
+client/.vercel/
+client/.netlify/
 
 # ------------------------------
 # Server (Express)
@@ -85,3 +89,9 @@ server/dist/
 *.bak
 *.tmp
 *.orig
+
+# ------------------------------
+# Deployment (platform folders)
+# ------------------------------
+.vercel/
+.netlify/
