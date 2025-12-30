@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+// Navigation not needed; we stay on page after save
 import { Loader, Search } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
 import { usePersonStore } from '@/stores/person.store';
@@ -50,7 +50,6 @@ const REQUIRED_FIELDS = [
 ];
 
 export default function TempAbsence() {
-  const navigate = useNavigate();
   const topRef = useRef<HTMLDivElement>(null);
   const token = useAuthStore((s) => s.token);
   const persistedToken = useMemo(
@@ -95,6 +94,20 @@ export default function TempAbsence() {
     reason: '',
   });
   const [formData, setFormData] = useState<FormData>(createInitialFormData());
+
+  const scrollToTop = () => {
+    try {
+      topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (typeof window !== 'undefined') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      const se = (document.scrollingElement || document.documentElement) as any;
+      se?.scrollTo?.({ top: 0, behavior: 'smooth' });
+      if (se) se.scrollTop = 0;
+    } catch {
+      // no-op
+    }
+  };
 
   // Fetch citizens via store (shared with CitizenList)
   const params = useCitizenListParams({
@@ -216,9 +229,9 @@ export default function TempAbsence() {
 
     if (success) {
       toast.success('Đăng ký tạm vắng thành công!');
-      setTimeout(() => {
-        navigate('/services/temp-absence');
-      }, 1000);
+      // Prepare for next entry: clear form and scroll to top
+      resetForm();
+      window.requestAnimationFrame(scrollToTop);
     } else {
       const currentError = useTempResidenceStore.getState().error;
       toast.error(currentError || 'Đăng ký thất bại. Vui lòng thử lại!');
@@ -236,17 +249,6 @@ export default function TempAbsence() {
     const ok = window.confirm("Bạn có chắc muốn xóa toàn bộ dữ liệu đã nhập?");
     if (!ok) return;
     resetForm();
-    const scrollToTop = () => {
-      // Prefer scrolling the container that owns this page
-      topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-      // Fallbacks for various scroll containers
-      if (typeof window !== "undefined") {
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      }
-      const se = (document.scrollingElement || document.documentElement) as any;
-      se?.scrollTo?.({ top: 0, behavior: "smooth" });
-      if (se) se.scrollTop = 0;
-    };
     // Wait for DOM to settle after reset, then scroll
     window.requestAnimationFrame(scrollToTop);
   };
