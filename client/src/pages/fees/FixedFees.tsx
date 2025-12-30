@@ -4,12 +4,13 @@ import { useState, useEffect, useMemo } from 'react';
 import {
   ChevronDown,
   ChevronRight,
-  //Edit,
+  Edit,
   Plus,
   X,
   Loader,
   DollarSign,
   Printer,
+  Trash2,
 } from 'lucide-react';
 import { useFeeStore, type Fee } from '@/stores/fee.store';
 import { toast } from 'react-hot-toast';
@@ -60,6 +61,7 @@ export default function FixedFees() {
     useState<HouseholdFeeUI | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showCreateFeeModal, setShowCreateFeeModal] = useState(false);
+  const [showEditFeeModal, setShowEditFeeModal] = useState(false);
 
   const [newItemType, setNewItemType] = useState('');
   const [newUnitType, setNewUnitType] = useState<
@@ -251,6 +253,52 @@ export default function FixedFees() {
     }
   }
 
+  const handleEditFee = () => {
+    if (!currentCategory) return;
+    setNewItemType(currentCategory.item_type);
+    setNewUnitType(currentCategory.unit_type);
+    setNewAmount(currentCategory.amount);
+    setNewEffectiveFrom(currentCategory.effective_from);
+    setNewEffectiveTo(currentCategory.effective_to || '');
+    setNewNote(currentCategory.note || '');
+    setShowEditFeeModal(true);
+  };
+
+  const handleDeleteFee = async () => {
+    if (!selectedRateId || !currentCategory) return;
+    
+    const confirmed = window.confirm(
+      `Bạn có chắc chắn muốn xóa khoản thu "${currentCategory.item_type}"? Hành động này không thể hoàn tác.`
+    );
+    
+    if (!confirmed) return;
+
+    setIsProcessing(true);
+    try {
+      const { deleteFeeWave } = useFeeStore.getState();
+      const ok = await deleteFeeWave(selectedRateId);
+      
+      if (ok) {
+        toast.success('Xóa khoản thu thành công!');
+        // Chọn khoản thu mới nhất sau khi xóa
+        await fetchAllFees();
+        const remainingFees = useFeeStore.getState().fees;
+        if (remainingFees.length > 0) {
+          setSelectedRateId(remainingFees[0].rate_id);
+        } else {
+          setSelectedRateId(null);
+        }
+      } else {
+        toast.error('Xóa khoản thu thất bại');
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Có lỗi xảy ra khi xóa khoản thu');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const handleAddPayment = (household: HouseholdFeeUI) => {
     setSelectedHousehold(household);
     const remaining = household.totalAmount - household.paidAmount;
@@ -321,8 +369,8 @@ export default function FixedFees() {
         </button>
       </div>
 
-      {/* Dropdown chọn khoản thu */}
-      <div>
+      {/* Dropdown chọn khoản thu và các nút Edit/Delete */}
+      <div className="flex items-center gap-2">
         <select
           value={selectedRateId ?? ""}
           onChange={(e) => {
@@ -332,7 +380,7 @@ export default function FixedFees() {
             setSortBy("status");
             setSelectedRateId(Number(e.target.value));
           }}
-          className="px-3 py-2 rounded-lg border border-input bg-card text-foreground"
+          className="px-3 py-2 rounded-lg border border-input bg-card text-foreground flex-1"
         >
           {fees.map((f) => (
             <option key={f.rate_id} value={f.rate_id}>
@@ -340,6 +388,26 @@ export default function FixedFees() {
             </option>
           ))}
         </select>
+        {selectedRateId && (
+          <>
+            <button
+              onClick={handleEditFee}
+              disabled={isProcessing}
+              className="p-2 rounded-lg border border-input bg-card text-foreground hover:bg-muted/10 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              title="Chỉnh sửa khoản thu"
+            >
+              <Edit className="w-4 h-4" />
+            </button>
+            <button
+              onClick={handleDeleteFee}
+              disabled={isProcessing}
+              className="p-2 rounded-lg border border-input bg-card text-foreground hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-300 dark:hover:border-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              title="Xóa khoản thu"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </>
+        )}
       </div>
 
       {/* Accordion */}
@@ -555,6 +623,89 @@ export default function FixedFees() {
       </div>
 
       {/* MODALS */}
+      {/* Edit Fee Modal */}
+      {showEditFeeModal && currentCategory && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+          onClick={() => setShowEditFeeModal(false)}
+        >
+          <div
+            className="bg-card w-full max-w-lg rounded-2xl p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">Chi tiết khoản thu</h3>
+              <button onClick={() => setShowEditFeeModal(false)}>
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="text-sm text-muted-foreground">Tên khoản thu</label>
+                <div className="mt-1 px-3 py-2 rounded-lg border bg-muted/50 text-foreground">
+                  {currentCategory.item_type}
+                </div>
+              </div>
+
+              <div>
+                <label className="text-sm text-muted-foreground">Đơn vị tính</label>
+                <div className="mt-1 px-3 py-2 rounded-lg border bg-muted/50 text-foreground">
+                  {currentCategory.unit_type === 'per_person' ? 'Theo nhân khẩu' : 'Theo hộ'}
+                </div>
+              </div>
+
+              <div>
+                <label className="text-sm text-muted-foreground">Số tiền</label>
+                <div className="mt-1 px-3 py-2 rounded-lg border bg-muted/50 text-foreground">
+                  {currentCategory.amount.toLocaleString()} VND
+                </div>
+              </div>
+
+              <div>
+                <label className="text-sm text-muted-foreground">Từ ngày</label>
+                <div className="mt-1 px-3 py-2 rounded-lg border bg-muted/50 text-foreground">
+                  {currentCategory.effective_from}
+                </div>
+              </div>
+
+              {currentCategory.effective_to && (
+                <div>
+                  <label className="text-sm text-muted-foreground">Đến ngày</label>
+                  <div className="mt-1 px-3 py-2 rounded-lg border bg-muted/50 text-foreground">
+                    {currentCategory.effective_to}
+                  </div>
+                </div>
+              )}
+
+              {currentCategory.note && (
+                <div>
+                  <label className="text-sm text-muted-foreground">Ghi chú</label>
+                  <div className="mt-1 px-3 py-2 rounded-lg border bg-muted/50 text-foreground">
+                    {currentCategory.note}
+                  </div>
+                </div>
+              )}
+
+              <div className="pt-4 border-t">
+                <p className="text-sm text-muted-foreground">
+                  Chức năng chỉnh sửa đang được phát triển.
+                </p>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-4">
+                <button
+                  onClick={() => setShowEditFeeModal(false)}
+                  className="px-4 py-2 rounded-lg border hover:bg-muted/10 transition"
+                >
+                  Đóng
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showCreateFeeModal && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"

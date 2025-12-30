@@ -148,7 +148,8 @@ export default function CitizenDetailPanel({
             >
               {formatStatus(citizen.status)}
             </span>
-            {citizen.isDeceased && (
+            {/* Chỉ hiển thị badge "Đã qua đời" riêng nếu status không phải "deceased" (tránh trùng lặp) */}
+            {citizen.isDeceased && citizen.status !== 'deceased' && (
               <span
                 className="px-3 py-1 rounded-full text-sm font-medium text-muted-foreground"
                 style={

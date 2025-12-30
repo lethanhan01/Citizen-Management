@@ -36,11 +36,23 @@ interface CitizenItem {
   isDeceased?: boolean;
   relationshipToHead?: string;
   isHead?: boolean;
+  start_date?: string;
+  end_date?: string;
 }
 
 interface FormErrors {
   [key: string]: string;
 }
+
+// Helper: Format ngày tháng
+const formatDate = (dateString?: string) => {
+  if (!dateString || dateString === 'N/A') return '-';
+  try {
+    return new Date(dateString).toLocaleDateString('vi-VN');
+  } catch {
+    return dateString;
+  }
+};
 
 // Helpers: map BE data ↔ FE view model
 function mapGenderToView(g: string | null | undefined): "Nam" | "Nữ" {
@@ -93,6 +105,8 @@ function toCitizenItem(p: any): CitizenItem {
     isDeceased: String(p?.residency_status ?? "").toLowerCase() === "deceased",
     relationshipToHead: relation ?? "",
     isHead,
+    start_date: p?.start_date ?? undefined,
+    end_date: p?.end_date ?? undefined,
   };
 }
 
@@ -135,7 +149,6 @@ export default function UpdatePerson() {
   const [formData, setFormData] = useState<CitizenItem | null>(null);
   const [errors, setErrors] = useState<FormErrors>({});
   const [saving, setSaving] = useState<boolean>(false);
-  const [deceasedLoading, setDeceasedLoading] = useState<boolean>(false);
 
   // Use same data source + server-side pagination as CitizenList
   const LIMIT = 10; // Limited page size like ViewCitizen
@@ -222,7 +235,7 @@ export default function UpdatePerson() {
     } else if (originalStatus === "Tạm trú") {
       return ["Tạm trú", "Đã chuyển đi"];
     } else if (originalStatus === "Tạm vắng") {
-      return ["Tạm vắng", "Thường trú", "Tạm trú", "Đã chuyển đi"];
+      return []; // Chỉ xem, không cho chỉnh sửa status
     } else if (originalStatus === "Đã chuyển đi") {
       return []; // Không có option nào nếu đã là "Đã chuyển đi"
     }
@@ -237,7 +250,6 @@ export default function UpdatePerson() {
       "fullName",
       "dateOfBirth",
       "gender",
-      "cccd",
       "address",
       "status",
     ];
@@ -317,26 +329,21 @@ export default function UpdatePerson() {
     setFormData(updatedLocal);
   };
 
-  const toggleDeceased = async () => {
-    if (!formData) return;
-    setDeceasedLoading(true);
+  const toggleDeceased = () => {
+    if (!formData || !selected) return;
+    // Chỉ update form state, không gửi API ngay - đợi user bấm Save
     const nextDeceased = !formData.isDeceased;
-    const nextLocal = { ...formData, isDeceased: nextDeceased, status: nextDeceased ? "Đã chuyển đi" : formData.status };
-    try {
-      await PersonAPI.updatePerson(formData.id, {
-        residency_status: nextDeceased ? "deceased" : mapStatusToServer(nextLocal.status),
-      });
-      setCitizens((prev) => prev.map((c) => (c.id === nextLocal.id ? nextLocal : c)));
-      setSelected(nextLocal);
-      setFormData(nextLocal);
-    } catch (e: any) {
-      alert(e?.message || "Cập nhật trạng thái qua đời thất bại");
-    } finally {
-      setDeceasedLoading(false);
-    }
+    // Khi đánh dấu đã chết, tự động đổi status thành "Đã chuyển đi"
+    // Khi bỏ đánh dấu, restore về status ban đầu từ DB (selected.status)
+    const updatedLocal = { 
+      ...formData, 
+      isDeceased: nextDeceased, 
+      status: nextDeceased ? "Đã chuyển đi" as Status : selected.status 
+    };
+    setFormData(updatedLocal);
   };
 
-  const isBusy = saving || deceasedLoading;
+  const isBusy = saving;
 
   return (
     <div className="space-y-6">
@@ -592,6 +599,35 @@ export default function UpdatePerson() {
                   />
                 </div>
 
+                {/* Hiển thị thời hạn Tạm trú/Tạm vắng */}
+                {(formData.status === "Tạm trú" || formData.status === "Tạm vắng") && (
+                  <div className="space-y-4 p-4 rounded-lg bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800">
+                    <h4 className="font-semibold text-blue-700 dark:text-blue-400">
+                      {formData.status === "Tạm trú"
+                        ? "Thời hạn Tạm trú"
+                        : "Thời hạn Tạm vắng"}
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-first dark:text-darkmodetext mb-1">
+                          Từ ngày
+                        </label>
+                        <div className="px-3 py-2.5 rounded-lg border border-second/40 dark:border-second/30 bg-muted/50 text-foreground text-sm">
+                          {formatDate(formData.start_date)}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-first dark:text-darkmodetext mb-1">
+                          Đến ngày
+                        </label>
+                        <div className="px-3 py-2.5 rounded-lg border border-second/40 dark:border-second/30 bg-muted/50 text-foreground text-sm">
+                          {formatDate(formData.end_date)}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Field
                     label="Mã hộ gia đình"
@@ -648,17 +684,8 @@ export default function UpdatePerson() {
                   type="button"
                   disabled={isBusy}
                 >
-                  {deceasedLoading ? (
-                    <>
-                      <Loader className="w-4 h-4 animate-spin" />
-                      Đang lưu...
-                    </>
-                  ) : (
-                    <>
-                      <HeartPulse className="w-4 h-4" />
-                      Đánh dấu đã qua đời
-                    </>
-                  )}
+                  <HeartPulse className="w-4 h-4" />
+                  {formData.isDeceased ? "Bỏ đánh dấu đã qua đời" : "Đánh dấu đã qua đời"}
                 </button>
                 <button
                   onClick={saveChanges}
