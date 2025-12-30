@@ -1,16 +1,31 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { User, Lock, LogOut, Eye, EyeOff, Loader } from "lucide-react";
 import { useAuthStore } from "@/stores/auth.store";
 
+// Preload all icon images named icon, icon2 ... icon10 from assets
+const ICON_MODULES = import.meta.glob("../../assets/icon*.{png,jpg,jpeg,svg}", {
+  eager: true,
+  import: "default",
+}) as Record<string, string>;
+const ICON_URLS: string[] = Object.values(ICON_MODULES);
+
 export default function Profile() {
+  const randomAvatarRef = useRef<string | null>(null);
   const navigate = useNavigate();
   const { user, loading, error, fetchMe, logout } = useAuthStore();
   useEffect(() => {
     fetchMe();
   }, [fetchMe]);
+
+  // Pick a random icon once (per page load) for users without avatar
+  if (!randomAvatarRef.current) {
+    randomAvatarRef.current = ICON_URLS.length
+      ? ICON_URLS[Math.floor(Math.random() * ICON_URLS.length)]
+      : null;
+  }
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [oldPassword, setOldPassword] = useState("");
@@ -98,7 +113,17 @@ export default function Profile() {
           <div className="flex-shrink-0">
             <div className="w-24 h-24 rounded-full bg-third/20 flex items-center justify-center">
               {user?.avatar ? (
-                <img src={user.avatar} alt={user?.full_name ?? user?.fullName ?? "Avatar"} className="w-24 h-24 rounded-full object-cover" />
+                <img
+                  src={user.avatar}
+                  alt={(user?.full_name ?? user?.fullName ?? "Avatar").toString()}
+                  className="w-24 h-24 rounded-full object-cover"
+                />
+              ) : randomAvatarRef.current ? (
+                <img
+                  src={randomAvatarRef.current}
+                  alt={(user?.full_name ?? user?.fullName ?? "Avatar").toString()}
+                  className="w-24 h-24 rounded-full object-cover"
+                />
               ) : (
                 <User className="w-12 h-12 text-third" />
               )}
