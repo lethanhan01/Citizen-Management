@@ -2,8 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Search, Users, X, Save, Loader } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import * as HouseholdAPI from "@/api/household.api";
+import PaginationBar from "@/components/PaginationBar";
 
 interface Member {
   id: string;
@@ -27,20 +28,51 @@ interface TableHouseholdItem {
   headName: string;
   address: string;
   membersCount: number;
+  registrationDate?: string;
 }
 
 interface FormErrors {
   [key: string]: string;
 }
 
-// Backend-connected households list
-// Loaded via API: getHouseholds() then mapped for table display
+const ITEMS_PER_PAGE = 10;
+
+function toTableHouseholdItem(h: any): TableHouseholdItem {
+  const head = Array.isArray(h?.residents)
+    ? h.residents.find((m: any) => m?.HouseholdMembership?.is_head || m?.is_head)
+    : h?.headPerson || h?.head || null;
+  const headNameValue =
+    head?.full_name ??
+    h?.headPerson?.full_name ??
+    h?.head_full_name ??
+    h?.head_name ??
+    h?.owner_full_name ??
+    h?.chu_ho_name ??
+    h?.household_head_name ??
+    h?.headName ??
+    "";
+  return {
+    id: String(h?.household_id ?? h?.id ?? ""),
+    code: String(h?.household_no ?? h?.code ?? ""),
+    headName: String(headNameValue),
+    address: String(h?.address ?? ""),
+    membersCount: Number(
+      h?.members_count ?? h?.memberCount ?? (Array.isArray(h?.residents) ? h.residents.length : 0)
+    ),
+    registrationDate: String(h?.registration_date ?? h?.created_at ?? ""),
+  };
+}
 
 export default function SplitHousehold() {
   const navigate = useNavigate();
-  const [search, setSearch] = useState("");
-  const [households, setHouseholds] = useState<TableHouseholdItem[]>([]);
+  const [params] = useSearchParams();
+  const initialId = params.get("household_no") || params.get("id") || params.get("code") || "";
+  const [searchQuery, setSearchQuery] = useState(initialId);
+  const [sortBy, setSortBy] = useState<"headName" | "memberCount" | "date" | "codeAsc" | "codeDesc">("headName");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [allData, setAllData] = useState<any[]>([]);
   const [listLoading, setListLoading] = useState(false);
+  const [listError, setListError] = useState<string | null>(null);
   const [selected, setSelected] = useState<HouseholdItem | null>(null);
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
   const [newHead, setNewHead] = useState("");
@@ -50,37 +82,102 @@ export default function SplitHousehold() {
   const [isLoading, setIsLoading] = useState(false);
   const [detailLoading, setDetailLoading] = useState(false);
 
-  // Load households from backend
+  // Load all households from backend (same as HouseholdList)
   useEffect(() => {
-    const load = async () => {
+    const fetchAll = async () => {
       setListLoading(true);
+      setListError(null);
       try {
-        const list = await HouseholdAPI.getHouseholds({ page: 1, limit: 200 });
-        const arr = Array.isArray(list) ? list : Array.isArray(list?.rows) ? list.rows : [];
-        const mapped: TableHouseholdItem[] = arr.map((h: any) => ({
-          id: String(h?.household_id ?? h?.id ?? ""),
-          code: String(h?.household_no ?? h?.code ?? ""),
-          headName: String(h?.headPerson?.full_name ?? h?.head_name ?? ""),
-          address: String(h?.address ?? ""),
-          membersCount: Number(h?.members_count ?? h?.membersCount ?? 0),
-        }));
-        setHouseholds(mapped);
-      } catch (e) {
-        console.error(e);
+        const limit = 500;
+        let page = 1;
+        const acc: any[] = [];
+        // Loop pages until fewer than limit results are returned
+        while (true) {
+          const resp = await HouseholdAPI.getHouseholds({ page, limit });
+          const arr = Array.isArray(resp) ? resp : Array.isArray(resp?.rows) ? resp.rows : [];
+          acc.push(...arr);
+          if (arr.length < limit) break;
+          page += 1;
+          // Safety stop to avoid infinite loops if backend misreports
+          if (page > 1000) break;
+        }
+        setAllData(acc);
+      } catch (e: any) {
+        setListError(e?.message || "Không tải được toàn bộ hộ khẩu");
       } finally {
         setListLoading(false);
       }
     };
-    load();
+    fetchAll();
   }, []);
 
-  const filtered = useMemo(() => {
-    const term = search.trim().toLowerCase();
-    if (!term) return households;
-    return households.filter((h) =>
-      [h.code, h.headName].some((v) => v.toLowerCase().includes(term))
+  const sourceHouseholds: TableHouseholdItem[] = useMemo(() => {
+    return allData.map(toTableHouseholdItem);
+  }, [allData]);
+
+  // Auto-select household from query params
+  useEffect(() => {
+    if (!initialId || sourceHouseholds.length === 0) return;
+    
+    const found = sourceHouseholds.find(
+      (h) => h.code === initialId || h.id === initialId
     );
-  }, [search, households]);
+    
+    if (found && !selected) {
+      handleSelect(found);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialId, sourceHouseholds]);
+
+  // Filter & Sort (same as HouseholdList)
+  const filteredHouseholds = useMemo(() => {
+    let result = sourceHouseholds.filter((household) => {
+      const matchSearch =
+        household.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        household.headName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        household.address.toLowerCase().includes(searchQuery.toLowerCase());
+
+      return matchSearch;
+    });
+
+    // Sort
+    if (sortBy === "headName") {
+      result.sort((a, b) => a.headName.localeCompare(b.headName));
+    } else if (sortBy === "memberCount") {
+      result.sort((a, b) => b.membersCount - a.membersCount);
+    } else if (sortBy === "date") {
+      // Sort by created_at (registrationDate) descending - newest first
+      result.sort((a, b) => {
+        const dateA = a.registrationDate ? new Date(a.registrationDate).getTime() : 0;
+        const dateB = b.registrationDate ? new Date(b.registrationDate).getTime() : 0;
+        return dateB - dateA; // Descending order
+      });
+    } else if (sortBy === "codeAsc") {
+      // Sort by household code ascending
+      result.sort((a, b) => {
+        const codeA = a.code.toLowerCase();
+        const codeB = b.code.toLowerCase();
+        return codeA.localeCompare(codeB, undefined, { numeric: true, sensitivity: 'base' });
+      });
+    } else if (sortBy === "codeDesc") {
+      // Sort by household code descending
+      result.sort((a, b) => {
+        const codeA = a.code.toLowerCase();
+        const codeB = b.code.toLowerCase();
+        return codeB.localeCompare(codeA, undefined, { numeric: true, sensitivity: 'base' });
+      });
+    }
+
+    return result;
+  }, [searchQuery, sortBy, sourceHouseholds]);
+
+  // Pagination
+  const totalPages = Math.ceil(filteredHouseholds.length / ITEMS_PER_PAGE);
+  const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedHouseholds = filteredHouseholds.slice(
+    startIdx,
+    startIdx + ITEMS_PER_PAGE
+  );
 
   const handleSelect = async (household: TableHouseholdItem) => {
     setDetailLoading(true);
@@ -177,14 +274,18 @@ export default function SplitHousehold() {
 
   return (
     <div className="space-y-6">
-      {/* Search */}
+      {/* Search & Filter Section */}
       <div className="space-y-4 mb-6">
+        {/* Search Bar */}
         <div className="relative">
           <input
             type="text"
-            placeholder="Tìm theo mã hộ, tên chủ hộ..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Tìm kiếm theo mã hộ, tên chủ hộ, địa chỉ..."
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1);
+            }}
             className="
               w-full pl-10 pr-4 py-2.5 rounded-lg
               bg-white dark:bg-transparent dark:border
@@ -196,55 +297,121 @@ export default function SplitHousehold() {
           />
           <Search className="w-5 h-5 absolute left-3 top-2.5 text-second dark:text-darkmodetext/60" />
         </div>
+
+        {/* Sort Controls */}
+        <div className="flex flex-wrap gap-3">
+          <select
+            value={sortBy}
+            onChange={(e) => {
+              setSortBy(e.target.value as "headName" | "memberCount" | "date" | "codeAsc" | "codeDesc");
+              setCurrentPage(1);
+            }}
+            className="
+              px-4 py-2 rounded-lg text-sm font-medium
+              bg-white dark:bg-transparent dark:border
+              border border-second/40 dark:border-second/30
+              text-first dark:text-darkmodetext
+              focus:outline-none focus:ring-1 focus:ring-selectring transition
+            "
+          >
+            <option value="headName">Sắp xếp theo tên chủ hộ</option>
+            <option value="memberCount">Sắp xếp theo số thành viên</option>
+            <option value="date">Sắp xếp theo thời gian thêm vào hệ thống</option>
+            <option value="codeAsc">Sắp xếp theo mã hộ tăng dần</option>
+            <option value="codeDesc">Sắp xếp theo mã hộ giảm dần</option>
+          </select>
+        </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-card text-card-foreground border border-border rounded-xl p-4 shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-sm">
-            <thead>
-              <tr className="text-left text-second dark:text-darkmodetext/70 border-b border-border">
-                <th className="py-3 px-2">Mã hộ</th>
-                <th className="py-3 px-2">Chủ hộ</th>
-                <th className="py-3 px-2">Địa chỉ</th>
-                <th className="py-3 px-2">Số người</th>
-                <th className="py-3 px-2 text-center">Chọn</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((h) => (
-                <tr
-                  key={h.id}
-                  className="border-b border-border/50 hover:bg-muted/10 transition"
-                >
-                  <td className="py-3 px-2 font-medium text-first dark:text-darkmodetext">{h.code}</td>
-                  <td className="py-3 px-2 text-first dark:text-darkmodetext">{h.headName}</td>
-                  <td className="py-3 px-2 text-first dark:text-darkmodetext">{h.address}</td>
-                  <td className="py-3 px-2 text-first dark:text-darkmodetext">{h.membersCount}</td>
-                  <td className="py-3 px-2 text-center">
-                    <button
-                      onClick={() => handleSelect(h)}
-                      className="p-2 rounded-lg border border-border hover:bg-muted/20 text-first dark:text-darkmodetext"
+      {/* Table Container */}
+      <div className="bg-card text-card-foreground border border-border rounded-xl shadow-sm overflow-hidden flex flex-col">
+        {listLoading ? (
+          <div className="flex-1 flex items-center justify-center py-12">
+            <Loader className="w-8 h-8 text-third animate-spin" />
+          </div>
+        ) : listError ? (
+          <div className="flex-1 flex items-center justify-center py-12">
+            <div className="text-center">
+              <p className="text-red-500 font-semibold">Đã xảy ra lỗi</p>
+              <p className="text-second dark:text-darkmodetext/70 mt-1">{listError}</p>
+            </div>
+          </div>
+        ) : paginatedHouseholds.length === 0 ? (
+          <div className="flex-1 flex items-center justify-center py-12">
+            <div className="text-center">
+              <p className="text-second dark:text-darkmodetext/70 text-lg">
+                Không tìm thấy hộ khẩu nào
+              </p>
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Table */}
+            <div className="overflow-x-auto flex-1">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-second/40 dark:border-second/30 bg-second/5 dark:bg-second/10">
+                    <th className="px-4 py-3 text-left text-first dark:text-darkmodetext font-semibold">
+                      Mã hộ
+                    </th>
+                    <th className="px-4 py-3 text-left text-first dark:text-darkmodetext font-semibold">
+                      Chủ hộ
+                    </th>
+                    <th className="px-4 py-3 text-left text-first dark:text-darkmodetext font-semibold">
+                      Địa chỉ
+                    </th>
+                    <th className="px-4 py-3 text-left text-first dark:text-darkmodetext font-semibold">
+                      Số người
+                    </th>
+                    <th className="px-4 py-3 text-center text-first dark:text-darkmodetext font-semibold">
+                      Chọn
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedHouseholds.map((h) => (
+                    <tr
+                      key={h.id}
+                      className="border-b border-second/20 dark:border-second/20 hover:bg-second/5 dark:hover:bg-second/10 transition"
                     >
-                      <Users className="w-4 h-4" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-              {filtered.length === 0 && (
-                <tr>
-                  <td className="py-4 text-center text-second dark:text-darkmodetext/70" colSpan={5}>
-                    {listLoading ? (
-                      <span className="inline-flex items-center gap-2"><Loader className="w-4 h-4 animate-spin" /> Đang tải...</span>
-                    ) : (
-                      "Không tìm thấy"
-                    )}
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+                      <td className="px-4 py-3 text-first dark:text-darkmodetext font-medium">
+                        {h.code}
+                      </td>
+                      <td className="px-4 py-3 text-first dark:text-darkmodetext">
+                        {h.headName || "—"}
+                      </td>
+                      <td className="px-4 py-3 text-first dark:text-darkmodetext max-w-xs truncate">
+                        {h.address}
+                      </td>
+                      <td className="px-4 py-3 text-first dark:text-darkmodetext">
+                        {h.membersCount}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <button
+                          onClick={() => handleSelect(h)}
+                          className="p-2 rounded-lg border border-border hover:bg-muted/20 text-first dark:text-darkmodetext transition"
+                          title="Chọn hộ để tách"
+                        >
+                          <Users className="w-4 h-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <PaginationBar
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={filteredHouseholds.length}
+              startIdx={startIdx}
+              pageSize={ITEMS_PER_PAGE}
+              currentCount={paginatedHouseholds.length}
+              onPageChange={(page) => setCurrentPage(page)}
+            />
+          </>
+        )}
       </div>
 
       {selected && (

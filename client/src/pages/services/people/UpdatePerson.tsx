@@ -9,6 +9,7 @@ import {
   UserX,
   HeartPulse,
   Loader,
+  Check,
 } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import * as PersonAPI from "@/api/person.api";
@@ -641,15 +642,16 @@ export default function UpdatePerson() {
                   />
                 </div>
 
-                <label className="flex items-center gap-2 text-sm text-first dark:text-darkmodetext">
-                  <input
-                    type="checkbox"
-                    checked={formData.isHead || false}
-                    onChange={(e) => handleChange("isHead", e.target.checked)}
-                    className="w-4 h-4 rounded"
-                  />
-                  Đánh dấu là chủ hộ
-                </label>
+                <div className="flex items-center gap-2 text-sm text-first dark:text-darkmodetext">
+                  {formData.isHead ? (
+                    <>
+                      <Check className="w-4 h-4 text-green-600 dark:text-green-400" />
+                      <span>Là chủ hộ</span>
+                    </>
+                  ) : (
+                    <span className="text-second dark:text-darkmodetext/60">Không phải chủ hộ</span>
+                  )}
+                </div>
               </Section>
 
               {/* Status toggles */}
