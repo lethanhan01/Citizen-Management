@@ -70,11 +70,27 @@ const handleLogout = async (req, res) => {
 };
 
 const getMe = async (req, res) => {
-    return res.status(200).json({
-        success: true,
-        message: "Lấy thông tin người dùng thành công",
-        data: req.user
-    });
+    try {
+        const userId = req.user?.user_id;
+        if (!userId) {
+            return res.status(400).json({
+                success: false,
+                message: "Thiếu user_id trong token"
+            });
+        }
+
+        const me = await authService.getMe(userId);
+        return res.status(200).json({
+            success: true,
+            message: "Lấy thông tin người dùng thành công",
+            data: me
+        });
+    } catch (error) {
+        return res.status(400).json({
+            success: false,
+            message: error.message
+        });
+    }
 };
 
 export default {

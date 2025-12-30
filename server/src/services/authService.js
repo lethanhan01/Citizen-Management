@@ -72,5 +72,13 @@ const updateProfile = async (userId, updateData) => {
 export default {
   register,
   login,
-  updateProfile
+  updateProfile,
+  async getMe(userId) {
+    const user = await db.User.findByPk(userId);
+    if (!user) {
+      throw new Error("Người dùng không tồn tại");
+    }
+    const { password: _, ...userInfo } = user.toJSON();
+    return userInfo;
+  }
 };

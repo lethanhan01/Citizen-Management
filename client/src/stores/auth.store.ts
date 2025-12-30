@@ -42,7 +42,10 @@ export const useAuthStore = create<AuthState>()(
         set({ loading: true, error: null });
         try {
           const me = await AuthAPI.getMe();
-          set({ user: me ?? null, loading: false });
+          set((state) => ({
+            user: me ? { ...(state.user ?? {}), ...me } : (state.user ?? null),
+            loading: false,
+          }));
         } catch (err: any) {
           set({ error: err?.message || 'Không lấy được thông tin người dùng', loading: false });
         }
