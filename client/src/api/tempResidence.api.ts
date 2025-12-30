@@ -3,7 +3,8 @@ import apiClient from '../lib/axios';
 // Tạm trú
 export async function createTempResidence(payload: any) {
   const resp = await apiClient.post('/api/v1/tam-tru', payload);
-  return resp.data?.data ?? null;
+  // Backend returns { message, tempResidence }
+  return resp.data?.tempResidence ?? null;
 }
 
 // Danh sách tạm trú/tạm vắng (có thể truyền params lọc)
