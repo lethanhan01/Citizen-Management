@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
+import { useLocation } from "react-router-dom";
 import { toast, Toaster } from "react-hot-toast";
 import { Search, UserCheck, X, Save, Loader } from "lucide-react";
 import { useHouseholdStore } from "@/stores/household.store";
@@ -68,6 +69,7 @@ function toHouseholdItem(h: any): HouseholdItem {
 const ITEMS_PER_PAGE = 10;
 
 export default function ChangeOwner() {
+  const location = useLocation();
   const { data, loading, error, fetchHouseholds } = useHouseholdStore();
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<HouseholdItem | null>(null);
@@ -109,10 +111,32 @@ export default function ChangeOwner() {
     fetchAll();
   }, [fetchHouseholds]);
 
+  // Read household code from query param to prefill and auto-select
+  const prefillCode = useMemo(() => {
+    const params = new URLSearchParams(location.search);
+    return params.get("household_no") || params.get("code") || "";
+  }, [location.search]);
+  const prefilledRef = useRef(false);
+
   const sourceHouseholds: HouseholdItem[] = useMemo(() => {
     const arr = Array.isArray(allData) && allData.length > 0 ? allData : Array.isArray(data) ? data : [];
     return arr.map(toHouseholdItem);
   }, [allData, data]);
+
+  useEffect(() => {
+    if (!prefilledRef.current && prefillCode) {
+      setSearch(prefillCode);
+      setCurrentPage(1);
+      const match = sourceHouseholds.find((h) => h.code === prefillCode);
+      if (match) {
+        // Open detail for the matched household
+        (async () => {
+          await handleSelect(match);
+          prefilledRef.current = true;
+        })();
+      }
+    }
+  }, [prefillCode, sourceHouseholds]);
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
