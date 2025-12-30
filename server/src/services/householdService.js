@@ -23,7 +23,7 @@ let getAllHouseholds = async ({ page = 1, limit = 20 }) => {
                         SELECT COUNT(*) FROM core.household_membership hm
                         JOIN core.person p ON hm.person_id = p.person_id
                         WHERE hm.household_id = "Household"."household_id" AND (hm.end_date > CURRENT_DATE OR hm.end_date IS NULL)
-                        AND p.residency_status NOT IN ('deseased', 'moved_out')
+                        AND p.residency_status NOT IN ('deceased', 'moved_out')
                     )`),
                     "members_count",
                 ],
@@ -49,7 +49,7 @@ let getHouseholdById = async (id) => {
                         SELECT COUNT(*) FROM core.household_membership hm
                         JOIN core.person p ON hm.person_id = p.person_id
                         WHERE hm.household_id = "Household"."household_id" AND (hm.end_date > CURRENT_DATE OR hm.end_date IS NULL)
-                        AND p.residency_status NOT IN ('deseased', 'moved_out')
+                        AND p.residency_status NOT IN ('deceased', 'moved_out')
                     )`),
                     "members_count",
                 ],
