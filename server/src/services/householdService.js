@@ -554,6 +554,26 @@ let changeHouseholdHead = async (
                 `Không tìm thấy nhân khẩu với ID: ${newHeadPersonId}`
             );
         }
+        if (
+            newHeadPerson.residency_status === "deceased" ||
+            newHeadPerson.residency_status === "moved_out"
+        ) {
+            throw new Error(
+                `Nhân khẩu với ID: ${newHeadPersonId} không thể trở thành chủ hộ do có trạng thái cư trú là ${newHeadPerson.residency_status}`
+            );
+        }
+        const membership = await HouseholdMembership.findOne({
+            where: {
+                household_id: householdId,
+                person_id: newHeadPersonId,
+            },
+            transaction,
+        });
+        if (membership.end_date !== null && membership.end_date <= new Date()) {
+            throw new Error(
+                `Nhân khẩu với ID: ${newHeadPersonId} không thể trở thành chủ hộ do đã từng rời khỏi hộ khẩu`
+            );
+        }
         const newHeadMembership = await HouseholdMembership.findOne({
             where: {
                 household_id: householdId,
