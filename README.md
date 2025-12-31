@@ -1,4 +1,3 @@
-
 # 🏙️ Citizen Management System
 
 ![NodeJS](https://img.shields.io/badge/Backend-Node.js-green?logo=node.js)
@@ -27,6 +26,8 @@
 - CORS, dotenv, nodemon
 - JWT xác thực
 
+## Demo Project
+[![Xem demo trên YouTube](https://img.youtube.com/vi/L2Wl6m0teB8/maxresdefault.jpg)](https://www.youtube.com/watch?v=L2Wl6m0teB8 "Bấm để xem trên YouTube")
 
 
 ## ⚙️ Cài đặt và chạy dự án
@@ -51,37 +52,19 @@ npm install
 
 ---
 
-### 3️⃣ Cấu hình môi trường
+### 3️⃣ Cấu hình môi trường và chạy ở chế độ phát triển
 
-Tạo file `.env` trong thư mục `server/` dựa theo `.env.example`:
+Tạo file `.env` trong thư mục `client/` như sau:
 
 ```bash
-PORT=5000
-DATABASE_URL=postgresql://user:password@localhost:5432/citizen_db
-JWT_SECRET=super_secret_key
+VITE_API_URL=https://citizen-management-w0w5.onrender.com
 ```
 
----
-
-### 4️⃣ Chạy ứng dụng ở chế độ phát triển
-
-Mở hai terminal:
-
+Chạy chương trình:
 ```bash
-# Terminal 1: Backend
-cd server
+cd ./client
 npm run dev
 ```
-
-```bash
-# Terminal 2: Frontend
-cd client
-npm run dev
-```
-
-* Frontend: [http://localhost:5173](http://localhost:5173)
-* Backend: [http://localhost:5000](http://localhost:5000)
-
 ---
 
 ### 5️⃣ Build & deploy
@@ -92,24 +75,11 @@ npm run dev
 cd client
 npm run build
 ```
-
-→ Tạo thư mục `client/dist/`
-
 #### ☁️ Deploy Backend
+Deploy trên **Render**, **Railway**, hoặc **AWS EC2** (PostgreSQL dùng RDS, Supabase hoặc ElephantSQL).
 
-Deploy trên **Render**, **Railway**, hoặc **AWS EC2** (PostgreSQL dùng RDS hoặc ElephantSQL).
-
----
-
-## 🧩 API endpoints (ví dụ)
-
-| Method | Endpoint              | Mô tả                           |
-| ------ | --------------------- | ------------------------------- |
-| GET    | `/api/households`     | Lấy danh sách hộ gia đình       |
-| POST   | `/api/households`     | Tạo mới hộ                      |
-| PUT    | `/api/households/:id` | Cập nhật hộ                     |
-| DELETE | `/api/households/:id` | Xóa hộ                          |
-| GET    | `/api/payments`       | Lấy danh sách đóng góp, thu phí |
+Tuy nhiên
+cả Frontend và Backend đều đã được Lê Thành An deploy rồi nên có thể bỏ qua bước này và ấn vào link ở phần mô tả để xem kết quả
 
 ---
 
@@ -148,8 +118,6 @@ Deploy trên **Render**, **Railway**, hoặc **AWS EC2** (PostgreSQL dùng RDS h
     }
   })
   ```
-* **Không commit file `.env`**, chỉ giữ `.env.example`.
-
 ---
 
 ## 🚀 Chất lượng Code (Code Quality)
