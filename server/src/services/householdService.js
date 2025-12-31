@@ -346,9 +346,36 @@ let splitHousehold = async (
 ) => {
     const transaction = await db.sequelize.transaction();
     try {
+        for (const personId of danhSachNhanKhauTachDi) {
+            const person = await Person.findByPk(personId, { transaction });
+            if (
+                person.residency_status === "deceased" ||
+                person.residency_status === "moved_out"
+            ) {
+                throw new Error(
+                    `Nhân khẩu với ID: ${personId} không thể tách hộ do có trạng thái cư trú là ${person.residency_status}`
+                );
+            }
+        }
+
         const oldHousehold = await Household.findByPk(hoKhauCuId, {
             transaction,
         });
+        for (const personId of danhSachNhanKhauTachDi) {
+            const membership = await HouseholdMembership.findOne({
+                where: {
+                    household_id: hoKhauCuId,
+                    person_id: personId,
+                },
+                transaction,
+            });
+            if (membership.is_head) {
+                throw new Error(
+                    `Không thể tách hộ khi nhân khẩu với ID: ${personId} là chủ hộ của hộ khẩu cũ.`
+                );
+            }
+        }
+
         if (!oldHousehold) {
             throw new Error(`Không tìm thấy hộ khẩu với ID: ${hoKhauCuId}`);
         }
