@@ -25,7 +25,6 @@ const createCampaign = async (data) => {
   return await Campaign.create(payload);
 };
 
-
 // 2. Lấy danh sách các đợt vận động
 const getAllCampaigns = async () => {
   return await Campaign.findAll({
@@ -91,7 +90,6 @@ const updateCampaign = async (id, data) => {
   return campaign;
 };
 
-
 // 5. Xóa đợt vận động
 const deleteCampaign = async (id) => {
   // DB để ON DELETE CASCADE nên xóa Campaign sẽ tự xóa Payment
@@ -104,7 +102,7 @@ const deleteCampaign = async (id) => {
 const recordContribution = async (data) => {
   const {
     campaign_id,
-    household_id,
+    household_no,
     amount,
     contribution_date = new Date(),
     note,
@@ -139,18 +137,21 @@ const recordContribution = async (data) => {
   }
 
   // 1.3 Kiểm tra hộ khẩu có tồn tại không?
-  const household = await Household.findByPk(household_id);
+  const household = await Household.findOne({
+    where: { household_no: household_no },
+  });
   if (!household) {
-    throw new Error("Hộ khẩu không tồn tại trong hệ thống!");
+    throw new Error(`Không tìm thấy hộ khẩu có mã: ${household_no}`);
   }
 
   // --- BƯỚC 2: XỬ LÝ GHI NHẬN ---
+  const realHouseholdId = household.household_id;
 
   // 1. Kiểm tra xem hộ này đã có bản ghi trong chiến dịch này chưa
   let contribution = await CampaignPayment.findOne({
     where: {
       campaign_id: campaign_id,
-      household_id: household_id,
+      household_id: realHouseholdId,
     },
   });
 
@@ -183,7 +184,7 @@ const recordContribution = async (data) => {
     // --- TRƯỜNG HỢP B: CHƯA CÓ -> TẠO MỚI ---
     const newContribution = await CampaignPayment.create({
       campaign_id,
-      household_id,
+      household_id: realHouseholdId,
       amount,
       contribution_date,
       status: "paid",

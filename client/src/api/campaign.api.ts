@@ -11,7 +11,7 @@ export type CampaignUpdatePayload = Partial<CampaignCreatePayload>;
 
 export type ContributePayload = {
   campaign_id: number | string;
-  household_id: number | string;
+  household_no: string;
   amount: number;
   contribution_date?: string;  // "YYYY-MM-DD" (optional)
   note?: string;

@@ -79,10 +79,10 @@ const handleDelete = async (req, res) => {
 
 const handleContribute = async (req, res) => {
   try {
-    const { campaign_id, household_id, amount } = req.body;
+    const { campaign_id, household_no, amount } = req.body;
 
     // Validate
-    if (!campaign_id || !household_id || !amount) {
+    if (!campaign_id || !household_no || !amount) {
       return res.status(400).json({
         success: false,
         message:
