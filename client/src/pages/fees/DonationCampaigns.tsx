@@ -32,12 +32,12 @@ const {
   deleteCampaign,
 } = useCampaignStore();
 
-
+  const [householdNo, setHouseholdNo] = useState("");
   const [expandedCampaigns, setExpandedCampaigns] = useState<number[]>([]);
   const [showDonationModal, setShowDonationModal] = useState(false);
   const [showNewCampaignModal, setShowNewCampaignModal] = useState(false);
   const [selectedCampaignId, setSelectedCampaignId] = useState<number | null>(null);
-  const [householdId, setHouseholdId] = useState("");
+  // const [householdId, setHouseholdId] = useState("");
   const [contributionDate, setContributionDate] = useState("");
   const [note, setNote] = useState("");
   const [donationAmount, setDonationAmount] = useState<string>("");
@@ -70,7 +70,8 @@ const {
 
   const handleAddDonation = (campaignId: number) => {
     setSelectedCampaignId(campaignId);
-    setHouseholdId("");
+    // setHouseholdId("");
+    setHouseholdNo("");
     setDonationAmount("");
     setContributionDate("");
     setNote("");
@@ -106,15 +107,19 @@ const {
 
   const handleSaveDonation = async () => {
     const amount = Number(donationAmount);
-    const hhId = Number(householdId);
+    // const hhId = Number(householdId);
 
     if (!selectedCampaignId) return;
-    if (!hhId || Number.isNaN(hhId)) return;
+    // if (!hhId || Number.isNaN(hhId)) return;
+    if (!householdNo.trim()) {
+        toast.error("Vui lòng nhập mã hộ khẩu");
+        return;
+    }
     if (Number.isNaN(amount) || amount <= 0) return;
 
     const ok = await contribute({
       campaign_id: selectedCampaignId,
-      household_id: hhId,
+      household_no: householdNo.trim(),
       amount,
       contribution_date: contributionDate || undefined,
       note: note || undefined,
@@ -122,10 +127,10 @@ const {
 
     if (ok) {
       const campaignName = campaigns.find((c) => c.campaign_id === selectedCampaignId)?.name || `#${selectedCampaignId}`;
-      toast.success(`Hộ ${hhId} đã đóng góp ${amount.toLocaleString()} VND vào chiến dịch "${campaignName}"!`);
+      toast.success(`Hộ ${householdNo.trim()} đã đóng góp ${amount.toLocaleString()} VND vào chiến dịch "${campaignName}"!`);
       setShowDonationModal(false);
       setSelectedCampaignId(null);
-      setHouseholdId("");
+      // setHouseholdId("");
       setDonationAmount("");
       setContributionDate("");
       setNote("");
@@ -390,12 +395,12 @@ const {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-first dark:text-darkmodetext mb-2">
-                  Household ID <span className="text-red-500">*</span>
+                  Mã hộ khẩu (Household No) <span className="text-red-500">*</span>
                 </label>
                 <input
-                  value={householdId}
-                  onChange={(e) => setHouseholdId(e.target.value.replace(/[^0-9]/g, ""))}
-                  placeholder="Nhập household_id (VD: 5)"
+                  value={householdNo}
+                  onChange={(e) => setHouseholdNo(e.target.value)}
+                  placeholder="Nhập household_no (VD: HK123456)"
                   className="w-full px-3 py-2 rounded-lg border border-input bg-card text-card-foreground focus:outline-none focus:ring-1 focus:ring-selectring"
                 />
               </div>
@@ -450,7 +455,7 @@ const {
                 </button>
                 <button
                   onClick={handleSaveDonation}
-                  disabled={submitting || !householdId || !donationAmount || Number(donationAmount) <= 0}
+                  disabled={submitting || !householdNo.trim() || !donationAmount || Number(donationAmount) <= 0}
                   className="flex-1 px-4 py-2 rounded-lg border border-second/40 dark:border-second/30 bg-third text-first hover:bg-emerald-400 dark:hover:bg-emerald-500 hover:border-emerald-300 dark:hover:border-emerald-400 disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {submitting ? (
