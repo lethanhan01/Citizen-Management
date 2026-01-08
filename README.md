@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="client\src\assets\lakhe.gif"/>
+</p>
+
 # 🏙️ Citizen Management System
 
 ![NodeJS](https://img.shields.io/badge/Backend-Node.js-green?logo=node.js)
