@@ -8,7 +8,7 @@ Cảm ơn bạn đã quan tâm tới dự án **Citizen Management**. Tài liệ
 - Frontend: `cd client && npm install`
 - Frontend cần file `.env` trong `client/`:
   ```bash
-  VITE_API_URL=https://citizen-management-w0w5.onrender.com
+  VITE_API_URL=http://localhost:5000
   ```
 
 ## Quy trình đóng góp
@@ -38,4 +38,4 @@ Cảm ơn bạn đã quan tâm tới dự án **Citizen Management**. Tài liệ
 - Mô tả ngắn gọn vấn đề, bước tái hiện, log (nếu có) và kỳ vọng.
 - Với tính năng mới, nêu lý do và giá trị mang lại cho người dùng.
 
-Cảm ơn bạn đã đóng góp để hệ thống quản lý dân cư ngày càng tốt hơn! 
+Cảm ơn bạn đã đóng góp để hệ thống quản lý dân cư ngày càng tốt hơn!
