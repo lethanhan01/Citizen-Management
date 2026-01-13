@@ -7,16 +7,16 @@ let pool;
 
 function getPool() {
     if (!pool) {
+        const sslFlag = (process.env.DB_SSL || "").toLowerCase();
+        const useSsl = sslFlag === "true";
+
         pool = new Pool({
             user: process.env.DB_USER,
             host: process.env.DB_HOST,
             database: process.env.DB_NAME,
             password: process.env.DB_PASSWORD,
             port: process.env.DB_PORT,
-            ssl:
-                process.env.NODE_ENV === "production"
-                    ? { rejectUnauthorized: false }
-                    : false,
+            ssl: useSsl ? { rejectUnauthorized: false } : false,
             max: 5, // 👈 giới hạn connection
             idleTimeoutMillis: 30000,
             connectionTimeoutMillis: 2000,

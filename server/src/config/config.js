@@ -1,5 +1,15 @@
 import "dotenv/config";
 
+const sslFlag = (process.env.DB_SSL || "").toLowerCase() === "true";
+const dialectOptions = sslFlag
+  ? {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false,
+      },
+    }
+  : {};
+
 const config = {
   development: {
     username: process.env.DB_USER,
@@ -8,12 +18,7 @@ const config = {
     host: process.env.DB_HOST,
     port: process.env.DB_PORT,
     dialect: "postgres",
-    dialectOptions: {
-      ssl: {
-        require: true,
-        rejectUnauthorized: false,
-      },
-    },
+    dialectOptions,
   },
   test: {
     username: process.env.DB_USER,
@@ -22,12 +27,7 @@ const config = {
     host: process.env.DB_HOST,
     port: process.env.DB_PORT,
     dialect: "postgres",
-    dialectOptions: {
-        ssl: {
-          require: true,
-          rejectUnauthorized: false,
-        },
-      },
+    dialectOptions,
   },
   production: {
     username: process.env.DB_USER,
@@ -36,12 +36,7 @@ const config = {
     host: process.env.DB_HOST,
     port: process.env.DB_PORT,
     dialect: "postgres",
-    dialectOptions: {
-      ssl: {
-        require: true,
-        rejectUnauthorized: false,
-      },
-    }, 
+    dialectOptions,
   },
 };
 
