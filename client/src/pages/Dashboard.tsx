@@ -1,13 +1,25 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
-import { CChart } from '@coreui/react-chartjs';
+import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
+import type { ComponentProps } from 'react';
 import { useStatisticStore } from '@/stores/statistic.store.ts';
 import icon5 from '@/assets/icon5.svg';
 import icon6 from '@/assets/icon6.svg';
 import icon1 from '@/assets/icon.svg';
 import icon2 from '@/assets/icon2.svg';
 import icon3 from '@/assets/icon3.svg';
+
+const LazyChart = lazy(() =>
+  import('@coreui/react-chartjs').then((m) => ({ default: m.CChart })),
+);
+
+type ChartProps = ComponentProps<typeof LazyChart>;
+
+const Chart = (props: ChartProps) => (
+  <Suspense fallback={<div>Đang tải biểu đồ...</div>}>
+    <LazyChart {...props} />
+  </Suspense>
+);
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<'citizens' | 'fees'>('citizens');
@@ -230,7 +242,7 @@ export default function Dashboard() {
                   </h3>
                 </div>
               </div>
-              <CChart
+              <Chart
                 type="pie"
                 data={{
                   labels: chartData.gender.labels,
@@ -265,7 +277,7 @@ export default function Dashboard() {
                   </h3>
                 </div>
               </div>
-              <CChart
+              <Chart
                 type="pie"
                 data={{
                   labels: chartData.residency.labels,
@@ -301,7 +313,7 @@ export default function Dashboard() {
                 </h3>
               </div>
             </div>
-            <CChart
+            <Chart
               type="bar"
               data={{
                 labels: chartData.age.labels,
@@ -382,7 +394,7 @@ export default function Dashboard() {
                 </h3>
               </div>
             </div>
-            <CChart
+            <Chart
               type="bar"
               data={{
                 labels: [
@@ -450,7 +462,7 @@ export default function Dashboard() {
                   </h3>
                 </div>
               </div>
-              <CChart
+              <Chart
                 type="doughnut"
                 data={{
                   labels: chartData.paymentStatus.labels,
@@ -485,7 +497,7 @@ export default function Dashboard() {
                   </h3>
                 </div>
               </div>
-              <CChart
+              <Chart
                 type="bar"
                 data={{
                   labels: chartData.campaigns.labels,

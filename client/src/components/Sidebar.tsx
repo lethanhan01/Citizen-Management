@@ -13,6 +13,8 @@ import {
   ChevronDown,
   ChevronRight,
 } from 'lucide-react';
+import { prefetchRoute } from '@/lib/prefetchRoutes';
+import { useAuthStore } from '@/stores/auth.store';
 
 interface SubMenuItem {
   label: string;
@@ -82,6 +84,10 @@ export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [openMenus, setOpenMenus] = useState<string[]>(['Dashboard']);
   const location = useLocation();
+  const { user } = useAuthStore();
+
+  const role = (user?.role_name ?? user?.role ?? '').toString().toLowerCase();
+  const headerTitle = role === 'admin' ? 'Administrator' : (role === 'staff' || role === 'accountant') ? 'Accountant' : 'Administrator';
 
   const toggleMenu = (label: string) => {
     setOpenMenus((prev) =>
@@ -103,7 +109,7 @@ export default function Sidebar() {
       <div className="h-16 flex items-center justify-between px-4 bg-inherit flex-shrink-0">
         {!collapsed && (
           <span className="text-lg font-semibold text-first dark:text-darkmodetext">
-            Administrator
+            {headerTitle}
           </span>
         )}
         <button
@@ -187,6 +193,7 @@ function ChildMenuButton({
   return (
     <Link
       to={href}
+      onMouseEnter={() => prefetchRoute(href)}
       className={`
         sidebar-radio-item sidebar-radio-child
         block px-3 py-1.5 rounded-md text-sm ${isActive ? 'is-active' : ''}
@@ -220,6 +227,7 @@ function SidebarItem({
     return (
       <Link
         to={item.href}
+        onMouseEnter={() => prefetchRoute(item.href)}
         className={`
           sidebar-radio-item
           w-full flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer font-semibold
