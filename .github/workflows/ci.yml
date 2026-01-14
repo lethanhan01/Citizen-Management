@@ -1,113 +1,112 @@
 name: CI
 
 on:
-    push:
-        branches: [main]
-    pull_request:
-    workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
 
 concurrency:
-    group: ${{ github.workflow }}-${{ github.ref }}
-    cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-    build:
-        runs-on: ubuntu-latest
-        steps:
-            - name: Checkout repository
-              uses: actions/checkout@v4
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-            - name: Setup Node.js
-              uses: actions/setup-node@v4
-              with:
-                  node-version: "24.x"
-                  cache: "npm"
-                  cache-dependency-path: |
-                      package-lock.json
-                      client/package-lock.json
-                      server/package-lock.json
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24.x"
+          cache: "npm"
+          cache-dependency-path: |
+            package-lock.json
+            client/package-lock.json
+            server/package-lock.json
 
-            - name: Install root dependencies (if any)
-              run: |
-                  if [ -f package-lock.json ]; then npm ci; elif [ -f package.json ]; then npm i; fi
+      - name: Install root dependencies (if any)
+        run: |
+          if [ -f package-lock.json ]; then npm ci; elif [ -f package.json ]; then npm i; fi
 
-            - name: Install client dependencies
-              run: |
-                  if [ -f client/package-lock.json ]; then npm ci --prefix client; elif [ -f client/package.json ]; then npm i --prefix client; fi
+      - name: Install client dependencies
+        run: |
+          if [ -f client/package-lock.json ]; then npm ci --prefix client; elif [ -f client/package.json ]; then npm i --prefix client; fi
 
-            - name: Install server dependencies
-              run: |
-                  if [ -f server/package-lock.json ]; then npm ci --prefix server; elif [ -f server/package.json ]; then npm i --prefix server; fi
+      - name: Install server dependencies
+        run: |
+          if [ -f server/package-lock.json ]; then npm ci --prefix server; elif [ -f server/package.json ]; then npm i --prefix server; fi
 
-            - name: Build client
-              run: npm --prefix client run build --if-present
+      - name: Build client
+        run: npm --prefix client run build --if-present
 
-            - name: Build server (if present)
-              run: npm --prefix server run build --if-present
+      - name: Build server (if present)
+        run: npm --prefix server run build --if-present
 
-            - name: Lint (if present)
-              run: |
-                  npm run lint --if-present || true
-                  npm --prefix client run lint --if-present || true
-                  npm --prefix server run lint --if-present || true
+      - name: Lint (if present)
+        run: |
+          npm run lint --if-present || true
+          npm --prefix client run lint --if-present || true
+          npm --prefix server run lint --if-present || true
 
-            - name: Test (if present)
-              run: |
-                  npm test --if-present --silent || true
-                  npm --prefix client test --if-present --silent || true
-                  npm --prefix server test --if-present --silent || true
+      - name: Test (if present)
+        run: |
+          npm test --if-present --silent || true
+          npm --prefix client test --if-present --silent || true
+          npm --prefix server test --if-present --silent || true
 
-            - name: Upload client build artifact (if exists)
-              if: ${{ hashFiles('client/dist/**') != '' }}
-              uses: actions/upload-artifact@v4
-              with:
-                  name: client-dist
-                  path: client/dist
+      - name: Upload client build artifact (if exists)
+        if: ${{ hashFiles('client/dist/**') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: client-dist
+          path: client/dist
 
-            - name: Upload server build artifact (if exists)
-              if: ${{ hashFiles('server/dist/**') != '' }}
-              uses: actions/upload-artifact@v4
-              with:
-                  name: server-dist
-                  path: server/dist
+      - name: Upload server build artifact (if exists)
+        if: ${{ hashFiles('server/dist/**') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-dist
+          path: server/dist
 
-    docker-image:
-        name: Build and publish Docker image
-        needs: build
-        if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
-        runs-on: ubuntu-latest
-        permissions:
-            contents: read # needed to checkout the repo
-            packages: write # required to push to GHCR when on main
-        env:
-            REGISTRY: ghcr.io
-            IMAGE_NAME: ${{ github.repository }}
-            IMAGE_TAG: ${{ github.ref == 'refs/heads/main' && 'latest' || github.sha }} # non-main uses commit SHA as tag
-        steps:
-            - name: Checkout repository
-              # required for docker build context
-              uses: actions/checkout@v4
+  docker-image:
+    name: Build and publish Docker image
+    needs: build
+    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # needed to checkout the repo
+      packages: write # required to push to GHCR when on main
+    env:
+      REGISTRY: ghcr.io
+      IMAGE_NAME: ${{ github.repository }}
+      IMAGE_TAG: ${{ github.ref == 'refs/heads/main' && 'latest' || github.sha }} # non-main uses commit SHA as tag
+    steps:
+      - name: Checkout repository
+        # required for docker build context
+        uses: actions/checkout@v4
 
-            - name: Set up Docker Buildx
-              # enable cross-platform features/caching
-              uses: docker/setup-buildx-action@v3
+      - name: Set up Docker Buildx
+        # enable cross-platform features/caching
+        uses: docker/setup-buildx-action@v3
 
-            - name: Log in to GitHub Container Registry
-              if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-              # only push on main; PRs build without publishing
-              uses: docker/login-action@v3
-              with:
-                  registry: ghcr.io
-                  username: ${{ github.actor }}
-                  password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Log in to GitHub Container Registry
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        # only push on main; PRs build without publishing
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-            - name: Build and push Docker image
-              # build from repo root using server Dockerfile; push only on main
-              uses: docker/build-push-action@v6
-              with:
-                  context: .
-                  file: ./server/Dockerfile # Dockerfile lives under server/
-                  push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-                  tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
-                  provenance: false
-
+      - name: Build and push Docker image
+        # build from repo root using server Dockerfile; push only on main
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./server/Dockerfile # Dockerfile lives under server/
+          push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+          provenance: false
