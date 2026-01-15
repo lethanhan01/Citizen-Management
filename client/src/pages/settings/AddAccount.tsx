@@ -10,9 +10,6 @@ interface FormState {
   fullName: string;
   username: string;
   password: string;
-  email: string;
-  phone: string;
-  cccd: string;
   role: Role;
   status: Status;
 }
@@ -22,9 +19,6 @@ export default function AddAccount() {
     fullName: "",
     username: "",
     password: "123456",
-    email: "",
-    phone: "",
-    cccd: "",
     role: "viewer",
     status: "Hoạt động",
   });
@@ -73,9 +67,6 @@ export default function AddAccount() {
           <Field label="Họ và tên" value={form.fullName} required onChange={(v) => update("fullName", v)} />
           <Field label="Username" value={form.username} required onChange={(v) => update("username", v)} />
           <Field label="Mật khẩu mặc định" value={form.password} onChange={(v) => update("password", v)} />
-          <Field label="Email" value={form.email} onChange={(v) => update("email", v)} />
-          <Field label="Số điện thoại" value={form.phone} onChange={(v) => update("phone", v)} />
-          <Field label="CCCD" value={form.cccd} onChange={(v) => update("cccd", v)} />
 
           <div>
             <label className="block text-sm font-medium text-foreground mb-1">Vai trò</label>

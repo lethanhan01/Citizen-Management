@@ -4,12 +4,14 @@
 FROM node:20-alpine AS builder
 WORKDIR /usr/src/app
 
-# Install only production dependencies
-COPY package*.json ./
-RUN npm ci --omit=dev --silent
+# Install only production dependencies (scoped to server app)
+COPY server/package*.json ./
+# Native deps (e.g., pg) need build tooling on Alpine
+RUN apk add --no-cache python3 make g++ \
+    && npm ci --omit=dev
 
 # Copy application source (no TypeScript build needed for this project)
-COPY . .
+COPY server/. .
 
 # --- Runtime stage: minimal runtime with prod deps ---
 FROM node:20-alpine AS runner

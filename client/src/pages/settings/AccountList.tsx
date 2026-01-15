@@ -38,9 +38,6 @@ export default function AccountList() {
           role: u.role ?? "accountant",
           status: "Hoạt động",          // backend chưa có status thì tạm fix cứng
           createdAt: u.createdAt ? String(u.createdAt).slice(0, 10) : "",
-          email: "",
-          phone: "",
-          cccd: "",
         })) as Account[];
 
         setAccounts(list);
@@ -61,7 +58,7 @@ export default function AccountList() {
   const filteredAccounts = useMemo(() => {
     const term = search.trim().toLowerCase();
     let result = accounts.filter((a) =>
-      [a.fullName, a.username, a.email || "", a.phone || ""].some((v) =>
+      [a.fullName, a.username].some((v) =>
         v.toLowerCase().includes(term)
       )
     );
@@ -106,9 +103,6 @@ export default function AccountList() {
         role: "viewer",
         status: "Hoạt động",
         createdAt: new Date().toISOString().split("T")[0],
-        email: "",
-        phone: "",
-        cccd: "",
         password: "123456",
       });
     }
@@ -142,9 +136,6 @@ export default function AccountList() {
           role: (u.role ?? formData.role) as any,
           status: "Hoạt động",
           createdAt: u.createdAt ? String(u.createdAt).slice(0, 10) : formData.createdAt,
-          email: formData.email ?? "",
-          phone: formData.phone ?? "",
-          cccd: formData.cccd ?? "",
         };
 
         setAccounts((prev) => prev.map((a) => (a.id === editingAccount.id ? mapped : a)));
@@ -165,9 +156,6 @@ export default function AccountList() {
           role: (u.role ?? "accountant") as any,
           status: "Hoạt động",
           createdAt: u.createdAt ? String(u.createdAt).slice(0, 10) : "",
-          email: "",
-          phone: "",
-          cccd: "",
         };
 
         setAccounts((prev) => [mapped, ...prev]);
@@ -221,7 +209,7 @@ export default function AccountList() {
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Tìm theo họ tên, username, email, SĐT"
+              placeholder="Tìm theo họ tên, username"
               className="
                 w-full pl-10 pr-3 py-2.5 rounded-lg
                 bg-white dark:bg-transparent dark:border
@@ -391,21 +379,6 @@ export default function AccountList() {
                 value={formData.username}
                 onChange={(v) => setFormData({ ...formData, username: v })}
                 required
-              />
-              <Field
-                label="Email"
-                value={formData.email || ""}
-                onChange={(v) => setFormData({ ...formData, email: v })}
-              />
-              <Field
-                label="Số điện thoại"
-                value={formData.phone || ""}
-                onChange={(v) => setFormData({ ...formData, phone: v })}
-              />
-              <Field
-                label="CCCD"
-                value={formData.cccd || ""}
-                onChange={(v) => setFormData({ ...formData, cccd: v })}
               />
               <div>
                 <label className="block text-sm font-medium text-first dark:text-darkmodetext mb-1">
