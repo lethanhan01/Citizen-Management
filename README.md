@@ -13,6 +13,20 @@
 Ứng dụng web giúp Ban quản lý tổ dân phố quản lý **hộ khẩu, nhân khẩu, biến động, tạm trú – tạm vắng, thu phí và các khoản đóng góp** một cách **tập trung và hiệu quả**.
 
 ---
+## Trải nghiệm trang web
+Người dùng có thể trải nghiệm trang web đã được deploy ở phần mô tả với 1 trong 2 tài khoản sau:
+
+1- Tài khoản Tổ trưởng dân phố
+```bash
+admin_vip
+Admin@123
+```
+
+2- Tài khoản kế toán
+```bash
+ketoan2 
+123456
+```
 
 ## 🧱 Công nghệ sử dụng
 
