@@ -142,7 +142,12 @@ let initWebRoutes = (app) => {
         checkRole(["admin"]),
         getHouseholdById
     );
-    router.post("/api/v1/ho-khau/:hoKhauId/nhan-khau", addPersonToHousehold);
+    router.post(
+        "/api/v1/ho-khau/:hoKhauId/nhan-khau",
+        verifyToken,
+        checkRole(["admin"]),
+        addPersonToHousehold
+    );
     router.get(
         "/api/v1/ho-khau",
         verifyToken,

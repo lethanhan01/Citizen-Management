@@ -161,7 +161,7 @@ export default function ChangeOwner() {
       if (detail) {
         setSelected(toHouseholdItem(detail));
       }
-    } catch (e) {
+    } catch {
       // keep base selected if detail fails
     } finally {
       setDetailLoading(false);

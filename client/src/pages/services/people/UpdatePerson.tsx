@@ -175,7 +175,7 @@ export default function UpdatePerson() {
     if (searchQuery) {
       setSearch(searchQuery);
     }
-  }, [params, fetchPersons]);
+  }, [params, fetchPersons, searchQuery]);
 
   // Reset page to 1 when search changes
   useEffect(() => {

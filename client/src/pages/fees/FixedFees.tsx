@@ -347,7 +347,7 @@ export default function FixedFees() {
       setPrintingPaymentId(household.paymentId);
 
       await exportReceipt(household.paymentId);
-    } catch (error) {
+    } catch {
     } finally {
       setPrintingPaymentId(null);
     }

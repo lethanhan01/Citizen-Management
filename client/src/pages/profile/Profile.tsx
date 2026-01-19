@@ -92,7 +92,7 @@ export default function Profile() {
       await new Promise((resolve) => setTimeout(resolve, 1500));
       // Call API to change password
       setShowPasswordModal(false);
-    } catch (err) {
+    } catch {
       setPasswordError("Có lỗi xảy ra. Vui lòng thử lại.");
     } finally {
       setIsLoading(false);

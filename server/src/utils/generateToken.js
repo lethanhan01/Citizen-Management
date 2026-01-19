@@ -15,6 +15,7 @@ export const generateTokenAndUser = (userInstance) => {
 
     // 4. Tạo Token
     const secret = process.env.JWT_SECRET;
+    const expiresIn = process.env.JWT_EXPIRES_IN || "1d";
     const token = jwt.sign(
         {
             user_id: userInfo.user_id,
@@ -22,7 +23,7 @@ export const generateTokenAndUser = (userInstance) => {
             role: userInfo.role,
         },
         secret,
-        { expiresIn: "1d" }
+        { expiresIn }
     );
 
     // 5. Trả về cả Token và User Info (đã sạch password)

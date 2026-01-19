@@ -121,7 +121,6 @@ export default function HouseholdHistory() {
 
   useEffect(() => {
     if (initialId) fetchHistory(initialId);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialId]);
 
   return (

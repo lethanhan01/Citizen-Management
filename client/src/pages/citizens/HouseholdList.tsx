@@ -106,7 +106,7 @@ export default function HouseholdList() {
 
   // Filter & Sort
   const filteredHouseholds = useMemo(() => {
-    let result = sourceHouseholds.filter((household) => {
+    const result = sourceHouseholds.filter((household) => {
       const matchSearch =
         household.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
         household.headName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -163,7 +163,7 @@ export default function HouseholdList() {
       if (detail) {
         setSelectedHousehold(toHousehold(detail));
       }
-    } catch (e) {
+    } catch {
       // Giữ dữ liệu cơ bản nếu gọi chi tiết lỗi
     }
   };

@@ -121,7 +121,6 @@ export default function ChangeAddress() {
     if (initialId) {
       fetchHousehold(initialId);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialId]);
 
   // Handle input change

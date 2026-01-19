@@ -132,7 +132,7 @@ export default function SplitHousehold() {
 
   // Filter & Sort (same as HouseholdList)
   const filteredHouseholds = useMemo(() => {
-    let result = sourceHouseholds.filter((household) => {
+    const result = sourceHouseholds.filter((household) => {
       const matchSearch =
         household.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
         household.headName.toLowerCase().includes(searchQuery.toLowerCase()) ||
