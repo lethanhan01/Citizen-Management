@@ -44,6 +44,8 @@ import exportController from "../controllers/exportController.js";
 import verifyToken from "../middleware/authMiddleware.js";
 // --- CHECK ROLE ---
 import checkRole from "../middleware/roleMiddleware.js";
+import validateRequest from "../middleware/validateRequest.js";
+import { body, param } from "express-validator";
 
 import pool from "../config/db.js";
 import { create } from "domain";
@@ -195,6 +197,24 @@ let initWebRoutes = (app) => {
         "/api/v1/nhan-khau/:id",
         verifyToken,
         checkRole(["admin"]),
+        param("id").notEmpty().withMessage("Thiếu ID nhân khẩu"),
+        body("full_name").optional().isString().trim().notEmpty(),
+        body("alias").optional().isString().trim(),
+        body("gender").optional().isString().trim(),
+        body("dob").optional().isISO8601(),
+        body("birthplace").optional().isString().trim(),
+        body("ethnicity").optional().isString().trim(),
+        body("hometown").optional().isString().trim(),
+        body("occupation").optional().isString().trim(),
+        body("workplace").optional().isString().trim(),
+        body("citizen_id_num").optional().isString().trim(),
+        body("citizen_id_issued_date").optional().isISO8601(),
+        body("citizen_id_issued_place").optional().isString().trim(),
+        body("residency_status").optional().isString().trim(),
+        body("residence_registered_date").optional().isISO8601(),
+        body("previous_address").optional().isString().trim(),
+        body("relation_to_head").optional().isString().trim(),
+        validateRequest,
         updateNhanKhau
     );
     router.post(
@@ -213,6 +233,16 @@ let initWebRoutes = (app) => {
         "/api/v1/nhan-khau/:nhanKhauId/bien-dong",
         verifyToken,
         checkRole(["admin"]),
+        param("nhanKhauId").notEmpty().withMessage("Thiếu ID nhân khẩu"),
+        body("loaiBienDong")
+            .notEmpty()
+            .withMessage("Thiếu loại biến động")
+            .isIn(["CHUYEN_DI", "QUA_DOI"])
+            .withMessage("Loại biến động không hợp lệ"),
+        body("ngayBienDong").optional().isISO8601(),
+        body("ghiChu").optional().isString().trim(),
+        body("diaChi").optional().isString().trim(),
+        validateRequest,
         handlePersonEvent
     );
 
@@ -221,6 +251,8 @@ let initWebRoutes = (app) => {
         "/api/v1/nhan-khau/thong-tin/:id",
         verifyToken,
         checkRole(["admin"]),
+        param("id").notEmpty().withMessage("Thiếu ID công dân"),
+        validateRequest,
         getPersonDetail
     );
 
