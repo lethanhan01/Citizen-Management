@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import * as PersonAPI from "@/api/person.api";
+import type { UnknownRecord } from "@/types/api";
 import { usePersonStore } from "@/stores/person.store";
 import { useCitizenListParams } from "@/hooks/useCitizenListParams";
 import PaginationBar from "@/components/PaginationBar";
@@ -78,10 +79,25 @@ function mapStatusToView(s: string | null | undefined): Status {
   console.warn("Unexpected residency_status value:", s);
   return "Thường trú"; // Default fallback
 }
-function toCitizenItem(p: any): CitizenItem {
-  const firstHousehold = Array.isArray(p?.households) && p.households.length > 0 ? p.households[0] : null;
-  const relation = Array.isArray(p?.householdMemberships) && p.householdMemberships.length > 0 ? p.householdMemberships[0]?.relation_to_head : undefined;
-  const isHead = !!(firstHousehold?.HouseholdMembership?.is_head);
+const getErrorMessage = (err: unknown, fallback: string) => {
+  if (err && typeof err === "object") {
+    const responseMessage = (err as { response?: { data?: { message?: unknown } } }).response?.data
+      ?.message;
+    if (typeof responseMessage === "string" && responseMessage.trim()) return responseMessage;
+    const msg = (err as { message?: unknown }).message;
+    if (typeof msg === "string" && msg.trim()) return msg;
+  }
+  return fallback;
+};
+
+function toCitizenItem(p: UnknownRecord): CitizenItem {
+  const households = (p as { households?: unknown }).households;
+  const firstHousehold = Array.isArray(households) && households.length > 0 ? households[0] : null;
+  const memberships = (p as { householdMemberships?: unknown }).householdMemberships;
+  const relation = Array.isArray(memberships) && memberships.length > 0
+    ? (memberships[0] as { relation_to_head?: unknown })?.relation_to_head
+    : undefined;
+  const isHead = Boolean((firstHousehold as { HouseholdMembership?: { is_head?: unknown } })?.HouseholdMembership?.is_head);
   
   console.log("toCitizenItem raw data:", {
     residency_status: p?.residency_status,
@@ -89,25 +105,25 @@ function toCitizenItem(p: any): CitizenItem {
   });
   
   return {
-    id: String(p?.person_id ?? p?.id ?? ""),
-    cccd: String(p?.citizen_id_num ?? ""),
-    fullName: String(p?.full_name ?? ""),
-    dateOfBirth: p?.dob ?? "",
-    gender: mapGenderToView(p?.gender),
-    householdCode: String(firstHousehold?.household_no ?? ""),
-    address: String(firstHousehold?.address ?? ""),
-    status: mapStatusToView(p?.residency_status),
-    nationality: String(p?.ethnicity ?? ""),
-    occupation: String(p?.occupation ?? ""),
-    workplace: String(p?.workplace ?? ""),
-    cmndCccdIssueDate: p?.citizen_id_issued_date ?? "",
-    cmndCccdIssuePlace: p?.citizen_id_issued_place ?? "",
-    permanentResidenceDate: p?.residence_registered_date ?? "",
-    isDeceased: String(p?.residency_status ?? "").toLowerCase() === "deceased",
-    relationshipToHead: relation ?? "",
+    id: String((p as { person_id?: unknown; id?: unknown }).person_id ?? (p as { id?: unknown }).id ?? ""),
+    cccd: String((p as { citizen_id_num?: unknown }).citizen_id_num ?? ""),
+    fullName: String((p as { full_name?: unknown }).full_name ?? ""),
+    dateOfBirth: String((p as { dob?: unknown }).dob ?? ""),
+    gender: mapGenderToView((p as { gender?: string | null }).gender),
+    householdCode: String((firstHousehold as { household_no?: unknown })?.household_no ?? ""),
+    address: String((firstHousehold as { address?: unknown })?.address ?? ""),
+    status: mapStatusToView((p as { residency_status?: string | null }).residency_status),
+    nationality: String((p as { ethnicity?: unknown }).ethnicity ?? ""),
+    occupation: String((p as { occupation?: unknown }).occupation ?? ""),
+    workplace: String((p as { workplace?: unknown }).workplace ?? ""),
+    cmndCccdIssueDate: String((p as { citizen_id_issued_date?: unknown }).citizen_id_issued_date ?? ""),
+    cmndCccdIssuePlace: String((p as { citizen_id_issued_place?: unknown }).citizen_id_issued_place ?? ""),
+    permanentResidenceDate: String((p as { residence_registered_date?: unknown }).residence_registered_date ?? ""),
+    isDeceased: String((p as { residency_status?: unknown }).residency_status ?? "").toLowerCase() === "deceased",
+    relationshipToHead: relation ? String(relation) : "",
     isHead,
-    start_date: p?.start_date ?? undefined,
-    end_date: p?.end_date ?? undefined,
+    start_date: String((p as { start_date?: unknown }).start_date ?? ""),
+    end_date: String((p as { end_date?: unknown }).end_date ?? ""),
   };
 }
 
@@ -123,7 +139,7 @@ function mapStatusToServer(s: Status, isDeceased?: boolean): string {
   return "moved_out";
 }
 function toUpdatePayload(form: CitizenItem) {
-  const payload: Record<string, any> = {
+  const payload: Record<string, unknown> = {
     full_name: form.fullName,
     dob: form.dateOfBirth || null,
     gender: mapGenderToServer(form.gender),
@@ -315,9 +331,9 @@ export default function UpdatePerson() {
       // Close the drawer after successful save
       console.log("Closing drawer");
       closeDrawer();
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error("Save error:", e);
-      alert(e?.message || "Cập nhật thất bại");
+      alert(getErrorMessage(e, "Cập nhật thất bại"));
     } finally {
       setSaving(false);
     }

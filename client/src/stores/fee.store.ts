@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import * as FeeAPI from '@/api/fee.api';
+import type { ApiParams, UnknownRecord } from '@/types/api';
 
 export interface Fee {
   rate_id: number;
@@ -48,7 +49,7 @@ interface FeeStats {
     pending: number;
 }
 
-export interface PaymentSearchParams {
+export interface PaymentSearchParams extends ApiParams {
   rate_id?: number | string;
   status?: string;
   keyword?: string;
@@ -117,20 +118,25 @@ export const useFeeStore = create<FeeState>((set, get) => ({
     try {
       const data = await FeeAPI.getAllFees();
 
-      const normalizedFees: Fee[] = (data || []).map((f: any) => ({
-        ...f,
-        rate_id: Number(f.rate_id),
-        amount: Number(f.amount),
+      const normalizedFees: Fee[] = (Array.isArray(data) ? data : []).map((f: UnknownRecord) => ({
+        rate_id: Number((f as { rate_id?: unknown }).rate_id),
+        item_type: String((f as { item_type?: unknown }).item_type ?? ''),
+        unit_type:
+          (f as { unit_type?: Fee['unit_type'] }).unit_type ?? 'per_person',
+        amount: Number((f as { amount?: unknown }).amount),
+        effective_from: String((f as { effective_from?: unknown }).effective_from ?? ''),
+        effective_to: (f as { effective_to?: string | null }).effective_to ?? undefined,
+        note: (f as { note?: string }).note ?? undefined,
+        createdAt: (f as { createdAt?: string }).createdAt ?? undefined,
+        updatedAt: (f as { updatedAt?: string }).updatedAt ?? undefined,
       }));
 
       set({ fees: normalizedFees, loading: false });
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       set({
         error:
-          err?.response?.data?.message ||
-          err?.message ||
-          'Lỗi lấy danh sách khoản thu',
+          getErrorMessage(err, 'Lỗi lấy danh sách khoản thu'),
         loading: false,
       });
     }
@@ -144,12 +150,10 @@ export const useFeeStore = create<FeeState>((set, get) => ({
       await get().fetchAllFees();
       set({ loading: false });
       return true;
-    } catch (err: any) {
+    } catch (err: unknown) {
       set({
         error:
-          err?.response?.data?.message ||
-          err?.message ||
-          'Lỗi tạo khoản thu mới',
+          getErrorMessage(err, 'Lỗi tạo khoản thu mới'),
         loading: false,
       });
       return false;
@@ -167,10 +171,9 @@ export const useFeeStore = create<FeeState>((set, get) => ({
         loading: false,
       });
       return true;
-    } catch (err: any) {
+    } catch (err: unknown) {
       set({
-        error:
-          err?.response?.data?.message || err?.message || 'Lỗi xóa khoản thu',
+        error: getErrorMessage(err, 'Lỗi xóa khoản thu'),
         loading: false,
       });
       return false;
@@ -198,12 +201,10 @@ export const useFeeStore = create<FeeState>((set, get) => ({
       } else {
         set({ payments: [], loading: false });
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       set({
         error:
-          err?.response?.data?.message ||
-          err?.message ||
-          'Lỗi tìm kiếm danh sách đóng tiền',
+          getErrorMessage(err, 'Lỗi tìm kiếm danh sách đóng tiền'),
         loading: false,
       });
     }
@@ -235,12 +236,9 @@ export const useFeeStore = create<FeeState>((set, get) => ({
         return true;
       }
       return false;
-    } catch (err: any) {
+    } catch (err: unknown) {
       set({
-        error:
-          err?.response?.data?.message ||
-          err?.message ||
-          'Lỗi xác nhận đóng tiền',
+        error: getErrorMessage(err, 'Lỗi xác nhận đóng tiền'),
       });
       return false;
     }
@@ -248,3 +246,14 @@ export const useFeeStore = create<FeeState>((set, get) => ({
 
   clearError: () => set({ error: null }),
 }));
+
+const getErrorMessage = (err: unknown, fallback: string) => {
+  if (err && typeof err === 'object') {
+    const responseMessage = (err as { response?: { data?: { message?: unknown } } }).response?.data
+      ?.message;
+    if (typeof responseMessage === 'string' && responseMessage.trim()) return responseMessage;
+    const msg = (err as { message?: unknown }).message;
+    if (typeof msg === 'string' && msg.trim()) return msg;
+  }
+  return fallback;
+};

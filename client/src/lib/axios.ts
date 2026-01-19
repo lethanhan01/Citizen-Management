@@ -1,6 +1,18 @@
 import axios, { AxiosError } from 'axios';
 import { useAuthStore } from '@/stores/auth.store';
 
+type ErrorPayload = { message?: string };
+
+const getErrorMessage = (data: unknown, fallback: string) => {
+  if (data && typeof data === 'object' && 'message' in data) {
+    const message = (data as ErrorPayload).message;
+    if (typeof message === 'string' && message.trim()) {
+      return message;
+    }
+  }
+  return fallback;
+};
+
 const isTokenExpired = (token: string | null) => {
   if (!token) return true;
   try {
@@ -49,7 +61,7 @@ apiClient.interceptors.request.use(
       }
 
       config.headers = config.headers || {};
-      (config.headers as any).Authorization = `Bearer ${token}`;
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
@@ -59,7 +71,7 @@ apiClient.interceptors.request.use(
 // Response interceptor: chuẩn hoá lỗi + xử lý 401
 apiClient.interceptors.response.use(
   (response) => response,
-  (error: AxiosError<any>) => {
+  (error: AxiosError<unknown>) => {
     // Lỗi mạng/timeout
     if (!error.response) {
       return Promise.reject({
@@ -80,7 +92,7 @@ apiClient.interceptors.response.use(
       } catch {}
     }
 
-    const message = (data as any)?.message || error.message || 'Request failed';
+    const message = getErrorMessage(data, error.message || 'Request failed');
 
     return Promise.reject({
       success: false,

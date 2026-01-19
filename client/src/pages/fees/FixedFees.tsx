@@ -27,7 +27,7 @@ interface HouseholdFeeUI {
   headCCCD: string;
   memberCount: number;
   address: string;
-  status: 'paid' | 'pending' | 'partial';
+  status: 'paid' | 'pending' | 'partial' | 'unpaid';
   paidDate?: string;
   totalAmount: number;
   paidAmount: number;
@@ -35,6 +35,11 @@ interface HouseholdFeeUI {
 }
 
 const ITEMS_PER_PAGE = 10;
+
+const normalizeStatus = (value: unknown): HouseholdFeeUI['status'] => {
+  if (value === 'paid' || value === 'pending' || value === 'partial' || value === 'unpaid') return value;
+  return 'pending';
+};
 
 export default function FixedFees() {
   const {
@@ -128,7 +133,7 @@ export default function FixedFees() {
         headCCCD: p.household?.headPerson?.citizen_id_num || '---',
         memberCount: memberCount,
         address: p.household?.address || '',
-        status: p.payment_status as any,
+        status: normalizeStatus(p.payment_status),
         paidDate: p.date
           ? new Date(p.date).toISOString().split('T')[0]
           : undefined,
@@ -547,8 +552,7 @@ export default function FixedFees() {
                                   Đã thu
                                 </span>
                               )}
-                              {(h.status === 'pending' ||
-                                h.status === ('unpaid' as any)) && (
+                              {(h.status === 'pending' || h.status === 'unpaid') && (
                                 <span className="px-2 py-1 text-xs rounded-full bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
                                   Chưa thu
                                 </span>

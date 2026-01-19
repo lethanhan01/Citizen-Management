@@ -1,20 +1,20 @@
 // src/lib/citizen-ui.ts
 import type { Citizen } from "@/types/citizen";
 
-export function genderLabel(g: any) {
-  return g === "male" ? "Nam" : g === "female" ? "Nữ" : g === "other" ? "Khác" : "-";
+export function genderLabel(gender?: Citizen['gender'] | string | null) {
+  return gender === "male" ? "Nam" : gender === "female" ? "Nữ" : gender === "other" ? "Khác" : "-";
 }
 
-export function statusLabel(s: any) {
-  return s === "permanent"
+export function statusLabel(status?: Citizen['status'] | string | null) {
+  return status === "permanent"
     ? "Thường trú"
-    : s === "temporary_resident"
+    : status === "temporary_resident"
     ? "Tạm trú"
-    : s === "temporary_absent"
+    : status === "temporary_absent"
     ? "Tạm vắng"
-    : s === "moved_out"
+    : status === "moved_out"
     ? "Đã chuyển đi"
-    : s === "deceased"
+    : status === "deceased"
     ? "Đã mất"
     : "-";
 }

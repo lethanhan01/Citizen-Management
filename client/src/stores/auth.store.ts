@@ -2,8 +2,16 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import * as AuthAPI from '@/api/auth.api';
 
+const getErrorMessage = (err: unknown, fallback: string) => {
+  if (err && typeof err === 'object' && 'message' in err) {
+    const msg = (err as { message?: unknown }).message;
+    if (typeof msg === 'string' && msg.trim()) return msg;
+  }
+  return fallback;
+};
+
 interface AuthState {
-  user: any | null;
+  user: AuthAPI.AuthUser | null;
   token: string | null;
   loading: boolean;
   error: string | null;
@@ -27,8 +35,8 @@ export const useAuthStore = create<AuthState>()(
           const user = data?.user;
           if (token) localStorage.setItem('token', token);
           set({ token: token ?? null, user: user ?? null, loading: false });
-        } catch (err: any) {
-          set({ error: err?.message || 'Đăng nhập thất bại', loading: false });
+        } catch (err: unknown) {
+          set({ error: getErrorMessage(err, 'Đăng nhập thất bại'), loading: false });
         }
       },
       logout() {
@@ -46,8 +54,11 @@ export const useAuthStore = create<AuthState>()(
             user: me ? { ...(state.user ?? {}), ...me } : (state.user ?? null),
             loading: false,
           }));
-        } catch (err: any) {
-          set({ error: err?.message || 'Không lấy được thông tin người dùng', loading: false });
+        } catch (err: unknown) {
+          set({
+            error: getErrorMessage(err, 'Không lấy được thông tin người dùng'),
+            loading: false,
+          });
         }
       },
     }),

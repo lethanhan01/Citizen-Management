@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
 import type { ComponentProps } from 'react';
 import { useStatisticStore } from '@/stores/statistic.store.ts';
+import { ErrorBoundary } from 'react-error-boundary';
 import icon5 from '@/assets/icon5.svg';
 import icon6 from '@/assets/icon6.svg';
 import icon1 from '@/assets/icon.svg';
@@ -15,9 +16,15 @@ const LazyChart = lazy(() =>
 
 type ChartProps = ComponentProps<typeof LazyChart>;
 
+const ChartErrorFallback = () => (
+  <div className="p-4 text-sm text-destructive">Không thể tải biểu đồ.</div>
+);
+
 const Chart = (props: ChartProps) => (
   <Suspense fallback={<div>Đang tải biểu đồ...</div>}>
-    <LazyChart {...props} />
+    <ErrorBoundary FallbackComponent={ChartErrorFallback}>
+      <LazyChart {...props} />
+    </ErrorBoundary>
   </Suspense>
 );
 
@@ -26,7 +33,7 @@ export default function Dashboard() {
   const [textColor, setTextColor] = useState('#666666');
 
   // 1. Lấy dữ liệu và action từ Store
-  const { dashboardData, fetchDashboard, loading } = useStatisticStore();
+  const { dashboardData, fetchDashboard, loading, error } = useStatisticStore();
 
   // 2. Gọi API
   useEffect(() => {
@@ -120,6 +127,14 @@ export default function Dashboard() {
     return (
       <div className="p-6 text-center text-muted-foreground">
         Đang tải dữ liệu thống kê...
+      </div>
+    );
+  }
+
+  if (error && !dashboardData) {
+    return (
+      <div className="p-6 text-center text-destructive">
+        {error}
       </div>
     );
   }

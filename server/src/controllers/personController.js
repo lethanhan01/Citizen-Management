@@ -14,9 +14,12 @@ export const getAllNhanKhau = async (req, res) => {
       sortOrder = "DESC",
     } = req.query;
 
+    const safePage = Math.max(parseInt(page) || 1, 1);
+    const safeLimit = Math.min(Math.max(parseInt(limit) || 20, 1), 100);
+
     const result = await personService.getAllNhanKhau({
-      page: parseInt(page),
-      limit: parseInt(limit),
+      page: safePage,
+      limit: safeLimit,
       search,
       gender,
       residency_status,

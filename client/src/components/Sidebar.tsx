@@ -86,7 +86,7 @@ export default function Sidebar() {
   const location = useLocation();
   const { user } = useAuthStore();
 
-  const role = (user?.role_name ?? user?.role ?? '').toString().toLowerCase();
+  const role = (user?.role ?? '').toString().toLowerCase();
   const headerTitle = role === 'admin' ? 'Administrator' : (role === 'staff' || role === 'accountant') ? 'Accountant' : 'Administrator';
 
   const toggleMenu = (label: string) => {

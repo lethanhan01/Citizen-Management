@@ -6,6 +6,7 @@ import { toast, Toaster } from "react-hot-toast";
 // Navigation not needed; we stay on page after save
 import { search as searchApi } from "@/api/search.api";
 import { createHousehold, addPersonToHousehold } from "@/api/household.api";
+import type { UnknownRecord } from "@/types/api";
 
 interface FormData {
   fullName: string;
@@ -32,6 +33,17 @@ interface FormData {
 interface FormErrors {
   [key: string]: string;
 }
+
+const getErrorMessage = (err: unknown, fallback: string) => {
+  if (err && typeof err === "object") {
+    const responseMessage = (err as { response?: { data?: { message?: unknown } } }).response?.data
+      ?.message;
+    if (typeof responseMessage === "string" && responseMessage.trim()) return responseMessage;
+    const msg = (err as { message?: unknown }).message;
+    if (typeof msg === "string" && msg.trim()) return msg;
+  }
+  return fallback;
+};
 
 // Helper to generate a fresh initial form state
 const createInitialFormData = (): FormData => ({
@@ -85,8 +97,10 @@ export default function AddNewArrival() {
       if (typeof window !== "undefined") {
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
-      const se = (document.scrollingElement || document.documentElement) as any;
-      se?.scrollTo?.({ top: 0, behavior: "smooth" });
+      const se = (document.scrollingElement || document.documentElement) as HTMLElement | null;
+      if (se && "scrollTo" in se) {
+        se.scrollTo({ top: 0, behavior: "smooth" });
+      }
       if (se) se.scrollTop = 0;
     } catch {
       // no-op
@@ -170,9 +184,15 @@ export default function AddNewArrival() {
         const code = formData.householdCode.trim();
         const data = await searchApi({ household_no: code, limit: 1, page: 1 });
         const first = Array.isArray(data?.data) ? data.data[0] : null;
-        const households = first?.households || first?.Households || [];
-        const match = households?.find((h: any) => (h.household_no || h.householdNo) === code) || households?.[0];
-        const hid = match?.household_id || match?.householdId || match?.id;
+        const households: UnknownRecord[] = Array.isArray((first as UnknownRecord)?.households)
+          ? (((first as UnknownRecord).households ?? []) as UnknownRecord[])
+          : Array.isArray((first as UnknownRecord)?.Households)
+          ? (((first as UnknownRecord).Households ?? []) as UnknownRecord[])
+          : [];
+        const match = households.find((h: UnknownRecord) => (h.household_no || h.householdNo) === code) || households[0];
+        const hid = (match as { household_id?: unknown; householdId?: unknown; id?: unknown })?.household_id ||
+          (match as { householdId?: unknown })?.householdId ||
+          (match as { id?: unknown })?.id;
         if (hid) {
           householdId = String(hid);
         } else {
@@ -204,7 +224,7 @@ export default function AddNewArrival() {
           : formData.gender === "Nữ"
           ? "female"
           : formData.gender;
-      const personPayload: any = {
+      const personPayload: Record<string, unknown> = {
         event_type,
         full_name: formData.fullName,
         gender: genderPayload,
@@ -240,11 +260,9 @@ export default function AddNewArrival() {
         resetForm();
         window.requestAnimationFrame(scrollToTop);
       }
-    } catch (err) {
+    } catch (err: unknown) {
       console.error("Error submitting form", err);
-      // Basic error surface with safe access
-      const e: any = err as any;
-      const message = e?.response?.data?.message || e?.message || "Có lỗi xảy ra khi lưu";
+      const message = getErrorMessage(err, "Có lỗi xảy ra khi lưu");
       setErrors((prev) => ({ ...prev, submit: message }));
       toast.error(message);
     } finally {
@@ -280,11 +298,17 @@ export default function AddNewArrival() {
       const data = await searchApi({ household_no: code, limit: 1, page: 1 });
       // data is array of persons with included households
       const first = Array.isArray(data?.data) ? data.data[0] : null;
-      const households = first?.households || first?.Households || [];
+      const households: UnknownRecord[] = Array.isArray((first as UnknownRecord)?.households)
+        ? (((first as UnknownRecord).households ?? []) as UnknownRecord[])
+        : Array.isArray((first as UnknownRecord)?.Households)
+        ? (((first as UnknownRecord).Households ?? []) as UnknownRecord[])
+        : [];
       // Try to find exact match first
-      const match = households?.find((h: any) => (h.household_no || h.householdNo) === code) || households?.[0];
+      const match = households.find((h: UnknownRecord) => (h.household_no || h.householdNo) === code) || households[0];
       const addr = match?.address || match?.Address;
-      const hid = match?.household_id || match?.householdId || match?.id;
+      const hid = (match as { household_id?: unknown; householdId?: unknown; id?: unknown })?.household_id ||
+        (match as { householdId?: unknown })?.householdId ||
+        (match as { id?: unknown })?.id;
       if (addr && typeof addr === "string") {
         setFormData((prev) => ({ ...prev, address: addr }));
         // Clear address error if autofilled

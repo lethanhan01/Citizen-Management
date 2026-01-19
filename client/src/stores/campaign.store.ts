@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import * as CampaignAPI from "@/api/campaign.api";
+import type { ApiParams } from "@/types/api";
 
 type CampaignListItem = {
   campaign_id: number;
@@ -40,7 +41,7 @@ interface CampaignState {
   submitting: boolean;
   error: string | null;
 
-  fetchCampaigns: (params?: Record<string, any>) => Promise<void>;
+  fetchCampaigns: (params?: ApiParams) => Promise<void>;
   fetchCampaignById: (id: number) => Promise<void>;
 
   createCampaign: (payload: CampaignAPI.CampaignCreatePayload) => Promise<boolean>;
@@ -49,6 +50,17 @@ interface CampaignState {
 
   contribute: (payload: CampaignAPI.ContributePayload) => Promise<boolean>;
 }
+
+const getErrorMessage = (err: unknown, fallback: string) => {
+  if (err && typeof err === "object") {
+    const responseMessage = (err as { response?: { data?: { message?: unknown } } }).response?.data
+      ?.message;
+    if (typeof responseMessage === "string" && responseMessage.trim()) return responseMessage;
+    const msg = (err as { message?: unknown }).message;
+    if (typeof msg === "string" && msg.trim()) return msg;
+  }
+  return fallback;
+};
 
 export const useCampaignStore = create<CampaignState>((set, get) => ({
   campaigns: [],
@@ -68,10 +80,10 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
         campaigns: Array.isArray(list) ? list : [],
         loadingList: false,
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       set({
         loadingList: false,
-        error: err?.response?.data?.message || err?.message || "Không tải được danh sách chiến dịch",
+        error: getErrorMessage(err, "Không tải được danh sách chiến dịch"),
       });
     }
   },
@@ -89,10 +101,10 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
         detailsById: { ...s.detailsById, [id]: detail },
         loadingDetailById: { ...s.loadingDetailById, [id]: false },
       }));
-    } catch (err: any) {
+    } catch (err: unknown) {
       set((s) => ({
         loadingDetailById: { ...s.loadingDetailById, [id]: false },
-        error: err?.response?.data?.message || err?.message || "Không tải được chi tiết chiến dịch",
+        error: getErrorMessage(err, "Không tải được chi tiết chiến dịch"),
       }));
     }
   },
@@ -108,10 +120,10 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
       set({ submitting: false });
       await get().fetchCampaigns();
       return true;
-    } catch (err: any) {
+    } catch (err: unknown) {
       set({
         submitting: false,
-        error: err?.response?.data?.message || err?.message || "Tạo chiến dịch thất bại",
+        error: getErrorMessage(err, "Tạo chiến dịch thất bại"),
       });
       return false;
     }
@@ -129,10 +141,10 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
       await get().fetchCampaigns();
       await get().fetchCampaignById(id);
       return true;
-    } catch (err: any) {
+    } catch (err: unknown) {
       set({
         submitting: false,
-        error: err?.response?.data?.message || err?.message || "Cập nhật thất bại",
+        error: getErrorMessage(err, "Cập nhật thất bại"),
       });
       return false;
     }
@@ -153,10 +165,10 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
       });
       await get().fetchCampaigns();
       return true;
-    } catch (err: any) {
+    } catch (err: unknown) {
       set({
         submitting: false,
-        error: err?.response?.data?.message || err?.message || "Xóa thất bại",
+        error: getErrorMessage(err, "Xóa thất bại"),
       });
       return false;
     }
@@ -178,10 +190,10 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
         await get().fetchCampaignById(idNum);
       }
       return true;
-    } catch (err: any) {
+    } catch (err: unknown) {
       set({
         submitting: false,
-        error: err?.response?.data?.message || err?.message || "Ghi nhận đóng góp thất bại",
+        error: getErrorMessage(err, "Ghi nhận đóng góp thất bại"),
       });
       return false;
     }

@@ -1,15 +1,27 @@
 import { create } from 'zustand';
 import * as TempResidenceAPI from '@/api/tempResidence.api';
+import type { ApiParams, UnknownRecord } from '@/types/api';
 
 interface TempResidenceState {
-  data: any[];
+  data: UnknownRecord[];
   loading: boolean;
   error: string | null;
-  fetchTempResidence: (params?: Record<string, any>) => Promise<void>;
+  fetchTempResidence: (params?: ApiParams) => Promise<void>;
   createTempAbsence: (
     payload: TempResidenceAPI.TempAbsencePayload,
   ) => Promise<boolean>;
 }
+
+const getErrorMessage = (err: unknown, fallback: string) => {
+  if (err && typeof err === 'object') {
+    const responseMessage = (err as { response?: { data?: { message?: unknown } } }).response?.data
+      ?.message;
+    if (typeof responseMessage === 'string' && responseMessage.trim()) return responseMessage;
+    const msg = (err as { message?: unknown }).message;
+    if (typeof msg === 'string' && msg.trim()) return msg;
+  }
+  return fallback;
+};
 
 export const useTempResidenceStore = create<TempResidenceState>((set) => ({
   data: [],
@@ -20,9 +32,9 @@ export const useTempResidenceStore = create<TempResidenceState>((set) => ({
     try {
       const data = await TempResidenceAPI.getTempResidence(params);
       set({ data: Array.isArray(data) ? data : [], loading: false });
-    } catch (err: any) {
+    } catch (err: unknown) {
       set({
-        error: err?.message || 'Không tải được danh sách tạm trú/vắng',
+        error: getErrorMessage(err, 'Không tải được danh sách tạm trú/vắng'),
         loading: false,
       });
     }
@@ -38,14 +50,9 @@ export const useTempResidenceStore = create<TempResidenceState>((set) => ({
       }
       set({ loading: false, error: 'Không nhận được phản hồi từ máy chủ' });
       return false;
-    } catch (err: any) {
-      const errorMsg =
-        err?.response?.data?.message ||
-        err?.message ||
-        'Đăng ký tạm vắng thất bại';
-
+    } catch (err: unknown) {
       set({
-        error: errorMsg,
+        error: getErrorMessage(err, 'Đăng ký tạm vắng thất bại'),
         loading: false,
       });
       return false;

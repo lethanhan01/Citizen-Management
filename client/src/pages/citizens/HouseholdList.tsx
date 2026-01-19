@@ -7,55 +7,70 @@ import PaginationBar from "@/components/PaginationBar";
 import type { Household } from "@/types/household";
 import { useHouseholdStore } from "@/stores/household.store";
 import * as HouseholdAPI from "@/api/household.api";
+import type { UnknownRecord } from "@/types/api";
 
 // Dữ liệu sẽ lấy từ store; bỏ mock
 
 const ITEMS_PER_PAGE = 10;
 
-function toHousehold(h: any): Household {
-  const head = Array.isArray(h?.residents)
-    ? h.residents.find((m: any) => m?.HouseholdMembership?.is_head || m?.is_head)
-    : h?.headPerson || h?.head || null;
+function toHousehold(h: UnknownRecord): Household {
+  const residents = (h as { residents?: unknown }).residents;
+  const head = Array.isArray(residents)
+    ? residents.find((m: UnknownRecord) =>
+        (m as { HouseholdMembership?: { is_head?: unknown } })?.HouseholdMembership?.is_head ||
+        (m as { is_head?: unknown })?.is_head
+      )
+    : (h as { headPerson?: unknown; head?: unknown }).headPerson || (h as { head?: unknown }).head || null;
   const headNameValue =
-    head?.full_name ??
-    h?.headPerson?.full_name ??
-    h?.head_full_name ??
-    h?.head_name ??
-    h?.owner_full_name ??
-    h?.chu_ho_name ??
-    h?.household_head_name ??
-    h?.headName ??
+    (head as { full_name?: unknown })?.full_name ??
+    (h as { headPerson?: { full_name?: unknown } })?.headPerson?.full_name ??
+    (h as { head_full_name?: unknown })?.head_full_name ??
+    (h as { head_name?: unknown })?.head_name ??
+    (h as { owner_full_name?: unknown })?.owner_full_name ??
+    (h as { chu_ho_name?: unknown })?.chu_ho_name ??
+    (h as { household_head_name?: unknown })?.household_head_name ??
+    (h as { headName?: unknown })?.headName ??
     "";
   const headIdValue =
-    head?.person_id ??
-    head?.id ??
-    h?.headPerson?.person_id ??
-    h?.head_id ??
-    h?.owner_id ??
-    h?.chu_ho_id ??
-    h?.household_head_id ??
+    (head as { person_id?: unknown })?.person_id ??
+    (head as { id?: unknown })?.id ??
+    (h as { headPerson?: { person_id?: unknown } })?.headPerson?.person_id ??
+    (h as { head_id?: unknown })?.head_id ??
+    (h as { owner_id?: unknown })?.owner_id ??
+    (h as { chu_ho_id?: unknown })?.chu_ho_id ??
+    (h as { household_head_id?: unknown })?.household_head_id ??
     "";
   return {
-    id: String(h?.household_id ?? h?.id ?? ""),
-    code: String(h?.household_no ?? h?.code ?? ""),
+    id: String((h as { household_id?: unknown; id?: unknown }).household_id ?? (h as { id?: unknown }).id ?? ""),
+    code: String((h as { household_no?: unknown; code?: unknown }).household_no ?? (h as { code?: unknown }).code ?? ""),
     headName: String(headNameValue),
     headId: String(headIdValue),
-    address: String(h?.address ?? ""),
-    registrationDate: String(h?.registration_date ?? h?.created_at ?? ""),
+    address: String((h as { address?: unknown }).address ?? ""),
+    registrationDate: String((h as { registration_date?: unknown; created_at?: unknown }).registration_date ?? (h as { created_at?: unknown }).created_at ?? ""),
     memberCount: Number(
-      h?.members_count ?? h?.memberCount ?? (Array.isArray(h?.residents) ? h.residents.length : 0)
+      (h as { members_count?: unknown; memberCount?: unknown }).members_count ??
+        (h as { memberCount?: unknown }).memberCount ??
+        (Array.isArray(residents) ? residents.length : 0)
     ),
     members:
-      Array.isArray(h?.residents)
-        ? h.residents.map((m: any) => ({
-            id: String(m?.person_id ?? m?.id ?? ""),
-            fullName: String(m?.full_name ?? ""),
-            cccd: String(m?.citizen_id_num ?? ""),
-            relationship: m?.HouseholdMembership?.relation_to_head ?? m?.relationship ?? "",
-            isHead: Boolean(m?.HouseholdMembership?.is_head ?? m?.isHead ?? false),
+      Array.isArray(residents)
+        ? residents.map((m: UnknownRecord) => ({
+            id: String((m as { person_id?: unknown; id?: unknown }).person_id ?? (m as { id?: unknown }).id ?? ""),
+            fullName: String((m as { full_name?: unknown }).full_name ?? ""),
+            cccd: String((m as { citizen_id_num?: unknown }).citizen_id_num ?? ""),
+            relationship: String(
+              (m as { HouseholdMembership?: { relation_to_head?: unknown } })?.HouseholdMembership?.relation_to_head ??
+                (m as { relationship?: unknown }).relationship ??
+                ""
+            ),
+            isHead: Boolean(
+              (m as { HouseholdMembership?: { is_head?: unknown } })?.HouseholdMembership?.is_head ??
+                (m as { isHead?: unknown }).isHead ??
+                false
+            ),
           }))
         : [],
-    lastUpdated: h?.updated_at ?? undefined,
+    lastUpdated: (h as { updated_at?: string }).updated_at ?? undefined,
   };
 }
 
@@ -67,7 +82,7 @@ export default function HouseholdList() {
     null
   );
   const { data, loading, error } = useHouseholdStore();
-  const [allData, setAllData] = useState<any[]>([]);
+  const [allData, setAllData] = useState<UnknownRecord[]>([]);
   const [allLoading, setAllLoading] = useState(false);
   const [allError, setAllError] = useState<string | null>(null);
 
@@ -78,7 +93,7 @@ export default function HouseholdList() {
       try {
         const limit = 500;
         let page = 1;
-        const acc: any[] = [];
+        const acc: UnknownRecord[] = [];
         // Loop pages until fewer than limit results are returned
         while (true) {
           const resp = await HouseholdAPI.getHouseholds({ page, limit });
@@ -90,8 +105,12 @@ export default function HouseholdList() {
           if (page > 1000) break;
         }
         setAllData(acc);
-      } catch (e: any) {
-        setAllError(e?.message || "Không tải được toàn bộ hộ khẩu");
+      } catch (e: unknown) {
+        setAllError(
+          (e && typeof e === "object" && "message" in e && typeof (e as { message?: unknown }).message === "string")
+            ? (e as { message?: string }).message!
+            : "Không tải được toàn bộ hộ khẩu"
+        );
       } finally {
         setAllLoading(false);
       }

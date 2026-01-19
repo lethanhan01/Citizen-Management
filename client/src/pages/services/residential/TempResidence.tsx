@@ -24,6 +24,17 @@ interface FormErrors {
   [key: string]: string;
 }
 
+const getErrorMessage = (err: unknown, fallback: string) => {
+  if (err && typeof err === "object") {
+    const responseMessage = (err as { response?: { data?: { message?: unknown } } }).response?.data
+      ?.message;
+    if (typeof responseMessage === "string" && responseMessage.trim()) return responseMessage;
+    const msg = (err as { message?: unknown }).message;
+    if (typeof msg === "string" && msg.trim()) return msg;
+  }
+  return fallback;
+};
+
 const REQUIRED_FIELDS = [
   "fullName",
   "dateOfBirth",
@@ -60,8 +71,10 @@ export default function TempResidence() {
       if (typeof window !== "undefined") {
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
-      const se = (document.scrollingElement || document.documentElement) as any;
-      se?.scrollTo?.({ top: 0, behavior: "smooth" });
+      const se = (document.scrollingElement || document.documentElement) as HTMLElement | null;
+      if (se && "scrollTo" in se) {
+        se.scrollTo({ top: 0, behavior: "smooth" });
+      }
       if (se) se.scrollTop = 0;
     } catch {
       // no-op
@@ -163,13 +176,8 @@ export default function TempResidence() {
       // After successful save: reset form and scroll to top for next entry
       resetForm();
       scrollToTop();
-    } catch (error) {
-      const err: any = error as any;
-      const message =
-        err?.response?.data?.message ||
-        err?.message ||
-        "Đăng ký tạm trú thất bại. Vui lòng thử lại!";
-      toast.error(message);
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, "Đăng ký tạm trú thất bại. Vui lòng thử lại!"));
       console.error("Error submitting form:", error);
     } finally {
       setIsLoading(false);

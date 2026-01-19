@@ -5,6 +5,7 @@ import { toast, Toaster } from "react-hot-toast";
 import { Search, Users, X, Save, Loader } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import * as HouseholdAPI from "@/api/household.api";
+import type { UnknownRecord } from "@/types/api";
 import PaginationBar from "@/components/PaginationBar";
 
 interface Member {
@@ -38,29 +39,35 @@ interface FormErrors {
 
 const ITEMS_PER_PAGE = 10;
 
-function toTableHouseholdItem(h: any): TableHouseholdItem {
-  const head = Array.isArray(h?.residents)
-    ? h.residents.find((m: any) => m?.HouseholdMembership?.is_head || m?.is_head)
-    : h?.headPerson || h?.head || null;
+function toTableHouseholdItem(h: UnknownRecord): TableHouseholdItem {
+  const residents = (h as { residents?: unknown }).residents;
+  const head = Array.isArray(residents)
+    ? residents.find((m: UnknownRecord) =>
+        (m as { HouseholdMembership?: { is_head?: unknown } })?.HouseholdMembership?.is_head ||
+        (m as { is_head?: unknown })?.is_head
+      )
+    : (h as { headPerson?: unknown; head?: unknown }).headPerson || (h as { head?: unknown }).head || null;
   const headNameValue =
-    head?.full_name ??
-    h?.headPerson?.full_name ??
-    h?.head_full_name ??
-    h?.head_name ??
-    h?.owner_full_name ??
-    h?.chu_ho_name ??
-    h?.household_head_name ??
-    h?.headName ??
+    (head as { full_name?: unknown })?.full_name ??
+    (h as { headPerson?: { full_name?: unknown } })?.headPerson?.full_name ??
+    (h as { head_full_name?: unknown })?.head_full_name ??
+    (h as { head_name?: unknown })?.head_name ??
+    (h as { owner_full_name?: unknown })?.owner_full_name ??
+    (h as { chu_ho_name?: unknown })?.chu_ho_name ??
+    (h as { household_head_name?: unknown })?.household_head_name ??
+    (h as { headName?: unknown })?.headName ??
     "";
   return {
-    id: String(h?.household_id ?? h?.id ?? ""),
-    code: String(h?.household_no ?? h?.code ?? ""),
+    id: String((h as { household_id?: unknown; id?: unknown }).household_id ?? (h as { id?: unknown }).id ?? ""),
+    code: String((h as { household_no?: unknown; code?: unknown }).household_no ?? (h as { code?: unknown }).code ?? ""),
     headName: String(headNameValue),
-    address: String(h?.address ?? ""),
+    address: String((h as { address?: unknown }).address ?? ""),
     membersCount: Number(
-      h?.members_count ?? h?.memberCount ?? (Array.isArray(h?.residents) ? h.residents.length : 0)
+      (h as { members_count?: unknown; memberCount?: unknown }).members_count ??
+        (h as { memberCount?: unknown }).memberCount ??
+        (Array.isArray(residents) ? residents.length : 0)
     ),
-    registrationDate: String(h?.registration_date ?? h?.created_at ?? ""),
+    registrationDate: String((h as { registration_date?: unknown; created_at?: unknown }).registration_date ?? (h as { created_at?: unknown }).created_at ?? ""),
   };
 }
 
@@ -71,7 +78,7 @@ export default function SplitHousehold() {
   const [searchQuery, setSearchQuery] = useState(initialId);
   const [sortBy, setSortBy] = useState<"headName" | "memberCount" | "date" | "codeAsc" | "codeDesc">("headName");
   const [currentPage, setCurrentPage] = useState(1);
-  const [allData, setAllData] = useState<any[]>([]);
+  const [allData, setAllData] = useState<UnknownRecord[]>([]);
   const [listLoading, setListLoading] = useState(false);
   const [listError, setListError] = useState<string | null>(null);
   const [selected, setSelected] = useState<HouseholdItem | null>(null);
@@ -91,7 +98,7 @@ export default function SplitHousehold() {
       try {
         const limit = 500;
         let page = 1;
-        const acc: any[] = [];
+        const acc: UnknownRecord[] = [];
         // Loop pages until fewer than limit results are returned
         while (true) {
           const resp = await HouseholdAPI.getHouseholds({ page, limit });
@@ -103,8 +110,12 @@ export default function SplitHousehold() {
           if (page > 1000) break;
         }
         setAllData(acc);
-      } catch (e: any) {
-        setListError(e?.message || "Không tải được toàn bộ hộ khẩu");
+      } catch (e: unknown) {
+        const msg =
+          (e && typeof e === "object" && "message" in e && typeof (e as { message?: unknown }).message === "string")
+            ? (e as { message?: string }).message!
+            : "Không tải được toàn bộ hộ khẩu";
+        setListError(msg);
       } finally {
         setListLoading(false);
       }
@@ -185,12 +196,21 @@ export default function SplitHousehold() {
     try {
       const detail = await HouseholdAPI.getHouseholdById(household.id);
       const residents = Array.isArray(detail?.residents) ? detail.residents : [];
-      const members: Member[] = residents.map((m: any) => ({
-        id: String(m?.person_id ?? m?.id ?? ""),
-        fullName: String(m?.full_name ?? m?.fullName ?? m?.name ?? ""),
-        cccd: String(m?.citizen_id_num ?? m?.cccd ?? ""),
-        relationship: String(m?.HouseholdMembership?.relation_to_head ?? m?.relation_to_head ?? ""),
-        isHead: Boolean(m?.HouseholdMembership?.is_head ?? false),
+      const members: Member[] = residents.map((m: UnknownRecord) => ({
+        id: String((m as { person_id?: unknown; id?: unknown }).person_id ?? (m as { id?: unknown }).id ?? ""),
+        fullName: String(
+          (m as { full_name?: unknown; fullName?: unknown; name?: unknown }).full_name ??
+            (m as { fullName?: unknown }).fullName ??
+            (m as { name?: unknown }).name ??
+            ""
+        ),
+        cccd: String((m as { citizen_id_num?: unknown; cccd?: unknown }).citizen_id_num ?? (m as { cccd?: unknown }).cccd ?? ""),
+        relationship: String(
+          (m as { HouseholdMembership?: { relation_to_head?: unknown } })?.HouseholdMembership?.relation_to_head ??
+            (m as { relation_to_head?: unknown }).relation_to_head ??
+            ""
+        ),
+        isHead: Boolean((m as { HouseholdMembership?: { is_head?: unknown } })?.HouseholdMembership?.is_head ?? false),
       }));
       setSelected({
         id: household.id,
@@ -272,10 +292,15 @@ export default function SplitHousehold() {
         }
         navigate("/households");
       }
-    } catch (err) {
+    } catch (err: unknown) {
       console.error(err);
-      const e: any = err as any;
-      const message = e?.response?.data?.message || e?.message || "Tách hộ thất bại. Vui lòng thử lại!";
+      const message =
+        (err && typeof err === "object" && "response" in err &&
+          typeof (err as { response?: { data?: { message?: unknown } } }).response?.data?.message === "string")
+          ? (err as { response?: { data?: { message?: string } } }).response!.data!.message!
+          : (err && typeof err === "object" && "message" in err && typeof (err as { message?: unknown }).message === "string")
+          ? (err as { message?: string }).message!
+          : "Tách hộ thất bại. Vui lòng thử lại!";
       toast.error(message);
     } finally {
       setIsLoading(false);

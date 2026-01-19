@@ -2,6 +2,22 @@ import { create } from 'zustand';
 // import { persist } from 'zustand/middleware';
 import * as StatisticAPI from '@/api/statistic.api';
 
+const getErrorMessage = (err: unknown, fallback: string) => {
+  if (err && typeof err === 'object') {
+    const maybeMessage = (err as { message?: unknown }).message;
+    if (typeof maybeMessage === 'string' && maybeMessage.trim()) {
+      return maybeMessage;
+    }
+
+    const responseMessage = (err as { response?: { data?: { message?: unknown } } }).response?.data
+      ?.message;
+    if (typeof responseMessage === 'string' && responseMessage.trim()) {
+      return responseMessage;
+    }
+  }
+  return fallback;
+};
+
 interface DashboardData {
   tongSoHoKhau: number;
   tongSoNhanKhau: number;
@@ -110,12 +126,9 @@ export const useStatisticStore = create<StatisticState>((set) => ({
     try {
       const data = await StatisticAPI.getDashboard();
       set({ dashboardData: data ?? null, loading: false });
-    } catch (err: any) {
+    } catch (err: unknown) {
       set({
-        error:
-          err?.response?.data?.message ||
-          err?.message ||
-          'Lỗi lấy số liệu Dashboard',
+        error: getErrorMessage(err, 'Lỗi lấy số liệu Dashboard'),
         loading: false,
       });
     }
@@ -126,12 +139,9 @@ export const useStatisticStore = create<StatisticState>((set) => ({
     try {
       const data = await StatisticAPI.getFeeReport(id);
       set({ currentFeeReport: data ?? null, loading: false });
-    } catch (err: any) {
+    } catch (err: unknown) {
       set({
-        error:
-          err?.response?.data?.message ||
-          err?.message ||
-          'Lỗi lấy báo cáo thu phí',
+        error: getErrorMessage(err, 'Lỗi lấy báo cáo thu phí'),
         loading: false,
       });
     }
@@ -142,12 +152,9 @@ export const useStatisticStore = create<StatisticState>((set) => ({
     try {
       const data = await StatisticAPI.getDonationReport(id);
       set({ currentDonationReport: data ?? null, loading: false });
-    } catch (err: any) {
+    } catch (err: unknown) {
       set({
-        error:
-          err?.response?.data?.message ||
-          err?.message ||
-          'Lỗi lấy báo cáo đóng góp',
+        error: getErrorMessage(err, 'Lỗi lấy báo cáo đóng góp'),
         loading: false,
       });
     }
