@@ -15,6 +15,25 @@ import {
   Trash2,
 } from "lucide-react";
 
+type CampaignListItem = {
+  campaign_id: number;
+  name: string;
+  start_date?: string;
+  end_date?: string | null;
+  description?: string;
+};
+
+type ContributionItem = {
+  id: number | string;
+  amount: number | string;
+  contribution_date?: string;
+  note?: string;
+  household?: {
+    household_no?: string;
+    address?: string;
+  };
+};
+
 export default function DonationCampaigns() {
 
 const {
@@ -139,7 +158,7 @@ const {
     }
   };
 
-  const handleOpenEditCampaign = (campaign: any) => {
+  const handleOpenEditCampaign = (campaign: CampaignListItem) => {
     setEditCampaignId(campaign.campaign_id);
 
     // prefill từ list (nếu list không có start/end thì vẫn sửa được name/end_date theo yêu cầu)
@@ -218,7 +237,7 @@ const {
         const isExpanded = expandedCampaigns.includes(id);
 
         const detail = detailsById[id];
-        const donations = detail?.contributions ?? [];
+        const donations: ContributionItem[] = detail?.contributions ?? [];
 
         const totalAmount =
           typeof detail?.total_collected === "number"
@@ -337,7 +356,7 @@ const {
                       </thead>
 
                       <tbody>
-                        {donations.map((d: any) => (
+                        {donations.map((d) => (
                           <tr key={d.id} className="border-t border-border">
                             <td className="py-2 px-3 text-first dark:text-darkmodetext">
                               {d.household?.household_no ?? "-"}

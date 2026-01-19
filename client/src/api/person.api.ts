@@ -1,7 +1,8 @@
 import apiClient from '../lib/axios';
+import type { ApiParams, UnknownRecord } from '@/types/api';
 
 export type PersonsResponse = {
-  rows: any[];
+  rows: UnknownRecord[];
   pagination: {
     currentPage: number;
     totalPages: number;
@@ -10,8 +11,7 @@ export type PersonsResponse = {
   };
 };
 
-
-export async function getPersons(params?: Record<string, any>): Promise<PersonsResponse> {
+export async function getPersons(params?: ApiParams): Promise<PersonsResponse> {
   const resp = await apiClient.get("/api/v1/nhan-khau", { params });
 
   return {
@@ -30,7 +30,7 @@ export async function getPersonById(id: string) {
   return resp.data?.data ?? null;
 }
 
-export async function updatePerson(id: string, payload: any) {
+export async function updatePerson(id: string, payload: UnknownRecord) {
   const resp = await apiClient.put(`/api/v1/nhan-khau/${id}`, payload);
   return resp.data?.data ?? null;
 }
@@ -40,7 +40,7 @@ export async function getPersonEvents(id: string) {
   return resp.data?.data ?? null;
 }
 
-export async function handlePersonEvent(nhanKhauId: string, payload: any) {
+export async function handlePersonEvent(nhanKhauId: string, payload: UnknownRecord) {
   const resp = await apiClient.put(`/api/v1/nhan-khau/${nhanKhauId}/bien-dong`, payload);
   return resp.data?.data ?? null;
 }

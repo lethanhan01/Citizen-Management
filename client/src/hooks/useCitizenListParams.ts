@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import type { ApiParams } from "@/types/api";
 
 export type CitizenSort = "name" | "age" | "status" | "date";
 export type CitizenGender = "all" | "male" | "female" | "other" | "unknown";
@@ -14,8 +15,16 @@ export function useCitizenListParams(opts: {
 }) {
   const { page, limit, searchQuery, sortBy, filterGender, filterStatus } = opts;
 
-  return useMemo(() => {
-    const params: any = { page, limit };
+    return useMemo<ApiParams>(() => {
+      const params: {
+        page: number;
+        limit: number;
+        search?: string;
+        gender?: CitizenGender;
+        residency_status?: CitizenStatus;
+        sortBy?: string;
+        sortOrder?: string;
+      } = { page, limit };
 
     const q = searchQuery.trim();
     if (q) params.search = q;

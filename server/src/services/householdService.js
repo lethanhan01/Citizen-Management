@@ -13,9 +13,10 @@ let createHousehold = async (data) => {
 };
 let getAllHouseholds = async ({ page = 1, limit = 20 }) => {
     const offset = (page - 1) * limit;
-    return await db.Household.findAll({
+    const { count, rows } = await db.Household.findAndCountAll({
         offset,
         limit,
+        distinct: true,
         attributes: {
             include: [
                 [
@@ -38,6 +39,14 @@ let getAllHouseholds = async ({ page = 1, limit = 20 }) => {
         ],
         order: [["household_id", "ASC"]],
     });
+
+    return {
+        data: rows,
+        currentPage: page,
+        totalPages: Math.ceil(count / limit),
+        totalItems: count,
+        itemsPerPage: limit,
+    };
 };
 let getHouseholdById = async (id) => {
     return await db.Household.findOne({

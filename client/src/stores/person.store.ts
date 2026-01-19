@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import * as PersonAPI from "@/api/person.api";
+import type { ApiParams, UnknownRecord } from "@/types/api";
 
 interface Pagination {
   currentPage: number;
@@ -9,15 +10,23 @@ interface Pagination {
 }
 
 interface PersonState {
-  data: any[];
+  data: UnknownRecord[];
   loading: boolean;
   error: string | null;
   pagination: Pagination;
 
-  current: any | null;
-  fetchPersons: (params?: Record<string, any>) => Promise<void>;
+  current: UnknownRecord | null;
+  fetchPersons: (params?: ApiParams) => Promise<void>;
   fetchPersonById: (id: string) => Promise<void>;
 }
+
+const getErrorMessage = (err: unknown, fallback: string) => {
+  if (err && typeof err === "object" && "message" in err) {
+    const msg = (err as { message?: unknown }).message;
+    if (typeof msg === "string" && msg.trim()) return msg;
+  }
+  return fallback;
+};
 
 export const usePersonStore = create<PersonState>((set) => ({
   data: [],
@@ -35,9 +44,9 @@ export const usePersonStore = create<PersonState>((set) => ({
         pagination: res.pagination,
         loading: false,
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       set({
-        error: err?.message || "Không tải được danh sách nhân khẩu",
+        error: getErrorMessage(err, "Không tải được danh sách nhân khẩu"),
         loading: false,
       });
     }
@@ -48,8 +57,12 @@ export const usePersonStore = create<PersonState>((set) => ({
     try {
       const data = await PersonAPI.getPersonById(id);
       set({ current: data ?? null, loading: false });
-    } catch (err: any) {
-      set({ error: err?.message || "Không lấy được thông tin công dân", loading: false, current: null });
+    } catch (err: unknown) {
+      set({
+        error: getErrorMessage(err, "Không lấy được thông tin công dân"),
+        loading: false,
+        current: null,
+      });
     }
   },
 }));

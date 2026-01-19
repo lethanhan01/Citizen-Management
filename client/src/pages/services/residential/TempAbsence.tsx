@@ -101,8 +101,10 @@ export default function TempAbsence() {
       if (typeof window !== 'undefined') {
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
-      const se = (document.scrollingElement || document.documentElement) as any;
-      se?.scrollTo?.({ top: 0, behavior: 'smooth' });
+      const se = (document.scrollingElement || document.documentElement) as HTMLElement | null;
+      if (se && 'scrollTo' in se) {
+        se.scrollTo({ top: 0, behavior: 'smooth' });
+      }
       if (se) se.scrollTop = 0;
     } catch {
       // no-op
@@ -134,7 +136,7 @@ export default function TempAbsence() {
       cccd: c.cccd,
       fullName: c.fullName,
       dateOfBirth: c.dateOfBirth,
-      gender: c.gender as any,
+      gender: c.gender,
       householdCode: c.householdCode,
       address: c.address,
     }));

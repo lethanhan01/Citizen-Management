@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Loader, X, RefreshCw } from "lucide-react";
 import * as HouseholdAPI from "@/api/household.api";
+import type { UnknownRecord } from "@/types/api";
 import { toast, Toaster } from "react-hot-toast";
 
 interface HouseholdItem {
@@ -24,15 +25,15 @@ interface FormErrors {
   [key: string]: string;
 }
 
-function toHouseholdItem(h: any): HouseholdItem {
-  const headPerson = h?.headPerson || null;
+function toHouseholdItem(h: UnknownRecord): HouseholdItem {
+  const headPerson = (h as { headPerson?: UnknownRecord })?.headPerson || null;
   return {
-    id: String(h?.household_id ?? h?.id ?? ""),
-    code: String(h?.household_no ?? h?.code ?? ""),
-    headName: String(headPerson?.full_name ?? h?.head_name ?? ""),
-    headCCCD: String(headPerson?.citizen_id_num ?? h?.head_cccd ?? ""),
-    address: String(h?.address ?? ""),
-    memberCount: Number(h?.members_count ?? h?.memberCount ?? 0),
+    id: String((h as { household_id?: unknown; id?: unknown }).household_id ?? (h as { id?: unknown }).id ?? ""),
+    code: String((h as { household_no?: unknown; code?: unknown }).household_no ?? (h as { code?: unknown }).code ?? ""),
+    headName: String((headPerson as { full_name?: unknown })?.full_name ?? (h as { head_name?: unknown }).head_name ?? ""),
+    headCCCD: String((headPerson as { citizen_id_num?: unknown })?.citizen_id_num ?? (h as { head_cccd?: unknown }).head_cccd ?? ""),
+    address: String((h as { address?: unknown }).address ?? ""),
+    memberCount: Number((h as { members_count?: unknown; memberCount?: unknown }).members_count ?? (h as { memberCount?: unknown }).memberCount ?? 0),
   };
 }
 
@@ -69,13 +70,13 @@ export default function ChangeAddress() {
         // Treat input as household code, resolve to ID across all pages
         const limit = 500;
         let page = 1;
-        const acc: any[] = [];
+        const acc: UnknownRecord[] = [];
         while (true) {
           const resp = await HouseholdAPI.getHouseholds({ page, limit });
-          const arr = Array.isArray(resp)
-            ? resp
-            : Array.isArray((resp as any)?.rows)
-            ? (resp as any).rows
+          const arr: UnknownRecord[] = Array.isArray(resp)
+            ? (resp as UnknownRecord[])
+            : Array.isArray((resp as { rows?: unknown })?.rows)
+            ? (((resp as { rows?: unknown[] }).rows ?? []) as UnknownRecord[])
             : [];
           acc.push(...arr);
           if (arr.length < limit) break;
@@ -83,12 +84,17 @@ export default function ChangeAddress() {
           if (page > 1000) break; // safety stop
         }
         const found = acc.find(
-          (h: any) => String(h?.household_no ?? h?.code ?? "").toLowerCase() === idForQuery.toLowerCase()
+          (h: UnknownRecord) =>
+            String((h as { household_no?: unknown; code?: unknown }).household_no ?? (h as { code?: unknown }).code ?? "").toLowerCase() ===
+            idForQuery.toLowerCase()
         );
         if (!found) {
           throw new Error(`Không tìm thấy hộ khẩu với mã: ${idForQuery}`);
         }
-        idForQuery = String(found?.household_id ?? found?.id);
+        idForQuery = String(
+          (found as { household_id?: unknown; id?: unknown }).household_id ??
+            (found as { id?: unknown }).id
+        );
       }
 
       // Fetch household detail
@@ -109,8 +115,12 @@ export default function ChangeAddress() {
       setTimeout(() => {
         formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 100);
-    } catch (e: any) {
-      setError(e?.message || "Không tìm thấy hộ khẩu");
+    } catch (e: unknown) {
+      setError(
+        (e && typeof e === "object" && "message" in e && typeof (e as { message?: unknown }).message === "string")
+          ? (e as { message?: string }).message!
+          : "Không tìm thấy hộ khẩu"
+      );
       setSelectedHousehold(null);
     } finally {
       setLoading(false);
@@ -121,7 +131,6 @@ export default function ChangeAddress() {
     if (initialId) {
       fetchHousehold(initialId);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialId]);
 
   // Handle input change
@@ -173,9 +182,15 @@ export default function ChangeAddress() {
 
       // Refresh household data
       await fetchHousehold(selectedHousehold.id);
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error("Error updating address:", e);
-      const message = e?.response?.data?.message || e?.message || "Có lỗi xảy ra khi thay đổi địa chỉ";
+      const message =
+        (e && typeof e === "object" && "response" in e &&
+          typeof (e as { response?: { data?: { message?: unknown } } }).response?.data?.message === "string")
+          ? (e as { response?: { data?: { message?: string } } }).response!.data!.message!
+          : (e && typeof e === "object" && "message" in e && typeof (e as { message?: unknown }).message === "string")
+          ? (e as { message?: string }).message!
+          : "Có lỗi xảy ra khi thay đổi địa chỉ";
       toast.error(message);
     } finally {
       setIsSubmitting(false);

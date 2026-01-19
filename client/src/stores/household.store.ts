@@ -1,14 +1,23 @@
 import { create } from 'zustand';
 import * as HouseholdAPI from '@/api/household.api';
+import type { ApiParams, UnknownRecord } from '@/types/api';
 
 interface HouseholdState {
-  data: any[];
+  data: UnknownRecord[];
   loading: boolean;
   error: string | null;
-  fetchHouseholds: (params?: Record<string, any>) => Promise<void>;
-  current: any | null;
+  fetchHouseholds: (params?: ApiParams) => Promise<void>;
+  current: UnknownRecord | null;
   fetchHouseholdById: (id: string) => Promise<void>;
 }
+
+const getErrorMessage = (err: unknown, fallback: string) => {
+  if (err && typeof err === 'object' && 'message' in err) {
+    const msg = (err as { message?: unknown }).message;
+    if (typeof msg === 'string' && msg.trim()) return msg;
+  }
+  return fallback;
+};
 
 export const useHouseholdStore = create<HouseholdState>((set) => ({
   data: [],
@@ -20,8 +29,8 @@ export const useHouseholdStore = create<HouseholdState>((set) => ({
     try {
       const data = await HouseholdAPI.getHouseholds(params);
       set({ data: Array.isArray(data) ? data : [], loading: false });
-    } catch (err: any) {
-      set({ error: err?.message || 'Không tải được danh sách hộ khẩu', loading: false });
+    } catch (err: unknown) {
+      set({ error: getErrorMessage(err, 'Không tải được danh sách hộ khẩu'), loading: false });
     }
   },
   async fetchHouseholdById(id) {
@@ -29,8 +38,12 @@ export const useHouseholdStore = create<HouseholdState>((set) => ({
     try {
       const data = await HouseholdAPI.getHouseholdById(id);
       set({ current: data ?? null, loading: false });
-    } catch (err: any) {
-      set({ error: err?.message || 'Không lấy được thông tin hộ khẩu', loading: false, current: null });
+    } catch (err: unknown) {
+      set({
+        error: getErrorMessage(err, 'Không lấy được thông tin hộ khẩu'),
+        loading: false,
+        current: null,
+      });
     }
   },
 }));

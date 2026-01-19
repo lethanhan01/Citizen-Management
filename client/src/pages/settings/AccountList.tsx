@@ -5,9 +5,16 @@ import { Search, Plus, Pencil, Trash2, X, Save, Loader } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { accountApi } from "@/api/account.api";
 import type { Account, Role, Status } from "@/types/account";
+import type { UnknownRecord } from "@/types/api";
 import { ROLE_LABEL } from "@/types/account";
 
 
+
+const toRole = (value: unknown): Role => {
+  if (value === "admin" || value === "staff" || value === "viewer") return value;
+  if (value === "accountant") return "staff";
+  return "viewer";
+};
 
 export default function AccountList() {
   const navigate = useNavigate();
@@ -31,13 +38,15 @@ export default function AccountList() {
     const fetchAccounts = async () => {
       try {
         const res = await accountApi.getAll();
-        const list = (res.data?.data ?? []).map((u: any) => ({
-          id: String(u.user_id ?? u.id),
-          username: u.username ?? "",
-          fullName: u.full_name ?? "",
-          role: u.role ?? "accountant",
-          status: "Hoạt động",          // backend chưa có status thì tạm fix cứng
-          createdAt: u.createdAt ? String(u.createdAt).slice(0, 10) : "",
+        const list = (res.data?.data ?? []).map((u: UnknownRecord) => ({
+          id: String((u as { user_id?: unknown; id?: unknown }).user_id ?? (u as { id?: unknown }).id ?? ""),
+          username: String((u as { username?: unknown }).username ?? ""),
+          fullName: String((u as { full_name?: unknown }).full_name ?? ""),
+          role: toRole((u as { role?: unknown }).role),
+          status: "Hoạt động", // backend chưa có status thì tạm fix cứng
+          createdAt: (u as { createdAt?: unknown }).createdAt
+            ? String((u as { createdAt?: unknown }).createdAt).slice(0, 10)
+            : "",
         })) as Account[];
 
         setAccounts(list);
@@ -130,12 +139,12 @@ export default function AccountList() {
 
         const u = res.data?.data;
         const mapped: Account = {
-          id: String(u.user_id ?? u.id),
-          username: u.username ?? formData.username,
-          fullName: u.full_name ?? formData.fullName,
-          role: (u.role ?? formData.role) as any,
+          id: String(u?.user_id ?? u?.id ?? editingAccount.id),
+          username: u?.username ?? formData.username,
+          fullName: u?.full_name ?? formData.fullName,
+          role: toRole(u?.role ?? formData.role),
           status: "Hoạt động",
-          createdAt: u.createdAt ? String(u.createdAt).slice(0, 10) : formData.createdAt,
+          createdAt: u?.createdAt ? String(u.createdAt).slice(0, 10) : formData.createdAt,
         };
 
         setAccounts((prev) => prev.map((a) => (a.id === editingAccount.id ? mapped : a)));
@@ -150,12 +159,12 @@ export default function AccountList() {
 
         const u = res.data?.data;
         const mapped: Account = {
-          id: String(u.user_id ?? u.id),
-          username: u.username ?? "",
-          fullName: u.full_name ?? "",
-          role: (u.role ?? "accountant") as any,
+          id: String(u?.user_id ?? u?.id ?? ""),
+          username: u?.username ?? "",
+          fullName: u?.full_name ?? "",
+          role: toRole(u?.role ?? "viewer"),
           status: "Hoạt động",
-          createdAt: u.createdAt ? String(u.createdAt).slice(0, 10) : "",
+          createdAt: u?.createdAt ? String(u.createdAt).slice(0, 10) : "",
         };
 
         setAccounts((prev) => [mapped, ...prev]);

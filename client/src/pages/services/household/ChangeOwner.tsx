@@ -7,6 +7,7 @@ import { Search, UserCheck, X, Save, Loader } from "lucide-react";
 import { useHouseholdStore } from "@/stores/household.store";
 import * as HouseholdAPI from "@/api/household.api";
 import PaginationBar from "@/components/PaginationBar";
+import type { UnknownRecord } from "@/types/api";
 
 interface Member {
   id: string;
@@ -29,38 +30,50 @@ interface FormErrors {
   [key: string]: string;
 }
 
-function toHouseholdItem(h: any): HouseholdItem {
-  const head = Array.isArray(h?.residents)
-    ? h.residents.find((m: any) => m?.HouseholdMembership?.is_head || m?.is_head)
-    : h?.headPerson || h?.head || null;
+function toHouseholdItem(h: UnknownRecord): HouseholdItem {
+  const residents = (h as { residents?: unknown }).residents;
+  const head = Array.isArray(residents)
+    ? residents.find((m: UnknownRecord) =>
+        (m as { HouseholdMembership?: { is_head?: unknown } })?.HouseholdMembership?.is_head ||
+        (m as { is_head?: unknown })?.is_head
+      )
+    : (h as { headPerson?: unknown; head?: unknown }).headPerson || (h as { head?: unknown }).head || null;
   const headNameValue =
-    head?.full_name ??
-    h?.headPerson?.full_name ??
-    h?.head_full_name ??
-    h?.head_name ??
-    h?.owner_full_name ??
-    h?.chu_ho_name ??
-    h?.household_head_name ??
-    h?.headName ??
+    (head as { full_name?: unknown })?.full_name ??
+    (h as { headPerson?: { full_name?: unknown } })?.headPerson?.full_name ??
+    (h as { head_full_name?: unknown })?.head_full_name ??
+    (h as { head_name?: unknown })?.head_name ??
+    (h as { owner_full_name?: unknown })?.owner_full_name ??
+    (h as { chu_ho_name?: unknown })?.chu_ho_name ??
+    (h as { household_head_name?: unknown })?.household_head_name ??
+    (h as { headName?: unknown })?.headName ??
     "";
 
-  const members: Member[] = Array.isArray(h?.residents)
-    ? h.residents.map((m: any) => ({
-        id: String(m?.person_id ?? m?.id ?? ""),
-        fullName: String(m?.full_name ?? ""),
-        cccd: String(m?.citizen_id_num ?? m?.citizen_id ?? ""),
-        relationship: m?.HouseholdMembership?.relation_to_head ?? m?.relationship ?? "",
-        isHead: Boolean(m?.HouseholdMembership?.is_head ?? m?.isHead ?? false),
+  const members: Member[] = Array.isArray(residents)
+    ? residents.map((m: UnknownRecord) => ({
+        id: String((m as { person_id?: unknown; id?: unknown }).person_id ?? (m as { id?: unknown }).id ?? ""),
+        fullName: String((m as { full_name?: unknown }).full_name ?? ""),
+        cccd: String((m as { citizen_id_num?: unknown; citizen_id?: unknown }).citizen_id_num ?? (m as { citizen_id?: unknown }).citizen_id ?? ""),
+        relationship: String(
+          (m as { HouseholdMembership?: { relation_to_head?: unknown } })?.HouseholdMembership?.relation_to_head ??
+            (m as { relationship?: unknown }).relationship ??
+            ""
+        ),
+        isHead: Boolean(
+          (m as { HouseholdMembership?: { is_head?: unknown } })?.HouseholdMembership?.is_head ??
+            (m as { isHead?: unknown }).isHead ??
+            false
+        ),
       }))
     : [];
 
   return {
-    id: String(h?.household_id ?? h?.id ?? ""),
-    code: String(h?.household_no ?? h?.code ?? ""),
+    id: String((h as { household_id?: unknown; id?: unknown }).household_id ?? (h as { id?: unknown }).id ?? ""),
+    code: String((h as { household_no?: unknown; code?: unknown }).household_no ?? (h as { code?: unknown }).code ?? ""),
     headName: String(headNameValue),
-    address: String(h?.address ?? ""),
+    address: String((h as { address?: unknown }).address ?? ""),
     memberCount: Number(
-      h?.members_count ?? (Array.isArray(h?.residents) ? h.residents.length : 0)
+      (h as { members_count?: unknown }).members_count ?? (Array.isArray(residents) ? residents.length : 0)
     ),
     members,
   };
@@ -78,7 +91,7 @@ export default function ChangeOwner() {
   const [isLoading, setIsLoading] = useState(false);
   const [detailLoading, setDetailLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [allData, setAllData] = useState<any[]>([]);
+  const [allData, setAllData] = useState<UnknownRecord[]>([]);
   const [allLoading, setAllLoading] = useState(false);
   const [allError, setAllError] = useState<string | null>(null);
 
@@ -92,18 +105,26 @@ export default function ChangeOwner() {
       try {
         const limit = 500;
         let page = 1;
-        const acc: any[] = [];
+        const acc: UnknownRecord[] = [];
         while (true) {
           const resp = await HouseholdAPI.getHouseholds({ page, limit });
-          const arr = Array.isArray(resp) ? resp : Array.isArray((resp as any)?.rows) ? (resp as any).rows : [];
+          const arr: UnknownRecord[] = Array.isArray(resp)
+            ? (resp as UnknownRecord[])
+            : Array.isArray((resp as { rows?: unknown }).rows)
+            ? (((resp as { rows?: unknown[] }).rows ?? []) as UnknownRecord[])
+            : [];
           acc.push(...arr);
           if (arr.length < limit) break;
           page += 1;
           if (page > 1000) break; // safety stop
         }
         setAllData(acc);
-      } catch (e: any) {
-        setAllError(e?.message || "Không tải được toàn bộ hộ khẩu");
+      } catch (e: unknown) {
+        setAllError(
+          (e && typeof e === "object" && "message" in e && typeof (e as { message?: unknown }).message === "string")
+            ? (e as { message?: string }).message!
+            : "Không tải được toàn bộ hộ khẩu"
+        );
       } finally {
         setAllLoading(false);
       }
@@ -161,7 +182,7 @@ export default function ChangeOwner() {
       if (detail) {
         setSelected(toHouseholdItem(detail));
       }
-    } catch (e) {
+    } catch {
       // keep base selected if detail fails
     } finally {
       setDetailLoading(false);
@@ -201,11 +222,15 @@ export default function ChangeOwner() {
       closeForm();
       // Show success toast, then navigate after a short delay
       toast.success("Thay đổi chủ hộ thành công!", { duration: 3000 });
-    } catch (err) {
+    } catch (err: unknown) {
       console.error(err);
-      const e: any = err as any;
       const message =
-        e?.response?.data?.message || e?.message || "Thay đổi chủ hộ thất bại. Vui lòng thử lại!";
+        (err && typeof err === "object" && "response" in err &&
+          typeof (err as { response?: { data?: { message?: unknown } } }).response?.data?.message === "string")
+          ? (err as { response?: { data?: { message?: string } } }).response!.data!.message!
+          : (err && typeof err === "object" && "message" in err && typeof (err as { message?: unknown }).message === "string")
+          ? (err as { message?: string }).message!
+          : "Thay đổi chủ hộ thất bại. Vui lòng thử lại!";
       toast.error(message);
     } finally {
       setIsLoading(false);

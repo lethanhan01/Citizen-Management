@@ -73,7 +73,7 @@ export default function FeeFilterBar({
       <select
         value={sortBy}
         onChange={(e) => {
-          setSortBy(e.target.value as any);
+          setSortBy(e.target.value as Props["sortBy"]);
         }}
         className="
           px-4 py-2 rounded-lg text-sm font-medium

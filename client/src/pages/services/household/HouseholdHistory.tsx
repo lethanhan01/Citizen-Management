@@ -4,17 +4,26 @@ import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Loader, History, RefreshCw, ArrowRight, Plus, Minus } from "lucide-react";
 import * as HouseholdAPI from "@/api/household.api";
+import type { UnknownRecord } from "@/types/api";
 
 type HistoryRow = {
   id?: string | number;
   household_id: string | number;
   event_type: string;
   field_changed?: string | null;
-  old_value?: any;
-  new_value?: any;
+  old_value?: unknown;
+  new_value?: unknown;
   changed_at: string | Date;
   changed_by_user_id?: string | number | null;
   note?: string | null;
+};
+
+const getErrorMessage = (err: unknown, fallback: string) => {
+  if (err && typeof err === "object") {
+    const msg = (err as { message?: unknown }).message;
+    if (typeof msg === "string" && msg.trim()) return msg;
+  }
+  return fallback;
 };
 
 export default function HouseholdHistory() {
@@ -28,7 +37,7 @@ export default function HouseholdHistory() {
 
   const parsedRows = useMemo(() => {
     return rows.map((r) => {
-      const parseMaybeJSON = (v: any) => {
+      const parseMaybeJSON = (v: unknown) => {
         if (typeof v === "string") {
           try {
             return JSON.parse(v);
@@ -57,13 +66,13 @@ export default function HouseholdHistory() {
         // Treat input as household code, resolve to ID across all pages
         const limit = 500;
         let page = 1;
-        const acc: any[] = [];
+        const acc: UnknownRecord[] = [];
         while (true) {
           const resp = await HouseholdAPI.getHouseholds({ page, limit });
-          const arr = Array.isArray(resp)
-            ? resp
-            : Array.isArray((resp as any)?.rows)
-            ? (resp as any).rows
+          const arr: UnknownRecord[] = Array.isArray(resp)
+            ? (resp as UnknownRecord[])
+            : Array.isArray((resp as { rows?: unknown })?.rows)
+            ? (((resp as { rows?: unknown[] }).rows ?? []) as UnknownRecord[])
             : [];
           acc.push(...arr);
           if (arr.length < limit) break;
@@ -71,35 +80,52 @@ export default function HouseholdHistory() {
           if (page > 1000) break; // safety stop
         }
         const found = acc.find(
-          (h: any) => String(h?.household_no ?? h?.code ?? "").toLowerCase() === idForQuery.toLowerCase()
+          (h: UnknownRecord) =>
+            String((h as { household_no?: unknown; code?: unknown }).household_no ?? (h as { code?: unknown }).code ?? "").toLowerCase() ===
+            idForQuery.toLowerCase()
         );
         if (!found) {
           throw new Error(`Không tìm thấy hộ khẩu với mã: ${idForQuery}`);
         }
-        idForQuery = String(found?.household_id ?? found?.id);
+        idForQuery = String(
+          (found as { household_id?: unknown; id?: unknown }).household_id ??
+            (found as { id?: unknown }).id
+        );
       }
 
       // Fetch household detail to build resident name map for friendly display
       const detail = await HouseholdAPI.getHouseholdById(idForQuery);
-      const residents = Array.isArray(detail?.residents)
-        ? detail.residents
-        : Array.isArray(detail?.members)
-        ? detail.members
+      const residents: UnknownRecord[] = Array.isArray((detail as { residents?: unknown }).residents)
+        ? (((detail as { residents?: unknown[] }).residents ?? []) as UnknownRecord[])
+        : Array.isArray((detail as { members?: unknown }).members)
+        ? (((detail as { members?: unknown[] }).members ?? []) as UnknownRecord[])
         : [];
       const map: Record<string, string> = {};
-      residents.forEach((m: any) => {
-        const pid = String(m?.person_id ?? m?.id ?? "");
+      residents.forEach((m: UnknownRecord) => {
+        const pid = String(
+          (m as { person_id?: unknown; id?: unknown }).person_id ?? (m as { id?: unknown }).id ?? ""
+        );
         const name = String(
-          m?.full_name ?? m?.fullName ?? m?.name ?? m?.person_name ?? ""
+          (m as { full_name?: unknown; fullName?: unknown; name?: unknown; person_name?: unknown }).full_name ??
+            (m as { fullName?: unknown }).fullName ??
+            (m as { name?: unknown }).name ??
+            (m as { person_name?: unknown }).person_name ??
+            ""
         );
         if (pid) map[pid] = name || map[pid] || pid;
       });
       // Include current head if present
       const headId = String(
-        detail?.head_person_id ?? detail?.chu_ho_id ?? detail?.headId ?? ""
+        (detail as { head_person_id?: unknown; chu_ho_id?: unknown; headId?: unknown }).head_person_id ??
+          (detail as { chu_ho_id?: unknown }).chu_ho_id ??
+          (detail as { headId?: unknown }).headId ??
+          ""
       );
       const headName = String(
-        detail?.head_name ?? detail?.chu_ho_ten ?? detail?.headName ?? ""
+        (detail as { head_name?: unknown; chu_ho_ten?: unknown; headName?: unknown }).head_name ??
+          (detail as { chu_ho_ten?: unknown }).chu_ho_ten ??
+          (detail as { headName?: unknown }).headName ??
+          ""
       );
       if (headId) map[headId] = headName || map[headId] || headId;
       setResidentMap(map);
@@ -112,8 +138,8 @@ export default function HouseholdHistory() {
         ? data.rows
         : [];
       setRows(list as HistoryRow[]);
-    } catch (e: any) {
-      setError(e?.message || "Không lấy được lịch sử hộ khẩu");
+    } catch (e: unknown) {
+      setError(getErrorMessage(e, "Không lấy được lịch sử hộ khẩu"));
     } finally {
       setLoading(false);
     }
@@ -121,7 +147,6 @@ export default function HouseholdHistory() {
 
   useEffect(() => {
     if (initialId) fetchHistory(initialId);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialId]);
 
   return (
@@ -174,7 +199,7 @@ export default function HouseholdHistory() {
           ) : (
             <ul className="divide-y divide-border">
               {parsedRows.map((item, idx) => (
-                <li key={(item as any).id ?? idx} className="py-3">
+                <li key={item.id ?? idx} className="py-3">
                   <div className="flex items-center justify-between gap-3">
                     <div className="min-w-0">
                       {renderSummary(item, residentMap)}
@@ -218,21 +243,29 @@ function formatRelative(date: string | Date) {
   return rtf.format(-yr, "year");
 }
 
-function getPersonName(value: any, residentMap: Record<string, string>) {
+function getPersonName(value: unknown, residentMap: Record<string, string>) {
   if (value == null) return "";
   if (typeof value === "number" || (typeof value === "string" && /^\d+$/.test(value))) {
     const id = String(value);
     return residentMap[id] || id;
   }
   if (typeof value === "object") {
-    const pid = String(value?.person_id ?? value?.id ?? "");
-    const nm = String(value?.full_name ?? value?.name ?? "");
+    const pid = String(
+      (value as { person_id?: unknown; id?: unknown }).person_id ??
+        (value as { id?: unknown }).id ??
+        ""
+    );
+    const nm = String(
+      (value as { full_name?: unknown; name?: unknown }).full_name ??
+        (value as { name?: unknown }).name ??
+        ""
+    );
     return residentMap[pid] || nm || pid;
   }
   return String(value);
 }
 
-function renderSummary(item: any, residentMap: Record<string, string>) {
+function renderSummary(item: HistoryRow, residentMap: Record<string, string>) {
   const type = String(item?.event_type || "");
   // Prefer using item's note as the main title when available
   if (item?.note) {
@@ -265,9 +298,17 @@ function renderSummary(item: any, residentMap: Record<string, string>) {
   const oldArr = Array.isArray(item?.old_value) ? item.old_value : [];
   const newArr = Array.isArray(item?.new_value) ? item.new_value : [];
   if (type === "members_add" || type === "members_remove") {
-    const norm = (arr: any[]) =>
+    const norm = (arr: unknown[]) =>
       new Set(
-        arr.map((v) => (typeof v === "object" ? String(v?.person_id ?? v?.id ?? v) : String(v)))
+        arr.map((v) =>
+          typeof v === "object"
+            ? String(
+                (v as { person_id?: unknown; id?: unknown }).person_id ??
+                  (v as { id?: unknown }).id ??
+                  v
+              )
+            : String(v)
+        )
       );
     const oldSet = norm(oldArr);
     const newSet = norm(newArr);
@@ -307,7 +348,7 @@ function renderSummary(item: any, residentMap: Record<string, string>) {
 }
 function renderValueCard(
   title: string,
-  value: any,
+  value: unknown,
   field: string | null | undefined,
   residentMap: Record<string, string>
 ) {
@@ -337,7 +378,7 @@ function renderValueCard(
   );
 }
 
-function formatValue(value: any, field: string, residentMap: Record<string, string>) {
+function formatValue(value: unknown, field: string, residentMap: Record<string, string>) {
   if (value == null) return "—";
 
   // Primitive numbers or numeric strings
@@ -354,8 +395,14 @@ function formatValue(value: any, field: string, residentMap: Record<string, stri
   if (Array.isArray(value)) {
     const chips: string[] = value.map((v) => {
       if (typeof v === "object") {
-        const pid = String(v?.person_id ?? v?.id ?? "");
-        const baseName = v?.full_name ?? v?.name ?? (pid || "");
+        const pid = String(
+          (v as { person_id?: unknown; id?: unknown }).person_id ??
+            (v as { id?: unknown }).id ??
+            ""
+        );
+        const baseName = (v as { full_name?: unknown; name?: unknown }).full_name ??
+          (v as { name?: unknown }).name ??
+          (pid || "");
         const nm = residentMap[pid] ?? String(baseName);
         return nm || pid || JSON.stringify(v);
       }
@@ -368,8 +415,13 @@ function formatValue(value: any, field: string, residentMap: Record<string, stri
   // Objects
   if (typeof value === "object") {
     // If it looks like a person reference, make it friendly
-    const pid = String(value?.person_id ?? value?.id ?? "");
-    const nm = residentMap[pid] ?? String(value?.full_name ?? value?.name ?? "");
+    const pid = String(
+      (value as { person_id?: unknown; id?: unknown }).person_id ??
+        (value as { id?: unknown }).id ??
+        ""
+    );
+    const nm = residentMap[pid] ??
+      String((value as { full_name?: unknown; name?: unknown }).full_name ?? (value as { name?: unknown }).name ?? "");
     if (pid || nm) return nm ? `${nm} (ID ${pid})` : pid;
     return value; // fallback pretty JSON in card
   }
@@ -377,15 +429,21 @@ function formatValue(value: any, field: string, residentMap: Record<string, stri
   return String(value);
 }
 
-function renderArrayDiff(oldVal: any, newVal: any, residentMap: Record<string, string>) {
+function renderArrayDiff(oldVal: unknown, newVal: unknown, residentMap: Record<string, string>) {
   const oldArr = Array.isArray(oldVal) ? oldVal : null;
   const newArr = Array.isArray(newVal) ? newVal : null;
   if (!oldArr && !newArr) return null;
 
-  const norm = (arr: any[]) =>
+  const norm = (arr: unknown[]) =>
     new Set(
       arr.map((v) => {
-        const id = typeof v === "object" ? String(v?.person_id ?? v?.id ?? v) : String(v);
+        const id = typeof v === "object"
+          ? String(
+              (v as { person_id?: unknown; id?: unknown }).person_id ??
+                (v as { id?: unknown }).id ??
+                v
+            )
+          : String(v);
         return id;
       })
     );

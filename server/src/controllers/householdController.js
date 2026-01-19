@@ -19,13 +19,21 @@ let createHousehold = async (req, res) => {
 let getAllHouseholds = async (req, res) => {
   try {
     const { page = 1, limit = 20 } = req.query;
-    const households = await householdService.getAllHouseholds({
-      page: parseInt(page),
-      limit: parseInt(limit),
+    const safePage = Math.max(parseInt(page) || 1, 1);
+    const safeLimit = Math.min(Math.max(parseInt(limit) || 20, 1), 100);
+    const result = await householdService.getAllHouseholds({
+      page: safePage,
+      limit: safeLimit,
     });
     return res.status(200).json({
       message: "Lấy danh sách hộ khẩu thành công",
-      data: households,
+      data: result.data,
+      pagination: {
+        currentPage: result.currentPage,
+        totalPages: result.totalPages,
+        totalItems: result.totalItems,
+        itemsPerPage: result.itemsPerPage,
+      },
     });
   } catch (error) {
     console.error("Lỗi khi lấy danh sách hộ khẩu:", error);

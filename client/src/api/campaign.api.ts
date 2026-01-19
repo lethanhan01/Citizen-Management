@@ -1,4 +1,5 @@
 import apiClient from "../lib/axios";
+import type { ApiParams } from "@/types/api";
 
 export type CampaignCreatePayload = {
   name: string;
@@ -22,7 +23,7 @@ export async function createCampaign(payload: CampaignCreatePayload) {
   return resp.data;
 }
 
-export async function getCampaigns(params?: Record<string, any>) {
+export async function getCampaigns(params?: ApiParams) {
   const resp = await apiClient.get("/api/v1/chien-dich", { params });
   return resp.data;
 }

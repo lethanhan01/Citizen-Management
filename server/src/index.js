@@ -5,6 +5,8 @@ import sequelize from "./config/sequelize.js";
 import db from "./models/index.js";
 import initWebRoutes from "./routes/web.js";
 import errorHandler from "./middleware/errorHandler.js";
+import verifyToken from "./middleware/authMiddleware.js";
+import checkRole from "./middleware/roleMiddleware.js";
 import "dotenv/config";
 import { initScheduledJobs } from "./services/schedulerService.js";
 
@@ -45,14 +47,14 @@ app.get("/api/v1/health", (req, res) => {
   res.status(200).json({ success: true, message: "OK", data: { status: "ok" } });
 });
 
-app.get("/campaigns", async (req, res) => {
-    try {
-        const result = await pool.query("SELECT * FROM finance.campaign");
-        res.json(result.rows);
-    } catch (err) {
-        console.error(err);
-        res.status(500).send("Lỗi truy vấn database");
-    }
+app.get("/campaigns", verifyToken, checkRole(["admin", "staff"]), async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM finance.campaign");
+    res.status(200).json({ success: true, data: result.rows });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Lỗi truy vấn database" });
+  }
 });
 
 initWebRoutes(app);

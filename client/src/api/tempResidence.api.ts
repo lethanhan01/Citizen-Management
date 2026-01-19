@@ -1,20 +1,21 @@
 import apiClient from '../lib/axios';
+import type { ApiParams, UnknownRecord } from '@/types/api';
 
 // Tạm trú
-export async function createTempResidence(payload: any) {
+export async function createTempResidence(payload: UnknownRecord) {
   const resp = await apiClient.post('/api/v1/tam-tru', payload);
   // Backend returns { message, tempResidence }
   return resp.data?.tempResidence ?? null;
 }
 
 // Danh sách tạm trú/tạm vắng (có thể truyền params lọc)
-export async function getTempResidence(params?: Record<string, any>) {
+export async function getTempResidence(params?: ApiParams) {
   const resp = await apiClient.get('/api/v1/tam-tru-vang', { params });
   return resp.data?.data ?? null;
 }
 
 // Cập nhật phiếu tạm trú/tạm vắng theo id
-export async function updateTempResidence(id: string, payload: any) {
+export async function updateTempResidence(id: string, payload: UnknownRecord) {
   const resp = await apiClient.put(`/api/v1/tam-tru-vang/${id}`, payload);
   return resp.data?.data ?? null;
 }

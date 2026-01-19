@@ -53,7 +53,7 @@ export default function Profile() {
     // setConfirmPassword("");
     // setPasswordError("");
     // setShowPasswordModal(true);
-    const role = (user?.role_name ?? user?.role ?? "").toString().toLowerCase();
+    const role = (user?.role ?? "").toString().toLowerCase();
 
       if (role === "admin") {
         window.alert(
@@ -92,7 +92,7 @@ export default function Profile() {
       await new Promise((resolve) => setTimeout(resolve, 1500));
       // Call API to change password
       setShowPasswordModal(false);
-    } catch (err) {
+    } catch {
       setPasswordError("Có lỗi xảy ra. Vui lòng thử lại.");
     } finally {
       setIsLoading(false);
@@ -112,16 +112,10 @@ export default function Profile() {
           {/* Avatar */}
           <div className="flex-shrink-0">
             <div className="w-24 h-24 rounded-full bg-third/20 flex items-center justify-center">
-              {user?.avatar ? (
-                <img
-                  src={user.avatar}
-                  alt={(user?.full_name ?? user?.fullName ?? "Avatar").toString()}
-                  className="w-24 h-24 rounded-full object-cover"
-                />
-              ) : randomAvatarRef.current ? (
+              {randomAvatarRef.current ? (
                 <img
                   src={randomAvatarRef.current}
-                  alt={(user?.full_name ?? user?.fullName ?? "Avatar").toString()}
+                  alt={(user?.full_name ?? "Avatar").toString()}
                   className="w-24 h-24 rounded-full object-cover"
                 />
               ) : (
@@ -138,8 +132,8 @@ export default function Profile() {
               </div>
             ) : (
               <>
-                <InfoField label="Họ và tên" value={(user?.full_name ?? user?.fullName ?? user?.name ?? "—").toString()} />
-                <InfoField label="Vai trò" value={(user?.role_name ?? user?.role ?? "—").toString()} />
+                <InfoField label="Họ và tên" value={(user?.full_name ?? "—").toString()} />
+                <InfoField label="Vai trò" value={(user?.role ?? "—").toString()} />
                 <InfoField label="Tên đăng nhập" value={(user?.username ?? "—").toString()} />
                 <InfoField label="Mật khẩu" value={"••••••••"} />
               </>

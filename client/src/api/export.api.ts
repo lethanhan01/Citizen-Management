@@ -1,4 +1,5 @@
 import apiClient from '../lib/axios';
+import type { AxiosResponse } from 'axios';
 
 function extractFilename(disposition?: string | null): string | null {
   if (!disposition) return null;
@@ -17,43 +18,43 @@ function extractFilename(disposition?: string | null): string | null {
 type ExportResult = { blob: Blob; filename: string | null };
 
 export async function exportFeeOutstanding(id: string): Promise<ExportResult> {
-  const resp = await apiClient.get(`/api/v1/export/thu-phi/ton-dong/${id}`, {
+  const resp: AxiosResponse<Blob> = await apiClient.get(`/api/v1/export/thu-phi/ton-dong/${id}`, {
     responseType: 'blob',
   });
-  const filename = extractFilename((resp as any).headers?.['content-disposition']);
+  const filename = extractFilename(resp.headers?.['content-disposition']);
   return { blob: resp.data as Blob, filename };
 }
 
 export async function exportDonationReport(id: string): Promise<ExportResult> {
-  const resp = await apiClient.get(`/api/v1/export/dong-gop/${id}`, {
+  const resp: AxiosResponse<Blob> = await apiClient.get(`/api/v1/export/dong-gop/${id}`, {
     responseType: 'blob',
   });
-  const filename = extractFilename((resp as any).headers?.['content-disposition']);
+  const filename = extractFilename(resp.headers?.['content-disposition']);
   return { blob: resp.data as Blob, filename };
 }
 
 export async function exportFullFeeReport(id: string): Promise<ExportResult> {
-  const resp = await apiClient.get(`/api/v1/export/thu-phi/tong-hop/${id}`, {
+  const resp: AxiosResponse<Blob> = await apiClient.get(`/api/v1/export/thu-phi/tong-hop/${id}`, {
     responseType: 'blob',
   });
-  const filename = extractFilename((resp as any).headers?.['content-disposition']);
+  const filename = extractFilename(resp.headers?.['content-disposition']);
   return { blob: resp.data as Blob, filename };
 }
 
 export async function exportReceiptsForPrinting(id: string): Promise<ExportResult> {
-  const resp = await apiClient.get(`/api/v1/export/thu-phi/phieu-thu/${id}`, {
+  const resp: AxiosResponse<Blob> = await apiClient.get(`/api/v1/export/thu-phi/phieu-thu/${id}`, {
     responseType: 'blob',
   });
-  const filename = extractFilename((resp as any).headers?.['content-disposition']);
+  const filename = extractFilename(resp.headers?.['content-disposition']);
   return { blob: resp.data as Blob, filename };
 }
 
 export async function exportSingleReceipt(paymentId: string | number): Promise<ExportResult> {
-  const resp = await apiClient.get(`/api/v1/export/thu-phi/hoa-don/${paymentId}`, {
+  const resp: AxiosResponse<Blob> = await apiClient.get(`/api/v1/export/thu-phi/hoa-don/${paymentId}`, {
     responseType: 'blob',
   });
   
-  const filename = extractFilename((resp as any).headers?.['content-disposition']);
+  const filename = extractFilename(resp.headers?.['content-disposition']);
   
   return { blob: resp.data as Blob, filename };
 }

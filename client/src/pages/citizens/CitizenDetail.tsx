@@ -4,35 +4,48 @@ import { useParams } from "react-router-dom";
 import { useEffect, useMemo } from "react";
 import { Loader } from "lucide-react";
 import { usePersonStore } from "@/stores/person.store";
-import type { Citizen } from "@/types/citizen";
+import type { Citizen, Gender, ResidencyStatus } from "@/types/citizen";
+import type { UnknownRecord } from "@/types/api";
 
-function toCitizen(p: any): Citizen {
-  const households = p?.households;
+const toGender = (value: unknown): Gender =>
+  value === "male" || value === "female" || value === "other" || value === "unknown" ? value : "unknown";
+
+const toResidencyStatus = (value: unknown): ResidencyStatus =>
+  value === "permanent" ||
+  value === "temporary_resident" ||
+  value === "temporary_absent" ||
+  value === "moved_out" ||
+  value === "deceased"
+    ? value
+    : "permanent";
+
+function toCitizen(p: UnknownRecord): Citizen {
+  const households = (p as { households?: unknown }).households;
   const firstHousehold = Array.isArray(households) ? households[0] : households || null;
   const householdMembership =
     firstHousehold?.HouseholdMembership || firstHousehold?.households?.HouseholdMembership;
 
   return {
-    id: String(p?.person_id ?? p?.id ?? ""),
-    cccd: String(p?.citizen_id_num ?? ""),
-    fullName: String(p?.full_name ?? ""),
-    dateOfBirth: String(p?.dob ?? ""),
-    gender: (p?.gender ?? "") as any,
-    householdCode: String(firstHousehold?.household_no ?? ""),
-    address: String(firstHousehold?.address ?? p?.previous_address ?? ""),
-    status: (p?.residency_status ?? "Thường trú") as any,
-    start_date: String(p?.start_date ?? ""),
-    end_date: String(p?.end_date ?? ""),
-    ethnicity: p?.ethnicity ?? undefined,
-    hometown: p?.hometown ?? undefined, 
+    id: String((p as { person_id?: unknown; id?: unknown }).person_id ?? (p as { id?: unknown }).id ?? ""),
+    cccd: String((p as { citizen_id_num?: unknown }).citizen_id_num ?? ""),
+    fullName: String((p as { full_name?: unknown }).full_name ?? ""),
+    dateOfBirth: String((p as { dob?: unknown }).dob ?? ""),
+    gender: toGender((p as { gender?: unknown }).gender),
+    householdCode: String((firstHousehold as { household_no?: unknown })?.household_no ?? ""),
+    address: String((firstHousehold as { address?: unknown })?.address ?? (p as { previous_address?: unknown }).previous_address ?? ""),
+    status: toResidencyStatus((p as { residency_status?: unknown }).residency_status),
+    start_date: String((p as { start_date?: unknown }).start_date ?? ""),
+    end_date: String((p as { end_date?: unknown }).end_date ?? ""),
+    ethnicity: String((p as { ethnicity?: unknown }).ethnicity ?? ""),
+    hometown: String((p as { hometown?: unknown }).hometown ?? ""), 
     nationality: undefined,
-    occupation: p?.occupation ?? undefined,
-    workplace: p?.workplace ?? undefined,
-    cmndCccdIssueDate: p?.citizen_id_issued_date ?? undefined,
-    cmndCccdIssuePlace: p?.citizen_id_issued_place ?? undefined,
-    permanentResidenceDate: p?.residence_registered_date ?? undefined,
-    isHead: Boolean(householdMembership?.is_head ?? false),
-    relationshipToHead: householdMembership?.relation_to_head ?? undefined,
+    occupation: (p as { occupation?: string }).occupation ?? undefined,
+    workplace: (p as { workplace?: string }).workplace ?? undefined,
+    cmndCccdIssueDate: (p as { citizen_id_issued_date?: string }).citizen_id_issued_date ?? undefined,
+    cmndCccdIssuePlace: (p as { citizen_id_issued_place?: string }).citizen_id_issued_place ?? undefined,
+    permanentResidenceDate: (p as { residence_registered_date?: string }).residence_registered_date ?? undefined,
+    isHead: Boolean((householdMembership as { is_head?: unknown })?.is_head ?? false),
+    relationshipToHead: (householdMembership as { relation_to_head?: string })?.relation_to_head ?? undefined,
     isDeceased: false,
   };
 }
