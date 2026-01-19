@@ -3,6 +3,13 @@ import "dotenv/config";
 
 const sslFlag = (process.env.DB_SSL || "").toLowerCase();
 const useSsl = sslFlag === "true";
+const rejectUnauthorizedFlag = (process.env.DB_SSL_REJECT_UNAUTHORIZED || "").toLowerCase();
+const rejectUnauthorized =
+  rejectUnauthorizedFlag === "true"
+    ? true
+    : rejectUnauthorizedFlag === "false"
+      ? false
+      : process.env.NODE_ENV === "production";
 
 console.log(`[DB] Sequelize target host=${process.env.DB_HOST} ssl=${useSsl}`);
 
@@ -19,7 +26,7 @@ const sequelize = new Sequelize(
       ? {
           ssl: {
             require: true,
-            rejectUnauthorized: false, // Chấp nhận chứng chỉ SSL của Supabase
+            rejectUnauthorized,
           },
         }
       : { ssl: false },

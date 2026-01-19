@@ -51,8 +51,10 @@ import { create } from "domain";
 const router = express.Router();
 let initWebRoutes = (app) => {
     // ---- AUTH ROUTE ---- (Admin)
-    // POST: Tạo 1 tài khoản Admin mới (Cái này cực kỳ nguy hiểm => Tạo ra để Group test => Cần xóa đi khi hoàn thiện project)
-    router.post("/api/v1/auth/register", authController.handleRegister);
+    // POST: Tạo tài khoản (chỉ bật ngoài production)
+    if (process.env.NODE_ENV !== "production") {
+        router.post("/api/v1/auth/register", authController.handleRegister);
+    }
     // POST: Login cho tất cả các User
     router.post("/api/v1/auth/login", authController.handleLogin);
     // GET: Lấy thông tin của cá nhân User đã đăng nhập
